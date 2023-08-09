@@ -1,3 +1,7 @@
-# @warmosaic/utils
+# gemforge
 
-General utils.
+CLI for designing, building, deploying and upgrading Diamond Standard contracts on EVM chains.
+
+
+
+
