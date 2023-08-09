@@ -5,3 +5,6 @@ CLI for designing, building, deploying and upgrading Diamond Standard contracts 
 
 
 
+## License
+
+MIT - see [LICENSE.md]

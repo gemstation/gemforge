@@ -2,9 +2,18 @@
   "name": "gemforge",
   "version": "1.0.0",
   "description": "CLI for designing, building, deploying and upgrading Diamond Standard contracts on EVM chains.",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "bin": "build/cli.js",
+  "bin": {
+    "gemforge": "./build/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": {
+        "development": "./src",
+        "default": "./build/index.js"
+      }
+    }
+  },
   "author": "Ramesh Nair <ram@hiddentao.com>",
   "license": "MIT",
   "scripts": {
