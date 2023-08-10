@@ -10,7 +10,6 @@ import { IDiamondCut } from 'lib/diamond-2-hardhat/contracts/interfaces/IDiamond
 import { IDiamondLoupe } from 'lib/diamond-2-hardhat/contracts/interfaces/IDiamondLoupe.sol';
 import { IERC165 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC165.sol';
 import { IERC173 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC173.sol';
-import { DiamondInit } from 'lib/diamond-2-hardhat/contracts/upgradeInitializers/DiamondInit.sol';
 
 contract Proxy is Diamond {
   constructor(address _contractOwner) payable Diamond(_contractOwner, address(new DiamondCutFacet())) {
