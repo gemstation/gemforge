@@ -1,15 +1,15 @@
 import { $ } from 'execa'
 import chalk from 'chalk'
-import path, { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import { readFileSync, writeFileSync } from 'node:fs'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+import { GemforgeConfig, sanitizeConfig } from '../shared/config.js'
 
 export const $$ = $({ stdio: 'inherit' })
 
-export const getContext = (args: Record<string, any>) => {
+export const getContext = async (args: Record<string, any>) => {
   const context = {
+    config: args.config,
     folder: args.folder,
   }
 
@@ -20,15 +20,32 @@ export const getContext = (args: Record<string, any>) => {
     context.folder = process.cwd()
   }
 
+  if (context.config) {
+    context.config = path.resolve(process.cwd(), context.config)
+    try {
+      context.config = (await import(context.config)).default as GemforgeConfig
+      sanitizeConfig(context.config)
+    } catch (err: any) {
+      error(`Failed to load config file ${context.config}: ${err.message}`)
+    }
+  }
+
   return context
 } 
 
-export const template = (file: string) => {
-  return path.resolve(__dirname, '../templates', file)
+export const writeTemplate = (file: string, dst: string, replacements: Record<string, string> = {}) => {
+  let str = readFileSync(new URL(`../../templates/${file}`, import.meta.url), 'utf-8')
+  Object.keys(replacements).forEach(key => {
+    str = str.replaceAll(key, replacements[key])
+  })
+  writeFileSync(dst, str, 'utf-8')
 }
 
 export const log = (message: string) => console.log(chalk.gray(message))
 export const info = (message: string) => console.log(chalk.whiteBright(message))
 export const success = (message: string) => console.log(chalk.greenBright(message))
-export const error = (message: string) => console.log(chalk.redBright(message))
+export const error = (message: string) => {
+  console.log(chalk.redBright(message))
+  process.exit(-1)
+}
 export const warn = (message: string) => console.log(chalk.yellowBright(message))

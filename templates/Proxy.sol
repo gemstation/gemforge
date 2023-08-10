@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >={SOLC_VERSION};
+pragma solidity >=SOLC_VERSION;
 
 import { Diamond } from 'lib/diamond-2-hardhat/contracts/Diamond.sol';
 import { LibDiamond } from 'lib/diamond-2-hardhat/contracts/libraries/LibDiamond.sol';
@@ -11,7 +11,6 @@ import { IDiamondLoupe } from 'lib/diamond-2-hardhat/contracts/interfaces/IDiamo
 import { IERC165 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC165.sol';
 import { IERC173 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC173.sol';
 import { DiamondInit } from 'lib/diamond-2-hardhat/contracts/upgradeInitializers/DiamondInit.sol';
-import { AppStorage, LibAppStorage } from '../libraries/LibAppStorage.sol';
 
 contract Proxy is Diamond {
   constructor(address _contractOwner) payable Diamond(_contractOwner, address(new DiamondCutFacet())) {
@@ -24,9 +23,6 @@ contract Proxy is Diamond {
     ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
-
-    // setup storage
-    AppStorage storage s = LibAppStorage.diamondStorage();
   }
 
   // Internal

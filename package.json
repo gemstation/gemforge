@@ -8,6 +8,16 @@
   "type": "module",
   "types": "./build/src/index.d.ts",
   "exports": "./build/src/index.js",
+  "files": [
+    "src",
+    "build",
+    "bin",
+    "templates",
+    "README.md",
+    "LICENSE.md",
+    "CHANGELOG.md",
+    "package.json"
+  ],
   "author": "Ramesh Nair <ram@hiddentao.com>",
   "license": "MIT",
   "scripts": {
@@ -19,6 +29,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
     "@commitlint/config-conventional": "^17.2.0",
+    "@types/lodash": "^4.14.197",
     "@types/node": "^18.16.16",
     "eslint": "8.27.0",
     "husky": "^8.0.2",
@@ -37,8 +48,10 @@
     ]
   },
   "dependencies": {
+    "@types/lodash.get": "^4.4.7",
     "chalk": "^5.3.0",
     "commander": "^11.0.0",
-    "execa": "^7.2.0"
+    "execa": "^7.2.0",
+    "lodash.get": "^4.4.2"
   }
 }

@@ -11,5 +11,5 @@ const index = process.argv.findIndex((arg) => arg === __filename)
 const args = process.argv.slice(index + 1)
 
 // Say our original entrance script is `app.js`
-const cmd = `node --no-warnings ${resolve(__dirname, "../build/src/cli.js")}`
+const cmd = `node --no-warnings ${resolve(__dirname, "../build/cli.js")}`
 spawnSync(cmd, args, { stdio: "inherit", shell: true })

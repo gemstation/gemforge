@@ -1,14 +1,14 @@
 import { Command } from 'commander'
-import { $$, getContext, info, template } from './common.js'
+import { $$, writeTemplate, getContext, info } from './common.js'
 
 export const command = () =>
   new Command('init')
     .description('Initialize a new project, generating all necessary scaffolding.')
     .option('-f, --folder <folder>', 'folder to create the scaffold in', '.')
     .action(async (args) => {
-      const ctx = getContext(args)
+      const ctx = await getContext(args)
 
       // write config file
       info('Writing config file...')
-      await $$`cp ${template('gemforge.config.js')} ${ctx.folder}/gemforge.config.js`
+      writeTemplate('gemforge.config.cjs', `${ctx.folder}/gemforge.config.cjs`)
     })

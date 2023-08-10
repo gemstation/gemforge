@@ -1,12 +1,12 @@
 import { Command } from 'commander'
 
-import packageJson from '../package.json' assert { "type": "json" }
+import { loadJson } from './shared/file.js'
 import { command as init } from './cli/init.js'
 import { command as build } from './cli/build.js'
 
-const { version } = packageJson
-
 const cli = new Command()
+
+const { version } = loadJson(new URL('../package.json', import.meta.url)) as any
 
 cli
   .version(version)
