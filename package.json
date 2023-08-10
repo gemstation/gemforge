@@ -3,24 +3,18 @@
   "version": "1.0.0",
   "description": "CLI for designing, building, deploying and upgrading Diamond Standard contracts on EVM chains.",
   "bin": {
-    "gemforge": "./build/cli.js"
+    "gemforge": "./bin/gemforge.js"
   },
-  "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "import": {
-        "development": "./src",
-        "default": "./build/index.js"
-      }
-    }
-  },
+  "type": "module",
+  "types": "./build/src/index.d.ts",
+  "exports": "./build/src/index.js",
   "author": "Ramesh Nair <ram@hiddentao.com>",
   "license": "MIT",
   "scripts": {
     "prepare": "husky install && npx husky add .husky/commit-msg 'npx commitlint --edit $1'",
     "prettify": "prettier --write .",
-    "dev": "tsc -b -w",
-    "build": "tsc -b"
+    "dev": "tsc -b -w tsconfig.json",
+    "build": "rm -fr build/* && tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
@@ -41,5 +35,10 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "execa": "^7.2.0"
   }
 }
