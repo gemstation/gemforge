@@ -23,8 +23,9 @@ export const getContext = async (args: Record<string, any>) => {
   if (context.config) {
     context.config = path.resolve(process.cwd(), context.config)
     try {
-      context.config = (await import(context.config)).default as GemforgeConfig
-      sanitizeConfig(context.config)
+      const config = (await import(context.config)).default as GemforgeConfig
+      sanitizeConfig(config)
+      context.config = config
     } catch (err: any) {
       error(`Failed to load config file ${context.config}: ${err.message}`)
     }

@@ -16,6 +16,7 @@ export const command = () =>
 
       info('Generating Proxy code...')
       writeTemplate('Proxy.sol', `${generatedFolderPath}/Proxy.sol`, {
+        SOLC_SPDX: ctx.config.solc.license,
         SOLC_VERSION: ctx.config.solc.version,
       })
     })

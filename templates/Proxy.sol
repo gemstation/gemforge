@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: SOLC_SPDX
 pragma solidity >=SOLC_VERSION;
 
 import { Diamond } from 'lib/diamond-2-hardhat/contracts/Diamond.sol';

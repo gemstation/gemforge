@@ -20,6 +20,9 @@ dependencies:
   lodash.get:
     specifier: ^4.4.2
     version: 4.4.2
+  spdx-license-ids:
+    specifier: ^3.0.13
+    version: 3.0.13
 
 devDependencies:
   '@commitlint/cli':
@@ -1636,7 +1639,6 @@ packages:
 
   /spdx-license-ids@3.0.13:
     resolution: {integrity: sha512-XkD+zwiqXHikFZm4AX/7JSCXA98U5Db4AFd5XUg/+9UNtnH75+Z9KxtpYiJZx36mUDVOwH83pl7yvCer6ewM3w==}
-    dev: true
 
   /split2@3.2.2:
     resolution: {integrity: sha512-9NThjpgZnifTkJpzTZ7Eue85S49QwpNhZTq6GRJwObb6jnLFNGB7Qm73V5HewTROPyxD0C29xqmaI68bQtV+hg==}
