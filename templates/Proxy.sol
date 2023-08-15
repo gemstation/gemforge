@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: SOLC_SPDX
-pragma solidity >=SOLC_VERSION;
+// SPDX-License-Identifier: __SOLC_SPDX__
+pragma solidity >=__SOLC_VERSION__;
 
 import { Diamond } from 'lib/diamond-2-hardhat/contracts/Diamond.sol';
 import { LibDiamond } from 'lib/diamond-2-hardhat/contracts/libraries/LibDiamond.sol';
@@ -52,6 +52,6 @@ contract Proxy is Diamond {
       functionSelectors: f2
     });
 
-    LibDiamond.diamondCut(cut, address(0), '');
+    LibDiamond.diamondCut(cut, address(0), "");
   }
 }

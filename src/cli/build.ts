@@ -1,5 +1,7 @@
 import { Command } from 'commander'
-import { $$, getContext, info, writeTemplate } from './common.js'
+import { info } from '../shared/log.js'
+import { getContext } from '../shared/context.js'
+import { getFacetsAndFunctions, writeTemplate } from '../shared/fs.js'
 
 export const command = () =>
   new Command('build')
@@ -10,13 +12,37 @@ export const command = () =>
       const ctx = await getContext(args)
 
       const generatedFolderPath = `${ctx.folder}/src/generated`
+      const { $$ } = ctx
 
       info('Creating generated folder...')
       await $$`mkdir -p ${generatedFolderPath}`
 
-      info('Generating Proxy code...')
+      info('Generating Proxy.sol...')
       writeTemplate('Proxy.sol', `${generatedFolderPath}/Proxy.sol`, {
-        SOLC_SPDX: ctx.config.solc.license,
-        SOLC_VERSION: ctx.config.solc.version,
+        __SOLC_SPDX__: ctx.config.solc.license,
+        __SOLC_VERSION__: ctx.config.solc.version,
       })
+
+      const facets = getFacetsAndFunctions(ctx)
+      info('Generating IProxy.sol...')
+      writeTemplate('IProxy.sol', `${generatedFolderPath}/IProxy.sol`, {
+        __SOLC_SPDX__: ctx.config.solc.license,
+        __SOLC_VERSION__: ctx.config.solc.version,
+        __METHODS__: facets
+          .reduce((m, f) => m.concat(f.functions), [] as any[])
+          .map(f => `${f.signature};`)
+          .join('\n')
+      })
+
+      info('Generating LibFacets.sol...')
+      writeTemplate('LibFacets.sol', `${generatedFolderPath}/LibFacets.sol`, {
+        __SOLC_SPDX__: ctx.config.solc.license,
+        __SOLC_VERSION__: ctx.config.solc.version,
+      })
+
+      // run forge build
+      info('Running forge build...')
+      await $$`forge build`
     })
+
+  

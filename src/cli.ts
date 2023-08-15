@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadJson } from './shared/file.js'
+import { loadJson } from './shared/fs.js'
 import { command as init } from './cli/init.js'
 import { command as build } from './cli/build.js'
 

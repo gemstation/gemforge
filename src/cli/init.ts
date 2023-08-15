@@ -1,5 +1,7 @@
 import { Command } from 'commander'
-import { $$, writeTemplate, getContext, info } from './common.js'
+import { info } from '../shared/log.js'
+import { getContext } from '../shared/context.js'
+import { writeTemplate } from '../shared/fs.js'
 
 export const command = () =>
   new Command('init')
@@ -11,4 +13,6 @@ export const command = () =>
       // write config file
       info('Writing config file...')
       writeTemplate('gemforge.config.cjs', `${ctx.folder}/gemforge.config.cjs`)
+
+      // TODO: setup foundry and forge
     })
