@@ -43,7 +43,7 @@ export const deployContract = async (name: string, artifact: ContractArtifact, s
     trace(`Deployed ${name} ...`)
     const tx = await factory.deploy(...args)
     return await tx.waitForDeployment()
-   } catch (err) {
+   } catch (err: any) {
     return captureErrorAndExit(err, `Failed to deploy ${name}`) as any
    }
 }
