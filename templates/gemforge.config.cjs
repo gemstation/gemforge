@@ -5,12 +5,18 @@ module.exports = {
     // Solidity compiler version - to be inserted in all generated .sol files
     version: '0.8.21',
   },
-  facets: {
+  paths: {
     // file patterns to include in facet parsing
-    include: [
+    facets: [
       // include all .sol files in the facets directory ending "Facet"
-      'facets/*Facet.sol'
+      'src/facets/*Facet.sol'
     ],
+    // output folder for generated files and scripts
+    generated: 'src/generated',
+    // diamond library source code
+    diamondLib: 'lib/diamond-2-hardhat',
+  },
+  facets: {
     // Whether to include public methods when generating facet cut instructions. Default is to only include external methods.
     publicMethods: false,
   }

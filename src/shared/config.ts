@@ -7,37 +7,54 @@ export interface GemforgeConfig {
     license: string
     version: string
   },
+  paths: {
+    facets: string[],
+    generated: string,
+    diamondLib: string,
+  },
   facets: {
-    include: string[],
     publicMethods: boolean,
   }
 }
 
+const throwError = (msg: string, key: string, val: any) => {
+  throw new Error(`${msg} for [${key}]: ${val}`)
+}
+
+const ensure = (config: GemforgeConfig, key: string, isValid: (v: any) => boolean) => {
+  const val = get(config, key)
+  if (!isValid(val)) {
+    throwError(`Invalid value`, key, val)
+  }
+}
+
+const ensureExists = (config: GemforgeConfig, key: string) => {
+  const val = get(config, key)
+  if (!val) {
+    throwError(`Value not found`, key, val)
+  }
+}
+
+const ensureArray = (config: GemforgeConfig, key: string) => {
+  const val = get(config, key)
+  if (!Array.isArray(val) || val.length === 0) {
+    throwError(`Invalid array`, key, val)
+  }
+}
+
+const ensureBool = (config: GemforgeConfig, key: string) => {
+  const val = get(config, key)
+  if (typeof val !== 'boolean') {
+    throwError(`Invalid boolean value`, key, val)
+  }
+}
+
 export const sanitizeConfig = (config: GemforgeConfig) => {
-  if (!get(config, 'solc.version')) {
-    throwMissingError('solc.version')
-  }
-
-  const license = get(config, 'solc.license')
-  if (!license) {
-    throwMissingError('solc.license')
-  } else {
-    if (spdxLicenseIds.indexOf(license) === -1) {
-      throw new Error(`Invalid SPDX license: ${license}`)
-    }
-  }
-
-  const publicMethods = get(config, 'facets.publicMethods')
-  if (publicMethods === undefined || typeof publicMethods !== 'boolean') {
-    throw new Error(`Invalid value for facets.publicMethods: ${publicMethods}`)
-  } 
-
-  const include = get(config, 'facets.include')
-  if (!Array.isArray(include) || include.length === 0) {
-    throw new Error(`Invalid value for facets.include: ${include}`)
-  }
+  ensureExists(config, 'solc.version')
+  ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0)
+  ensureArray(config, 'paths.facets')
+  ensureExists(config, 'paths.generated')
+  ensureExists(config, 'paths.diamondLib')
+  ensureBool(config, 'facets.publicMethods')
 }
 
-const throwMissingError = (key: string) => {
-  throw new Error(`Missing required config key: ${key}`)
-}

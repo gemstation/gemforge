@@ -2,10 +2,9 @@ import { glob } from 'glob'
 import path from 'node:path'
 import { ethers } from 'ethers'
 import { error, trace } from './log.js'
-import { log } from 'node:console'
 import { Context } from './context.js'
 import parser from '@solidity-parser/parser'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import type {
   ContractDefinition,
   FunctionDefinition,
@@ -25,11 +24,17 @@ export const loadJson = (file: string | URL): object => {
   }
 }
 
+export const fileExists = (file: string) => {
+  trace(`Checking if file exists: ${file}`)
+  return existsSync(file)
+}
+
 export const writeTemplate = (file: string, dst: string, replacements: Record<string, string> = {}) => {
   let str = readFileSync(new URL(`../../templates/${file}`, import.meta.url), 'utf-8')
   Object.keys(replacements).forEach(key => {
     str = str.replaceAll(key, replacements[key])
   })
+  trace(`Writing template to ${dst}`)
   writeFileSync(dst, str, 'utf-8')
 }
 
@@ -44,21 +49,19 @@ export interface FacetDefinition {
 }
 
 export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
-  const SRC_DIR = path.join(ctx.folder, 'src')
-
   if (ctx.config.facets.publicMethods) {
     trace('Including public methods in facet cuts')
   }
 
   // load facets
-  const facetFiles = glob.sync(ctx.config.facets.include, { cwd: SRC_DIR })
+  const facetFiles = glob.sync(ctx.config.paths.facets, { cwd: ctx.folder })
 
   const ret: FacetDefinition[] = []
   const mapFunctionToFacet: Record<string, boolean> = {}
 
   // get definitions
   facetFiles.forEach(file => {
-    const ast = parser.parse(readFileSync(path.join(SRC_DIR, file), 'utf-8'), {
+    const ast = parser.parse(readFileSync(path.join(ctx.folder, file), 'utf-8'), {
       loc: true,
       tolerant: true,
     })

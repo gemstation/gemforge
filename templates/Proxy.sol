@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: __SOLC_SPDX__
 pragma solidity >=__SOLC_VERSION__;
 
-import { Diamond } from 'lib/diamond-2-hardhat/contracts/Diamond.sol';
-import { LibDiamond } from 'lib/diamond-2-hardhat/contracts/libraries/LibDiamond.sol';
-import { DiamondCutFacet } from 'lib/diamond-2-hardhat/contracts/facets/DiamondCutFacet.sol';
-import { DiamondLoupeFacet } from 'lib/diamond-2-hardhat/contracts/facets/DiamondLoupeFacet.sol';
-import { OwnershipFacet } from 'lib/diamond-2-hardhat/contracts/facets/OwnershipFacet.sol';
-import { IDiamondCut } from 'lib/diamond-2-hardhat/contracts/interfaces/IDiamondCut.sol';
-import { IDiamondLoupe } from 'lib/diamond-2-hardhat/contracts/interfaces/IDiamondLoupe.sol';
-import { IERC165 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC165.sol';
-import { IERC173 } from 'lib/diamond-2-hardhat/contracts/interfaces/IERC173.sol';
+import { Diamond } from '__LIB_DIAMOND_PATH__/contracts/Diamond.sol';
+import { LibDiamond } from '__LIB_DIAMOND_PATH__/contracts/libraries/LibDiamond.sol';
+import { DiamondCutFacet } from '__LIB_DIAMOND_PATH__/contracts/facets/DiamondCutFacet.sol';
+import { DiamondLoupeFacet } from '__LIB_DIAMOND_PATH__/contracts/facets/DiamondLoupeFacet.sol';
+import { OwnershipFacet } from '__LIB_DIAMOND_PATH__/contracts/facets/OwnershipFacet.sol';
+import { IDiamondCut } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondCut.sol';
+import { IDiamondLoupe } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondLoupe.sol';
+import { IERC165 } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IERC165.sol';
+import { IERC173 } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IERC173.sol';
 
 contract Proxy is Diamond {
   constructor(address _contractOwner) payable Diamond(_contractOwner, address(new DiamondCutFacet())) {
