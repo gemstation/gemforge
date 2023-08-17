@@ -1,8 +1,8 @@
-import { info, trace } from '../shared/log.js'
 import { getContext } from '../shared/context.js'
-import { getFacetsAndFunctions, writeFile, writeTemplate } from '../shared/fs.js'
+import { fileExists, getFacetsAndFunctions, writeFile, writeTemplate } from '../shared/fs.js'
 import path from 'node:path'
-import { createCommand } from './common.js'
+import { createCommand, logSuccess } from './common.js'
+import { error, info, trace } from '../shared/log.js'
 
 export const command = () =>
   createCommand('build', 'Build a project.')
@@ -13,6 +13,11 @@ export const command = () =>
 
       const generatedSolidityPath = path.resolve(ctx.folder, ctx.config.paths.output.solidity)
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.output.support)
+
+      info('Checking diamond folder lib path...')
+      if (!fileExists(path.join(ctx.folder, ctx.config.paths.diamondLib, 'contracts/Diamond.sol'))) {
+        error(`Diamond folder lib path does not contain Diamond contracts: ${ctx.config.paths.diamondLib}`)
+      }
 
       info('Creating folder for solidity output...')
       await $$`mkdir -p ${generatedSolidityPath}`
@@ -62,6 +67,8 @@ export const command = () =>
       // run forge build
       info('Running forge build...')
       await $$`forge build`
+
+      logSuccess()
     })
 
   

@@ -1,6 +1,6 @@
 import { ExecaReturnBase, execaCommandSync } from 'execa'
 import path from 'node:path'
-import { error, trace } from './log.js'
+import { disableLogging, enableVerboseLogging, error, info, trace } from './log.js'
 import { GemforgeConfig, sanitizeConfig } from './config.js'
 
 export interface Context {
@@ -13,6 +13,14 @@ export const getContext = async (args: Record<string, any>): Promise<Context> =>
   let { folder, config } = args
 
   const context: Partial<Context> = {}
+
+  if (args.verbose) {
+    enableVerboseLogging()
+  }
+
+  if (args.quiet) {
+    disableLogging()
+  }
 
   if (folder != '.') {
     context.folder = path.resolve(process.cwd(), folder)

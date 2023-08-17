@@ -18,9 +18,10 @@ import type {
 
 export const loadJson = (file: string | URL): object => {
   try {
+    trace(`Loading JSON file: ${file}`)
     return JSON.parse(readFileSync(file).toString('utf-8'))
   } catch (err: any) {
-    throw new Error(`Failed to load JSON file ${file}: ${err.message}`)
+    return error(`Failed to load JSON file ${file}: ${err.message}`)
   }
 }
 

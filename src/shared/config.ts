@@ -41,10 +41,10 @@ const throwError = (msg: string, key: string, val?: any) => {
   throw new Error(`${msg} for [${key}]${typeof val !== undefined ? `: ${val}` : ''}`)
 }
 
-const ensure = (config: GemforgeConfig, key: string, isValid: (v: any) => boolean) => {
+const ensure = (config: GemforgeConfig, key: string, isValid: (v: any) => boolean, msg: string = 'Invalid value') => {
   const val = get(config, key)
   if (!isValid(val)) {
-    throwError(`Invalid value`, key, val)
+    throwError(msg, key, val)
   }
 }
 
@@ -72,7 +72,7 @@ const ensureBool = (config: GemforgeConfig, key: string) => {
 export const sanitizeConfig = (config: GemforgeConfig) => {
   // solc
   ensureExists(config, 'solc.version')
-  ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0)
+  ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0, 'Invalid SPDX license ID')
 
   // paths
   ensureArray(config, 'paths.facets')
@@ -90,7 +90,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     throwError(`No value found`, 'wallets')
   }
   walletNames.forEach(name => {
-    ensure(config, `wallets.${name}.type`, (v: any) => ['mnemonic'].indexOf(v) >= 0)
+    ensure(config, `wallets.${name}.type`, (v: any) => ['mnemonic'].indexOf(v) >= 0, 'Invalid wallet type')
 
     ensureExists(config, `wallets.${name}.config`)
 
@@ -98,7 +98,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     switch (type) {
       case 'mnemonic':
         ensureExists(config, `wallets.${name}.config.words`)
-        ensure(config, `wallets.${name}.config.index`, (v: any) => typeof v === 'number' && v >= 0)
+        ensure(config, `wallets.${name}.config.index`, (v: any) => typeof v === 'number' && v >= 0, 'Invalid number')
     }
   })
 
@@ -110,7 +110,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   }
   networkNames.forEach(name => {
     ensureExists(config, `networks.${name}.rpcUrl`)
-    ensure(config, `networks.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0)
+    ensure(config, `networks.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0, 'Invalid wallet')
   })
 }
 

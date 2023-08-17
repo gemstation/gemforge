@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { info } from '../shared/log.js'
 
 export interface CreateCommandOptions {
   skipConfigOption?: boolean
@@ -7,6 +8,8 @@ export interface CreateCommandOptions {
 export const createCommand = (name: string, desc: string, opts?: CreateCommandOptions) => {
   let c = new Command(name)
     .description(desc)
+    .option('-v, --verbose', 'verbose logging output')
+    .option('-q, --quiet', 'disable logging output')
     .option('-f, --folder <folder>', 'folder to run the build in', '.')
 
   if (!opts?.skipConfigOption) {
@@ -15,3 +18,9 @@ export const createCommand = (name: string, desc: string, opts?: CreateCommandOp
 
   return c
 }
+
+
+export const logSuccess = () => {
+  info('All done.')
+}
+
