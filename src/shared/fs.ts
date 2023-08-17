@@ -1,3 +1,5 @@
+import { execaCommandSync } from 'execa'
+import { tmpNameSync } from 'tmp'
 import { glob } from 'glob'
 import path from 'node:path'
 import { ethers } from 'ethers'
@@ -15,6 +17,36 @@ import type {
   UserDefinedTypeName,
   NumberLiteral,
 } from '@solidity-parser/parser/dist/src/ast-types.d.ts'
+
+export const $$ = async (strings: TemplateStringsArray, ...values: any[]) => {
+  const cmd = String.raw({ raw: strings }, ...values)
+  trace(`> ${cmd}`)
+  return execaCommandSync(cmd, {
+    stdio: 'inherit',
+  })
+}
+
+
+export const ensureGeneratedFolderExists = async (folderPath: string) => {
+  await $$`mkdir -p ${folderPath}`
+  writeFile(`${folderPath}/.gitignore`, `*.json\n*.sol\n*.log`)
+}
+
+
+export const captureErrorAndExit = (err: any, msg: string) => {
+  const logFilePath = tmpNameSync({
+    prefix: 'gemforge-error-',
+    postfix: '.log',
+   }) as string
+
+   writeFileSync(logFilePath, err.stack, {
+    encoding: 'utf-8',
+    flag: 'w'
+  })
+
+  error(`${msg}. A full log of the error has been written to ${logFilePath}`)
+}
+
 
 export const loadJson = (file: string | URL): object => {
   try {
@@ -66,7 +98,7 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   }
 
   // load facets
-  const facetFiles = glob.sync(ctx.config.paths.facets, { cwd: ctx.folder })
+  const facetFiles = glob.sync(ctx.config.paths.src.facets, { cwd: ctx.folder })
 
   const ret: FacetDefinition[] = []
   const contractNames: Record<string, boolean> = {}

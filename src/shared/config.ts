@@ -3,8 +3,13 @@ import get from 'lodash.get'
 import spdxLicenseIds from 'spdx-license-ids' assert { type: "json" }
 
 export interface MnemonicWalletConfig {
-  mnemonic: string,
+  words: string,
   index: number,
+}
+
+export type WalletConfig = {
+  type: 'mnemonic',
+  config: MnemonicWalletConfig,
 }
 
 export interface GemforgeConfig {
@@ -13,21 +18,23 @@ export interface GemforgeConfig {
     version: string
   },
   paths: {
-    facets: string[],
-    output: {
+    src: {
+      facets: string[],
+    },
+    artifacts: string,
+    generated: {
       solidity: string,
       support: string,
     }
-    diamondLib: string,
+    lib: {
+      diamond: string,
+    }
   },
   facets: {
     publicMethods: boolean,
   },
   wallets: {
-    [name: string]: {
-      type: string,
-      config: MnemonicWalletConfig,
-    }
+    [name: string]: WalletConfig,
   },
   networks: {
     [name: string]: {
@@ -75,10 +82,11 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0, 'Invalid SPDX license ID')
 
   // paths
-  ensureArray(config, 'paths.facets')
-  ensureExists(config, 'paths.output.solidity')
-  ensureExists(config, 'paths.output.support')
-  ensureExists(config, 'paths.diamondLib')
+  ensureExists(config, 'paths.artifacts')
+  ensureArray(config, 'paths.src.facets')
+  ensureExists(config, 'paths.generated.solidity')
+  ensureExists(config, 'paths.generated.support')
+  ensureExists(config, 'paths.lib.diamond')
 
   // facets
   ensureBool(config, 'facets.publicMethods')

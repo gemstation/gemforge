@@ -6,20 +6,28 @@ module.exports = {
     version: '0.8.21',
   },
   paths: {
-    // file patterns to include in facet parsing
-    facets: [
-      // include all .sol files in the facets directory ending "Facet"
-      'src/facets/*Facet.sol'
-    ],
-    // output folders
-    output: {
+    // contract built artifacts folder
+    artifacts: 'out',
+    // source files
+    src: {
+      // file patterns to include in facet parsing
+      facets: [
+        // include all .sol files in the facets directory ending "Facet"
+        'src/facets/*Facet.sol'
+      ],
+    },
+    // folders for gemforge-generated files
+    generated: {
       // output folder for generated .sol files
       solidity: 'src/generated', 
       // output folder for support scripts and files
       support: '.gemforge',
     },
-    // diamond library source code
-    diamondLib: 'lib/diamond-2-hardhat',
+    // library source code
+    lib: {
+      // diamond library
+      diamond: 'lib/diamond-2-hardhat',
+    }
   },
   facets: {
     // Whether to include public methods when generating facet cut instructions. Default is to only include external methods.
