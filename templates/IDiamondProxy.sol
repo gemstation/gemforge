@@ -6,7 +6,7 @@ import { IDiamondLoupe } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamon
 import { IERC173 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC173.sol";
 import { IERC165 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC165.sol";
 
-interface IProxy is
+interface IDiamondProxy is
     IERC173,
     IERC165,
     IDiamondCut,

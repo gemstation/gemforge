@@ -11,13 +11,43 @@ module.exports = {
       // include all .sol files in the facets directory ending "Facet"
       'src/facets/*Facet.sol'
     ],
-    // output folder for generated files and scripts
-    generated: 'src/generated',
+    // output folders
+    output: {
+      // output folder for generated .sol files
+      solidity: 'src/generated', 
+      // output folder for support scripts and files
+      support: '.gemforge',
+    },
     // diamond library source code
     diamondLib: 'lib/diamond-2-hardhat',
   },
   facets: {
     // Whether to include public methods when generating facet cut instructions. Default is to only include external methods.
     publicMethods: false,
+  },
+  // Wallets to use for deployment
+  wallets: {
+    // Wallet named "wallet1"
+    wallet1: {
+      // Wallet type - mnemonic
+      type: 'mnemonic',
+      // Wallet config
+      config: {
+        // Mnemonic phrase
+        words: 'test test test test test test test test test test test junk',
+        // 0-based index of the account to use
+        index: 0,
+      }
+    },
+  },
+  // Networks to deploy to
+  networks: {
+    // Local network
+    local: {
+      // RPC endpiont URL
+      rpcUrl: 'http://localhost:8545',
+      // Wallet to use for deployment
+      wallet: 'wallet1',
+    }
   }
 }

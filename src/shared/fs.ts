@@ -35,12 +35,23 @@ export const writeTemplate = (file: string, dst: string, replacements: Record<st
     str = str.replaceAll(key, replacements[key])
   })
   trace(`Writing template to ${dst}`)
-  writeFileSync(dst, str, 'utf-8')
+  writeFileSync(dst, str, {
+    encoding: 'utf-8',
+    flag: 'w'
+  })
+}
+
+export const writeFile = (dst: string, content: string) => {
+  trace(`Writing ${dst}`)
+  writeFileSync(dst, content, {
+    encoding: 'utf-8',
+    flag: 'w'
+  })
 }
 
 export interface FacetDefinition {
   file: string,
-  name: string,
+  contractName: string,
   functions: {
     name: string,
     hash: string,
@@ -57,7 +68,8 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   const facetFiles = glob.sync(ctx.config.paths.facets, { cwd: ctx.folder })
 
   const ret: FacetDefinition[] = []
-  const mapFunctionToFacet: Record<string, boolean> = {}
+  const contractNames: Record<string, boolean> = {}
+  const functionSigs: Record<string, boolean> = {}
 
   // get definitions
   facetFiles.forEach(file => {
@@ -69,6 +81,12 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
     const contractDefinitions = ast.children.filter(node => node.type === 'ContractDefinition') as ContractDefinition[]
 
     contractDefinitions.forEach(contract => {
+      if (contractNames[contract.name]) {
+        error(`Duplicate contract name found in ${file}: ${contract.name}`)
+      } else {
+        contractNames[contract.name] = true
+      }
+
       let functionDefinitions = contract.subNodes.filter(
         node => node.type === 'FunctionDefinition'
       ) as FunctionDefinition[]
@@ -96,10 +114,10 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
           hash: getFunctionHash(node.name!, node.parameters),
         }
 
-        if (mapFunctionToFacet[r.hash]) {
+        if (functionSigs[r.hash]) {
           error(`Duplicate function found in ${file}: ${signature}`)
         } else {
-          mapFunctionToFacet[r.hash] = true
+          functionSigs[r.hash] = true
         }
 
         return r
@@ -107,7 +125,7 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
 
       ret.push({
         file,
-        name: path.basename(file, '.sol'),
+        contractName: contract.name,
         functions,
       })
     })

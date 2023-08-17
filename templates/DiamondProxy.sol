@@ -11,7 +11,7 @@ import { IDiamondLoupe } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamon
 import { IERC165 } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IERC165.sol';
 import { IERC173 } from '__LIB_DIAMOND_PATH__/contracts/interfaces/IERC173.sol';
 
-contract Proxy is Diamond {
+contract DiamondProxy is Diamond {
   constructor(address _contractOwner) payable Diamond(_contractOwner, address(new DiamondCutFacet())) {
     // add core facets
     _initCoreFacets();
