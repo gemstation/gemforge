@@ -44,18 +44,26 @@ export const setupWallet = (walletConfig: WalletConfig, provider: Provider) => {
 }
 
 export interface ContractArtifact {
+  name: string,
   abi: Fragment[],
-  bytecode: string
+  bytecode: string,
+  deployedBytecode: string,
 }
 
 export const loadContractArtifact = (name: string, basePath: string) => {
   trace(`Loading contract artifact: ${name} ...`)
-  const { abi, bytecode: { object: bytecode } } = loadJson(`${basePath}/${name}.sol/${name}.json`) as any
-  return { abi, bytecode } as ContractArtifact
+  
+  const { 
+    abi, 
+    bytecode: { object: bytecode },
+    deployedBytecode: { object: deployedBytecode },
+  } = loadJson(`${basePath}/${name}.sol/${name}.json`) as any
+
+  return { name, abi, bytecode, deployedBytecode } as ContractArtifact
 }
 
 export interface OnChainContract {
-  name: string
+  artifact: ContractArtifact
   address: string
   contract: Contract
 }
@@ -66,7 +74,21 @@ export const getContractAt = async (name: string, artifactsFolder: string, signe
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
 
     return  {
-      name,
+      artifact,
+      address,
+      contract: factory.attach(address) as Contract,
+    }
+   } catch (err: any) {
+    return error(`Failed to load ${name} at address ${address}: ${err.message}}`)
+   }
+}
+
+export const getContractAtUsingArtifact = async (artifact: ContractArtifact, signer: Signer, address: string): Promise<OnChainContract> => {
+  try {
+    const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
+
+    return  {
+      artifact,
       address,
       contract: factory.attach(address) as Contract,
     }
@@ -84,7 +106,7 @@ export const deployContract = async (name: string, artifactsFolder: string, sign
     const contract = await tx.waitForDeployment() as Contract
 
     return  {
-      name,
+      artifact,
       address: await contract.getAddress(),
       contract,
     }
@@ -95,7 +117,7 @@ export const deployContract = async (name: string, artifactsFolder: string, sign
 
 
 export const getContractValue = async (contract: OnChainContract, method: string, args: any[]): Promise<any> => {  
-  const label = `${method}() on contract ${contract.name} deployed at ${contract.address} with args (${args.join(', ')})`
+  const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
     trace(`Calling ${label} ...`)
@@ -108,7 +130,7 @@ export const getContractValue = async (contract: OnChainContract, method: string
 
 
 export const execContractMethod = async (contract: OnChainContract, method: string, args: any[]): Promise<TransactionReceipt> => {  
-  const label = `${method}() on contract ${contract.name} deployed at ${contract.address} with args (${args.join(', ')})`
+  const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
     trace(`Executing ${label} ...`)

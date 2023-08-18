@@ -68,30 +68,35 @@ export const command = () =>
       info('Loading facet artifacts...')
       const facets = loadJson(`${generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
       const facetContractNames = Object.keys(facets)
-      info(`   ${facetContractNames.length} facet(s) found.`)
+      info(`   ${facetContractNames.length} facets found.`)
       const facetArtifacts = facetContractNames.reduce((m, name) => {
         m[name] = loadContractArtifact(name, artifactsFolder)
         return m
       }, {} as Record<string, ContractArtifact>)
 
-      info('Resolving what facets need to be deployed ...')
-      const changes = await resolveUpgrade(facets, facetArtifacts, proxyInterface)
-      info(`   ${changes.facetsToDeploy.length} facet(s) need to be deployed.`)
-      info(`   ${changes.namedCuts.length} facet cut(s) need to be applied.`)
+      info('Resolving what chaned need to be applied ...')
+      const changes = await resolveUpgrade(facetArtifacts, proxyInterface, signer)
+      info(`   ${changes.facetsToDeploy.length} facets need to be deployed.`)
+      info(`   ${changes.namedCuts.length} facet cuts need to be applied.`)
 
       if (changes.namedCuts.length === 0) {
         info('No changes need to be applied.')
       } else {
-        info('Deploying facets...')
         const facetContracts: Record<string, OnChainContract> = {}
-        await Promise.all(changes.facetsToDeploy.map(async name => {
-          info(`   Deploying ${name} ...`)
-          const contract = await deployContract(name, artifactsFolder, signer)
-          facetContracts[name] = contract
-          info(`   Deployed ${name} at: ${await contract.address}`)
-        }))
 
-        info('Register facets with the diamond proxy...')
+        if (changes.facetsToDeploy.length) {
+          info('Deploying facets...')
+          await Promise.all(changes.facetsToDeploy.map(async name => {
+            info(`   Deploying ${name} ...`)
+            const contract = await deployContract(name, artifactsFolder, signer)
+            facetContracts[name] = contract
+            info(`   Deployed ${name} at: ${await contract.address}`)
+          }))
+        } else {
+          info('No new facets need to be deployed.')
+        }
+
+        info('Upgrading the diamond proxy...')
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
         await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
       }
