@@ -2,10 +2,10 @@ import { ethers } from 'ethers'
 
 import { error, info, trace } from '../shared/log.js'
 import { getContext } from '../shared/context.js'
-import { FacetDefinition, loadJson } from '../shared/fs.js'
+import { FacetDefinition, loadJson, updateDeployedAddresses } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
-import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, loadContractArtifact, setupWallet } from '../shared/chain.js'
+import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, loadContractArtifact, setupNetwork, setupWallet } from '../shared/chain.js'
 import { Contract } from 'ethers'
 import { getFacetCuts } from '../shared/diamond.js'
 
@@ -16,21 +16,21 @@ export const command = () =>
       const ctx = await getContext(args)
 
       info(`Selected network: ${networkArg}`)
-      const network = ctx.config.networks[networkArg]
-      if (!network) {
+      const n = ctx.config.networks[networkArg]
+      if (!n) {
         error(`Network not found in config: ${networkArg}`)
       }
-      info('Checking network...')
-      const provider = new ethers.JsonRpcProvider(network.rpcUrl)
-      await provider.getNetwork()
+      info('Setting up network connection...')
+      const network = await setupNetwork(n)
+      info(`   Network chainId: ${network.chainId}`)
 
-      info(`Setting up wallet "${network.wallet}" ...`)
-      const walletConfig = ctx.config.wallets[network.wallet]
-      const wallet = setupWallet(walletConfig, provider)!
+      info(`Setting up wallet "${network.config.wallet}" ...`)
+      const walletConfig = ctx.config.wallets[network.config.wallet]
+      const wallet = setupWallet(walletConfig, network.provider)!
       const walletAddress = await wallet.getAddress()
       info(`Wallet deployer address: ${walletAddress}`)
 
-      const signer = wallet.connect(provider)
+      const signer = wallet.connect(network.provider)
 
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
 
@@ -57,6 +57,10 @@ export const command = () =>
       const proxyInterface = await getContractAt('IDiamondProxy', artifactsFolder, signer, diamond.address)
       const cuts = await getFacetCuts(facets, facetContracts)
       await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
+
+      info('Updating gemforge.deployments.json')
+      const deployedAddressesPath = path.resolve(ctx.folder, 'gemforge.deployments.json')
+      updateDeployedAddresses(deployedAddressesPath, network, diamond)
 
       logSuccess()
     })

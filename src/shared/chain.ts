@@ -1,14 +1,29 @@
 import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, WalletConfig } from "./config.js";
+import { MnemonicWalletConfig, NetworkConfig, WalletConfig } from "./config.js";
 import { error, trace } from "./log.js";
 import { Provider } from "ethers";
-import { captureErrorAndExit, FacetDefinition, loadJson } from "./fs.js";
-import { Interface } from "ethers";
-import { BaseContract } from "ethers";
-import { Context } from "./context.js";
+import { loadJson } from "./fs.js";
 import { TransactionReceipt } from "ethers";
 import { Fragment } from "ethers";
-import { ContractFactory } from "ethers";
+
+
+export interface Network {
+  config: NetworkConfig,
+  provider: Provider,
+  chainId: number,
+}
+
+export const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
+  const provider = new ethers.JsonRpcProvider(n.rpcUrl)
+  const chainId = await provider.send('eth_chainId', [])
+
+  return {
+    config: n,
+    provider,
+    chainId: ethers.toNumber(chainId),
+  }
+}
+
 
 export const setupMnemonicWallet = (config: MnemonicWalletConfig): Signer => {
   return ethers.HDNodeWallet.fromMnemonic(

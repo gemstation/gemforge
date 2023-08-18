@@ -12,6 +12,11 @@ export type WalletConfig = {
   config: MnemonicWalletConfig,
 }
 
+export interface NetworkConfig {
+  rpcUrl: string,
+  wallet: string,
+}
+
 export interface GemforgeConfig {
   solc: {
     license: string
@@ -37,10 +42,7 @@ export interface GemforgeConfig {
     [name: string]: WalletConfig,
   },
   networks: {
-    [name: string]: {
-      rpcUrl: string,
-      wallet: string,
-    }
+    [name: string]: NetworkConfig,
   }
 }
 
