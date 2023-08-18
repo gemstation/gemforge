@@ -1,9 +1,6 @@
-import { Contract, Interface, Provider } from "ethers"
-import { FacetDefinition } from "./fs.js"
-import { ContractArtifact, OnChainContract, getContractAt, getContractAtUsingArtifact, getContractValue } from "./chain.js"
-import { error, trace } from "./log.js"
-import { FunctionFragment } from "ethers"
-import { Signer } from "ethers"
+import { Signer, FunctionFragment, Interface } from "ethers"
+import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, getContractValue } from "./chain.js"
+import { trace } from "./log.js"
 
 interface FunctionSelector {
   name: string,
@@ -115,15 +112,11 @@ export const resolveUpgrade = async (
     }
   }
 
-  // resolve removals
-  // TODO: how do we stop it removing functions from base facets (loupe, cut, etc)???
-  // for (let f in liveFunctions) {
-  //   if (!newFunctions[f]) {
-  //     trace(`[Remove] method ${f} currently in facet ${liveFunctions[f]}`)
-  //     todo.remove[liveFunctions[f]] = todo.remove[liveFunctions[f]] || []
-  //     todo.remove[liveFunctions[f]].push(f)
-  //   }
-  // }
+  /*
+  TODO: removals
+
+  We need to make sure we don't remove loupe, cut and other required methods.
+  */
 
   const namedCuts: NamedFacetCut[] = []
   const _createNamedCuts = (src: Record<string, string[]>, action: FacetCutAction) => {
