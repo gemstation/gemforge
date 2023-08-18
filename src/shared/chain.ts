@@ -94,8 +94,21 @@ export const deployContract = async (name: string, artifactsFolder: string, sign
 }
 
 
+export const getContractValue = async (contract: OnChainContract, method: string, args: any[]): Promise<any> => {  
+  const label = `${method}() on contract ${contract.name} deployed at ${contract.address} with args (${args.join(', ')})`
+
+  try {
+    trace(`Calling ${label} ...`)
+    return (await contract.contract[method](...args)) as any
+  } catch (err: any) {
+    return error(`Failed to call ${label}: ${err.message}`)
+  }
+}
+
+
+
 export const execContractMethod = async (contract: OnChainContract, method: string, args: any[]): Promise<TransactionReceipt> => {  
-  const label = `method ${method} on contract ${contract.name} deployed at ${contract.address} with args (${args.join(', ')})`
+  const label = `${method}() on contract ${contract.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
     trace(`Executing ${label} ...`)

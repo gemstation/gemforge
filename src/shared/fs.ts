@@ -94,8 +94,29 @@ export interface DeployedAddresses {
   }
 }
 
-export const updateDeployedAddresses = (dst: string, network: Network, diamond: OnChainContract) => {
-  trace(`Writing diamond proxy address ${diamond.address} for chain id ${network.chainId} to ${dst} ...`)
+export const readDeployedAddress = (dst: string, network: Network): string | undefined =>  {
+  trace(`Reading diamond proxy address for chain id ${network.chainId} from ${dst} ...`)
+
+  const chainId = String(network.chainId)
+  let obj: DeployedAddresses = {}
+
+  try {
+    obj = _loadJson(dst) as DeployedAddresses
+    const addr = get(obj, ['DiamondProxy', chainId])
+    if (addr) {
+      return addr
+    } else {
+      trace(`Diamond proxy address for chain id ${chainId} does not exist in ${dst}`)
+      return undefined
+    }
+  } catch (err: any) {
+    trace(`Failed to load ${dst}: ${err.message}`)
+    return undefined
+  }
+}
+
+export const updateDeployedAddress = (dst: string, network: Network, address: string) => {
+  trace(`Writing diamond proxy address ${address} for chain id ${network.chainId} to ${dst} ...`)
 
   const chainId = String(network.chainId)
   let obj: DeployedAddresses = {}
@@ -110,7 +131,7 @@ export const updateDeployedAddresses = (dst: string, network: Network, diamond: 
   }
 
   obj['DiamondProxy'] = obj['DiamondProxy'] || {}
-  obj['DiamondProxy'][chainId] = diamond.address
+  obj['DiamondProxy'][chainId] = address
 
   writeFile(dst, JSON.stringify(obj, null, 2))
 

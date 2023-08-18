@@ -1,17 +1,17 @@
 import { ethers } from 'ethers'
-
-import { error, info, trace } from '../shared/log.js'
+import { error, info } from '../shared/log.js'
 import { getContext } from '../shared/context.js'
-import { FacetDefinition, loadJson, updateDeployedAddresses } from '../shared/fs.js'
+import { FacetDefinition, loadJson, readDeployedAddress, updateDeployedAddress } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
-import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, loadContractArtifact, setupNetwork, setupWallet } from '../shared/chain.js'
-import { Contract } from 'ethers'
-import { getFacetCuts } from '../shared/diamond.js'
+import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet } from '../shared/chain.js'
+import { getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
+import { Signer } from 'ethers'
 
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a network.')
     .argument('[network]', 'network to deploy to', 'local')
+    .option('-n, --new', 'do a fresh deployment, ignore any existing one')
     .action(async (networkArg, args) => {
       const ctx = await getContext(args)
 
@@ -33,36 +33,79 @@ export const command = () =>
       const signer = wallet.connect(network.provider)
 
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
-
-      info('Loading facets.json...')
-      const facets = loadJson(`${generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
-      const facetContractNames = Object.keys(facets)
-
+      const deployedAddressesJsonPath = path.resolve(ctx.folder, 'gemforge.deployments.json')
       const artifactsFolder = path.resolve(ctx.folder, ctx.config.paths.artifacts)
 
-      info('Deploying facets...')
-      const facetContracts: Record<string, OnChainContract> = {}
-      await Promise.all(facetContractNames.map(async name => {
-        info(`   Deploying ${name} ...`)
-        const contract = await deployContract(name, artifactsFolder, signer)
-        facetContracts[name] = contract
-        info(`   Deployed ${name} at: ${await contract.address}`)
-      }))
+      let proxyInterface: OnChainContract
 
-      info('Deploying diamond...')
-      const diamond = await deployContract('DiamondProxy', artifactsFolder, signer, walletAddress)
-      info(`   DiamondProxy deployed at: ${diamond.address}`)
+      if (args.new) {
+        info('New deployment requested. Skipping any existing deployment...')
+        proxyInterface = await deployNewDiamond(artifactsFolder, signer)
+      } else {
+        info(`Load existing deployment ...`)
 
-      info('Register facets with the diamond...')
-      const proxyInterface = await getContractAt('IDiamondProxy', artifactsFolder, signer, diamond.address)
-      const cuts = await getFacetCuts(facets, facetContracts)
-      await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
+        const existing = readDeployedAddress(deployedAddressesJsonPath, network)
+        if (existing) {
+          info(`   Existing deployment found at: ${existing}`)
+          info(`Checking if existing deployment is still valid...`)
+          proxyInterface = await getContractAt('IDiamondProxy', artifactsFolder, signer, existing)
 
-      info('Updating gemforge.deployments.json')
-      const deployedAddressesPath = path.resolve(ctx.folder, 'gemforge.deployments.json')
-      updateDeployedAddresses(deployedAddressesPath, network, diamond)
+          const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'])
+          if (!isDiamond) {
+            error(`Existing deployment is not a diamond: supportsInterface() error`)
+          }
+
+          const facets = await getContractValue(proxyInterface, 'facets', [])
+          if (!facets) {
+          error(`Existing deployment is not a diamond: facets() error`)
+          }
+        } else {
+          info(`   No existing deployment found.`)
+          proxyInterface = await deployNewDiamond(artifactsFolder, signer)
+        }
+      }
+
+      info('Loading facet artifacts...')
+      const facets = loadJson(`${generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
+      const facetContractNames = Object.keys(facets)
+      info(`   ${facetContractNames.length} facet(s) found.`)
+      const facetArtifacts = facetContractNames.reduce((m, name) => {
+        m[name] = loadContractArtifact(name, artifactsFolder)
+        return m
+      }, {} as Record<string, ContractArtifact>)
+
+      info('Resolving what facets need to be deployed ...')
+      const changes = await resolveUpgrade(facets, facetArtifacts, proxyInterface)
+      info(`   ${changes.facetsToDeploy.length} facet(s) need to be deployed.`)
+      info(`   ${changes.namedCuts.length} facet cut(s) need to be applied.`)
+
+      if (changes.namedCuts.length === 0) {
+        info('No changes need to be applied.')
+      } else {
+        info('Deploying facets...')
+        const facetContracts: Record<string, OnChainContract> = {}
+        await Promise.all(changes.facetsToDeploy.map(async name => {
+          info(`   Deploying ${name} ...`)
+          const contract = await deployContract(name, artifactsFolder, signer)
+          facetContracts[name] = contract
+          info(`   Deployed ${name} at: ${await contract.address}`)
+        }))
+
+        info('Register facets with the diamond proxy...')
+        const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
+        await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
+      }
+
+      info(`Saving deployment info...`)
+      updateDeployedAddress(deployedAddressesJsonPath, network, proxyInterface.address)
 
       logSuccess()
     })
 
   
+  const deployNewDiamond = async (artifactsFolder: string, signer: Signer) => {
+    info(`Deploying diamond...`)
+    const diamond = await deployContract('DiamondProxy', artifactsFolder, signer, await signer.getAddress())
+    info(`   DiamondProxy deployed at: ${diamond.address}`)
+    return await getContractAt('IDiamondProxy', artifactsFolder, signer, diamond.address)
+  }

@@ -31,11 +31,12 @@ contract DiamondProxy is Diamond {
     IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
     address _diamondLoupeFacet = address(new DiamondLoupeFacet());
-    bytes4[] memory f1 = new bytes4[](4);
+    bytes4[] memory f1 = new bytes4[](5);
     f1[0] = IDiamondLoupe.facets.selector;
     f1[1] = IDiamondLoupe.facetFunctionSelectors.selector;
     f1[2] = IDiamondLoupe.facetAddresses.selector;
     f1[3] = IDiamondLoupe.facetAddress.selector;
+    f1[4] = IERC165.supportsInterface.selector;
     cut[0] = IDiamondCut.FacetCut({
       facetAddress: _diamondLoupeFacet,
       action: IDiamondCut.FacetCutAction.Add,
