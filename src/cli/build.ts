@@ -28,9 +28,9 @@ export const command = () =>
       })
 
       const facets = getFacetsAndFunctions(ctx)
-      trace(`${facets.length} facet found`)
+      trace(`${facets.length} facets found`)
       facets.forEach(f => {
-        trace(`  ${f.contractName} => ${f.functions.length} function`)
+        trace(`  ${f.contractName} => ${f.functions.length} functions`)
       })
       
       info('Generating IDiamondProxy.sol...')
