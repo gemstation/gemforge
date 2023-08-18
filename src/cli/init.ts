@@ -7,10 +7,17 @@ export const command = () =>
   createCommand('init', 'Initialize a new project, generating necessary config files.', { skipConfigOption: true })
     .option('-n, --name <name>', 'name to use for the config file', 'gemforge.config.cjs')
     .option('-o, --overwrite', 'overwrite config file if it already exists')
+    .option('--hardhat', 'generate config file for a hardhat project')
     .action(async (args) => {
       const ctx = await getContext(args)
 
       const configFilePath = `${ctx.folder}/${args.name}`
+
+      if (args.hardhat) {
+        info(`Initializing for hardhat ...`)
+      } else {
+        info(`Initializing for foundry ...`)
+      }
 
       if (fileExists(configFilePath) && !args.overwrite) {
         // if config file already exists
@@ -18,7 +25,9 @@ export const command = () =>
       } else {
         // write config file
         info(`Writing config file...`)
-        writeTemplate('gemforge.config.cjs', configFilePath)
+        writeTemplate('gemforge.config.cjs', configFilePath, {
+          __BUILD_COMAND__: args.hardhat ? 'npx hardhat compile' : 'forge build',
+        })
         info(`Wrote config file: ${configFilePath}`)
 
         info(`Please edit the config file to your liking!`)

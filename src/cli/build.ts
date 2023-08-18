@@ -54,9 +54,9 @@ export const command = () =>
       }, {} as Record<string, FacetDefinition>)
       writeFile(`${generatedSupportPath}/facets.json`, JSON.stringify(obj, null, 2))
 
-      // run forge build
-      info('Running forge build...')
-      await $$`forge build`
+      // run build
+      info('Running build...')
+      await $$`${ctx.config.commands.build}`
 
       logSuccess()
     })

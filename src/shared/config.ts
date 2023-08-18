@@ -22,6 +22,9 @@ export interface GemforgeConfig {
     license: string
     version: string
   },
+  commands: {
+    build: string,
+  },
   paths: {
     src: {
       facets: string[],
@@ -82,6 +85,9 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   // solc
   ensureExists(config, 'solc.version')
   ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0, 'Invalid SPDX license ID')
+
+  // commands
+  ensureExists(config, 'commands.build')
 
   // paths
   ensureExists(config, 'paths.artifacts')

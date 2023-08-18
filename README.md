@@ -1,6 +1,6 @@
 # gemforge
 
-CLI for designing, building, deploying and upgrading Diamond Standard contracts on EVM chains.
+Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.
 
 
 

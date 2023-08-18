@@ -5,6 +5,11 @@ module.exports = {
     // Solidity compiler version - to be inserted in all generated .sol files
     version: '0.8.21',
   },
+  // commands to execute
+  commands: {
+    // the build command
+    build: '__BUILD_COMAND__',
+  },
   paths: {
     // contract built artifacts folder
     artifacts: 'out',
