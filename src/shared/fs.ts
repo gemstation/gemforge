@@ -87,7 +87,6 @@ export interface FacetDefinition {
   contractName: string,
   functions: {
     name: string,
-    hash: string,
     signature: string,
   }[],
 }
@@ -144,13 +143,12 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
         const r = {
           name: node.name!,
           signature,
-          hash: getFunctionHash(node.name!, node.parameters),
         }
 
-        if (functionSigs[r.hash]) {
+        if (functionSigs[r.signature]) {
           error(`Duplicate function found in ${file}: ${signature}`)
         } else {
-          functionSigs[r.hash] = true
+          functionSigs[r.signature] = true
         }
 
         return r
@@ -167,16 +165,6 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   return ret
 }
 
-
-const getFunctionHash = (name: string, params: VariableDeclaration[]): string => {
-  const p: string[] = []
-
-  params.map(param => {
-    p.push(_getTypeNameString(param.typeName!))
-  })
-4
-  return ethers.id(`${name}(${p.join(',')})`).substring(0, 10)
-}
 
 
 const getParamString = (params: VariableDeclaration[]): string => {

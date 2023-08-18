@@ -5,9 +5,9 @@ import { getContext } from '../shared/context.js'
 import { FacetDefinition, loadJson } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
-import { ContractArtifact, deployContract, loadContractArtifact, setupWallet } from '../shared/chain.js'
+import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, loadContractArtifact, setupWallet } from '../shared/chain.js'
 import { Contract } from 'ethers'
-import { BaseContract } from 'ethers'
+import { getFacetCuts } from '../shared/diamond.js'
 
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a network.')
@@ -36,33 +36,27 @@ export const command = () =>
 
       info('Loading facets.json...')
       const facets = loadJson(`${generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
+      const facetContractNames = Object.keys(facets)
 
       const artifactsFolder = path.resolve(ctx.folder, ctx.config.paths.artifacts)
 
-      info('Loading facet build outputs...')
-      const facetContractNames = Object.keys(facets)
-      const facetArtifacts = facetContractNames.reduce((m, name: any) => {
-        m[name] = loadContractArtifact(name, artifactsFolder)
-        return m
-      }, {} as Record<string, ContractArtifact>)
-
-      info(`Loaded ${facetContractNames.length} facet(s)`)
-      facetContractNames.forEach(name => {
-        trace(`  ${name}`)
-      })
-
       info('Deploying facets...')
-      const facetContracts: Record<string, BaseContract> = {}
+      const facetContracts: Record<string, OnChainContract> = {}
       await Promise.all(facetContractNames.map(async name => {
-        const contract = await deployContract(name, facetArtifacts[name], signer)
+        info(`   Deploying ${name} ...`)
+        const contract = await deployContract(name, artifactsFolder, signer)
         facetContracts[name] = contract
-        info(`   ${name} deployed at: ${await contract.getAddress()}`)
+        info(`   Deployed ${name} at: ${await contract.address}`)
       }))
 
       info('Deploying diamond...')
-      const artifact = loadContractArtifact('DiamondProxy', artifactsFolder)
-      const diamond = await deployContract('DiamondProxy', artifact, signer)
-      info(`   DiamondProxy deployed at: ${await diamond.getAddress()}`)
+      const diamond = await deployContract('DiamondProxy', artifactsFolder, signer, walletAddress)
+      info(`   DiamondProxy deployed at: ${diamond.address}`)
+
+      info('Register facets with the diamond...')
+      const proxyInterface = await getContractAt('IDiamondProxy', artifactsFolder, signer, diamond.address)
+      const cuts = await getFacetCuts(facets, facetContracts)
+      await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
 
       logSuccess()
     })
