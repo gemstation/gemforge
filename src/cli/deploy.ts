@@ -105,13 +105,23 @@ export const command = () =>
           info('No new facets need to be deployed.')
         }
 
+        let initContractAddress: string = ethers.ZeroAddress
+        let initData: string = '0x'
+
         if (isNewDeployment && ctx.config.diamond.init) {
-          info(`Deploying initialization contract...`)
+          info(`Deploying initialization contract: ${ctx.config.diamond.init} ...`)
+          const init = await deployContract(ctx, ctx.config.diamond.init, signer)
+          if (!init.contract.interface.getFunction('init')) {
+            error(`Initialization contract does not have an init() function.`)
+          }
+          initContractAddress = init.address
+          initData = init.contract.interface.getFunction('init')!.selector
+          info(`   Initialization contract deployed at: ${initContractAddress}`)
         }
         
         info('Calling diamondCut() on the proxy...')
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
-        await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
+        await execContractMethod(proxyInterface, 'diamondCut', [cuts, initContractAddress, initData])
       }
 
       info(`Saving deployment info...`)
