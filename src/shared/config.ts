@@ -38,8 +38,18 @@ export interface GemforgeConfig {
       diamond: string,
     }
   },
-  facets: {
+  diamond: {
     publicMethods: boolean,
+    init: string,
+  },
+  hooks: {
+    preBuild: string,
+    postBuild: string,
+    preDeploy: string,
+    postDeploy: string,
+  },
+  artifacts: {
+    format: 'foundry' | 'hardhat',
   },
   wallets: {
     [name: string]: WalletConfig,
@@ -60,7 +70,7 @@ const ensure = (config: GemforgeConfig, key: string, isValid: (v: any) => boolea
   }
 }
 
-const ensureExists = (config: GemforgeConfig, key: string) => {
+const ensureIsSet = (config: GemforgeConfig, key: string) => {
   const val = get(config, key)
   if (!val) {
     throwError(`Value not found`, key)
@@ -83,24 +93,34 @@ const ensureBool = (config: GemforgeConfig, key: string) => {
 
 export const sanitizeConfig = (config: GemforgeConfig) => {
   // solc
-  ensureExists(config, 'solc.version')
+  ensureIsSet(config, 'solc.version')
   ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0, 'Invalid SPDX license ID')
 
   // commands
-  ensureExists(config, 'commands.build')
+  ensureIsSet(config, 'commands.build')
 
   // paths
-  ensureExists(config, 'paths.artifacts')
+  ensureIsSet(config, 'paths.artifacts')
   ensureArray(config, 'paths.src.facets')
-  ensureExists(config, 'paths.generated.solidity')
-  ensureExists(config, 'paths.generated.support')
-  ensureExists(config, 'paths.lib.diamond')
+  ensureIsSet(config, 'paths.generated.solidity')
+  ensureIsSet(config, 'paths.generated.support')
+  ensureIsSet(config, 'paths.lib.diamond')
 
-  // facets
-  ensureBool(config, 'facets.publicMethods')
+  // diamond
+  ensureBool(config, 'diamond.publicMethods')
+  ensure(config, 'diamond.init', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid init contract value')
 
+  // artifacts
+  ensure(config, 'artifacts.format', (v: any) => ['foundry', 'hardhat'].indexOf(v) >= 0, 'Invalid artifacts format')
+  
+  // hooks
+  ensure(config, 'hooks.preBuild', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid preBuild hook')
+  ensure(config, 'hooks.postBuild', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid postBuild hook')
+  ensure(config, 'hooks.preDeploy', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid preDeploy hook')
+  ensure(config, 'hooks.postDeploy', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid postDeploy hook')
+  
   // wallets
-  ensureExists(config, 'wallets')
+  ensureIsSet(config, 'wallets')
   const walletNames = Object.keys(config.wallets)
   if (!walletNames.length) {
     throwError(`No value found`, 'wallets')
@@ -108,24 +128,24 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   walletNames.forEach(name => {
     ensure(config, `wallets.${name}.type`, (v: any) => ['mnemonic'].indexOf(v) >= 0, 'Invalid wallet type')
 
-    ensureExists(config, `wallets.${name}.config`)
+    ensureIsSet(config, `wallets.${name}.config`)
 
     const type = get(config, `wallets.${name}.type`)
     switch (type) {
       case 'mnemonic':
-        ensureExists(config, `wallets.${name}.config.words`)
+        ensureIsSet(config, `wallets.${name}.config.words`)
         ensure(config, `wallets.${name}.config.index`, (v: any) => typeof v === 'number' && v >= 0, 'Invalid number')
     }
   })
 
   // networks
-  ensureExists(config, 'networks')
+  ensureIsSet(config, 'networks')
   const networkNames = Object.keys(config.networks)
   if (!networkNames.length) {
     throwError(`No value found`, 'networks')
   }
   networkNames.forEach(name => {
-    ensureExists(config, `networks.${name}.rpcUrl`)
+    ensureIsSet(config, `networks.${name}.rpcUrl`)
     ensure(config, `networks.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0, 'Invalid wallet')
   })
 }

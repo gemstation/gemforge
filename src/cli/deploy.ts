@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { error, info } from '../shared/log.js'
-import { getContext } from '../shared/context.js'
-import { FacetDefinition, loadJson, readDeployedAddress, updateDeployedAddress } from '../shared/fs.js'
+import { Context, getContext } from '../shared/context.js'
+import { $$, FacetDefinition, loadJson, readDeployedAddress, updateDeployedAddress } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet } from '../shared/chain.js'
@@ -14,6 +14,12 @@ export const command = () =>
     .option('-n, --new', 'do a fresh deployment, ignore any existing one')
     .action(async (networkArg, args) => {
       const ctx = await getContext(args)
+
+      // run pre-deploy hook
+      if (ctx.config.hooks.preDeploy) {
+        info('Running pre-deploy hook...')
+        await $$`${ctx.config.hooks.preDeploy}`
+      }
 
       info(`Selected network: ${networkArg}`)
       const n = ctx.config.networks[networkArg]
@@ -34,13 +40,15 @@ export const command = () =>
 
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
       const deployedAddressesJsonPath = path.resolve(ctx.folder, 'gemforge.deployments.json')
-      const artifactsFolder = path.resolve(ctx.folder, ctx.config.paths.artifacts)
 
       let proxyInterface: OnChainContract
 
+      let isNewDeployment = false
+
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
-        proxyInterface = await deployNewDiamond(artifactsFolder, signer)
+        proxyInterface = await deployNewDiamond(ctx, signer)
+        isNewDeployment = true
       } else {
         info(`Load existing deployment ...`)
 
@@ -48,7 +56,7 @@ export const command = () =>
         if (existing) {
           info(`   Existing deployment found at: ${existing}`)
           info(`Checking if existing deployment is still valid...`)
-          proxyInterface = await getContractAt('IDiamondProxy', artifactsFolder, signer, existing)
+          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing)
 
           const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'])
           if (!isDiamond) {
@@ -61,7 +69,8 @@ export const command = () =>
           }
         } else {
           info(`   No existing deployment found.`)
-          proxyInterface = await deployNewDiamond(artifactsFolder, signer)
+          proxyInterface = await deployNewDiamond(ctx, signer)
+          isNewDeployment = true
         }
       }
 
@@ -70,11 +79,11 @@ export const command = () =>
       const facetContractNames = Object.keys(facets)
       info(`   ${facetContractNames.length} facets found.`)
       const facetArtifacts = facetContractNames.reduce((m, name) => {
-        m[name] = loadContractArtifact(name, artifactsFolder)
+        m[name] = loadContractArtifact(ctx, name)
         return m
       }, {} as Record<string, ContractArtifact>)
 
-      info('Resolving what chaned need to be applied ...')
+      info('Resolving what changes need to be applied ...')
       const changes = await resolveUpgrade(facetArtifacts, proxyInterface, signer)
       info(`   ${changes.facetsToDeploy.length} facets need to be deployed.`)
       info(`   ${changes.namedCuts.length} facet cuts need to be applied.`)
@@ -88,7 +97,7 @@ export const command = () =>
           info('Deploying facets...')
           await Promise.all(changes.facetsToDeploy.map(async name => {
             info(`   Deploying ${name} ...`)
-            const contract = await deployContract(name, artifactsFolder, signer)
+            const contract = await deployContract(ctx, name, signer)
             facetContracts[name] = contract
             info(`   Deployed ${name} at: ${await contract.address}`)
           }))
@@ -96,7 +105,11 @@ export const command = () =>
           info('No new facets need to be deployed.')
         }
 
-        info('Upgrading the diamond proxy...')
+        if (isNewDeployment && ctx.config.diamond.init) {
+          info(`Deploying initialization contract...`)
+        }
+        
+        info('Calling diamondCut() on the proxy...')
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
         await execContractMethod(proxyInterface, 'diamondCut', [cuts, ethers.ZeroAddress, '0x'])
       }
@@ -104,13 +117,19 @@ export const command = () =>
       info(`Saving deployment info...`)
       updateDeployedAddress(deployedAddressesJsonPath, network, proxyInterface.address)
 
+      // run post-deploy hook
+      if (ctx.config.hooks.postDeploy) {
+        info('Running post-deploy hook...')
+        await $$`${ctx.config.hooks.postDeploy}`
+      }
+
       logSuccess()
     })
 
   
-  const deployNewDiamond = async (artifactsFolder: string, signer: Signer) => {
+  const deployNewDiamond = async (ctx: Context, signer: Signer) => {
     info(`Deploying diamond...`)
-    const diamond = await deployContract('DiamondProxy', artifactsFolder, signer, await signer.getAddress())
+    const diamond = await deployContract(ctx, 'DiamondProxy', signer, await signer.getAddress())
     info(`   DiamondProxy deployed at: ${diamond.address}`)
-    return await getContractAt('IDiamondProxy', artifactsFolder, signer, diamond.address)
+    return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
   }

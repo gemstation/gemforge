@@ -2,9 +2,11 @@ import { Contract, ethers, Signer, TransactionResponse } from "ethers";
 import { MnemonicWalletConfig, NetworkConfig, WalletConfig } from "./config.js";
 import { error, trace } from "./log.js";
 import { Provider } from "ethers";
-import { loadJson } from "./fs.js";
+import { getArtifactsFolderPath, loadJson } from "./fs.js";
 import { TransactionReceipt } from "ethers";
 import { Fragment } from "ethers";
+import { Context } from "./context.js";
+import path from "node:path";
 
 
 export interface Network {
@@ -50,14 +52,28 @@ export interface ContractArtifact {
   deployedBytecode: string,
 }
 
-export const loadContractArtifact = (name: string, basePath: string) => {
+export const loadContractArtifact = (ctx: Context, name: string) => {
   trace(`Loading contract artifact: ${name} ...`)
   
+  const artifactsFolder = getArtifactsFolderPath(ctx)
+  let filePath = ''
+
+  switch (ctx.config.artifacts.format) {
+    case 'foundry':
+      filePath = `${artifactsFolder}/${name}.sol/${name}.json`
+      break
+    case 'hardhat':
+      filePath = `${artifactsFolder}/${name}.json`
+      break
+    default:
+      error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
+  }
+
   const { 
     abi, 
     bytecode: { object: bytecode },
     deployedBytecode: { object: deployedBytecode },
-  } = loadJson(`${basePath}/${name}.sol/${name}.json`) as any
+  } = loadJson(filePath) as any
 
   return { name, abi, bytecode, deployedBytecode } as ContractArtifact
 }
@@ -68,9 +84,9 @@ export interface OnChainContract {
   contract: Contract
 }
 
-export const getContractAt = async (name: string, artifactsFolder: string, signer: Signer, address: string): Promise<OnChainContract> => {
+export const getContractAt = async (ctx: Context, name: string, signer: Signer, address: string): Promise<OnChainContract> => {
   try {
-    const artifact = loadContractArtifact(name, artifactsFolder)
+    const artifact = loadContractArtifact(ctx, name)
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
 
     return  {
@@ -97,9 +113,9 @@ export const getContractAtUsingArtifact = async (artifact: ContractArtifact, sig
    }
 }
 
-export const deployContract = async (name: string, artifactsFolder: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
+export const deployContract = async (ctx: Context, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
   try {
-    const artifact = loadContractArtifact(name, artifactsFolder)
+    const artifact = loadContractArtifact(ctx, name)
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
     trace(`Deployed ${name} ...`)
     const tx = await factory.deploy(...args)

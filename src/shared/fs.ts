@@ -147,8 +147,12 @@ export interface FacetDefinition {
   }[],
 }
 
+export const getArtifactsFolderPath = (ctx: Context): string => {
+  return path.resolve(ctx.folder, ctx.config.paths.artifacts)
+}
+
 export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
-  if (ctx.config.facets.publicMethods) {
+  if (ctx.config.diamond.publicMethods) {
     trace('Including public methods in facet cuts')
   }
 
@@ -182,7 +186,7 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
       functionDefinitions = functionDefinitions
         .filter(node => !node.isConstructor && !node.isFallback && !node.isReceiveEther)
         .filter(
-          node => node.visibility === 'external' || (ctx.config.facets.publicMethods && node.visibility === 'public')
+          node => node.visibility === 'external' || (ctx.config.diamond.publicMethods && node.visibility === 'public')
         )
 
       // export declare type TypeName = ElementaryTypeName | UserDefinedTypeName | ArrayTypeName;

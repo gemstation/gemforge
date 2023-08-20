@@ -9,6 +9,12 @@ export const command = () =>
     .action(async args => {
       const ctx = await getContext(args)
 
+      // run prebuild hook
+      if (ctx.config.hooks.preBuild) {
+        info('Running pre-build hook...')
+        await $$`${ctx.config.hooks.preBuild}`
+      }
+
       const generatedSolidityPath = path.resolve(ctx.folder, ctx.config.paths.generated.solidity)
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
 
@@ -57,6 +63,12 @@ export const command = () =>
       // run build
       info('Running build...')
       await $$`${ctx.config.commands.build}`
+
+      // run post build hook
+      if (ctx.config.hooks.postBuild) {
+        info('Running post-build hook...')
+        await $$`${ctx.config.hooks.postBuild}`
+      }
 
       logSuccess()
     })

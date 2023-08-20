@@ -34,9 +34,28 @@ module.exports = {
       diamond: 'lib/diamond-2-hardhat',
     }
   },
-  facets: {
-    // Whether to include public methods when generating facet cut instructions. Default is to only include external methods.
+  // artifacts configuration
+  artifacts: {
+    // artifact format - "foundry" or "hardhat"
+    format: 'foundry'
+  },
+  // diamond configuration
+  diamond: {
+    // Whether to include public methods when generating the IDiamondProxy interface. Default is to only include external methods.
     publicMethods: false,
+    // The diamond initialization contract - to be called when first deploying the diamond.
+    init: 'InitDiamond',
+  },
+  // lifecycle hooks
+  hooks: {
+    // shell command to execute before build
+    preBuild: '',
+    // shell command to execute after build
+    postBuild: '',
+    // shell command to execute before deploy
+    preDeploy: '',
+    // shell command to execute after deploy
+    postDeploy: '',
   },
   // Wallets to use for deployment
   wallets: {
@@ -57,8 +76,15 @@ module.exports = {
   networks: {
     // Local network
     local: {
-      // RPC endpiont URL
+      // RPC endpoint URL
       rpcUrl: 'http://localhost:8545',
+      // Wallet to use for deployment
+      wallet: 'wallet1',
+    },
+    // Local network
+    sepolia: {
+      // RPC endpoint URL
+      rpcUrl: 'https://sepolia.infura.io/v3/',
       // Wallet to use for deployment
       wallet: 'wallet1',
     }
