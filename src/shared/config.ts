@@ -3,7 +3,7 @@ import get from 'lodash.get'
 import spdxLicenseIds from 'spdx-license-ids' assert { type: "json" }
 
 export interface MnemonicWalletConfig {
-  words: string,
+  words: string | Function,
   index: number,
 }
 
@@ -13,7 +13,7 @@ export type WalletConfig = {
 }
 
 export interface NetworkConfig {
-  rpcUrl: string,
+  rpcUrl: string | Function,
   wallet: string,
 }
 
@@ -77,6 +77,14 @@ const ensureIsSet = (config: GemforgeConfig, key: string) => {
   }
 }
 
+const ensureIsType = (config: GemforgeConfig, key: string, types: string[]) => {
+  const val = get(config, key)
+  const type = typeof val
+  if (types.indexOf(type) < 0) {
+    throwError(`Invalid type: ${type}, must be one of (${types.join(', ')})`, key, val)
+  }
+}
+
 const ensureArray = (config: GemforgeConfig, key: string) => {
   const val = get(config, key)
   if (!Array.isArray(val) || val.length === 0) {
@@ -108,16 +116,16 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
 
   // diamond
   ensureBool(config, 'diamond.publicMethods')
-  ensure(config, 'diamond.init', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid init contract value')
+  ensureIsType(config, 'diamond.init', ['undefined', 'string'])
 
   // artifacts
   ensure(config, 'artifacts.format', (v: any) => ['foundry', 'hardhat'].indexOf(v) >= 0, 'Invalid artifacts format')
   
   // hooks
-  ensure(config, 'hooks.preBuild', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid preBuild hook')
-  ensure(config, 'hooks.postBuild', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid postBuild hook')
-  ensure(config, 'hooks.preDeploy', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid preDeploy hook')
-  ensure(config, 'hooks.postDeploy', (v: any) => typeof v === 'undefined' || typeof v === 'string', 'Invalid postDeploy hook')
+  ensureIsType(config, 'hooks.preBuild', ['undefined', 'string'])
+  ensureIsType(config, 'hooks.postBuild', ['undefined', 'string'])
+  ensureIsType(config, 'hooks.preDeploy', ['undefined', 'string'])
+  ensureIsType(config, 'hooks.postDeploy', ['undefined', 'string'])
   
   // wallets
   ensureIsSet(config, 'wallets')
@@ -132,9 +140,10 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
 
     const type = get(config, `wallets.${name}.type`)
     switch (type) {
-      case 'mnemonic':
-        ensureIsSet(config, `wallets.${name}.config.words`)
-        ensure(config, `wallets.${name}.config.index`, (v: any) => typeof v === 'number' && v >= 0, 'Invalid number')
+      case 'mnemonic': {
+        ensureIsType(config, `wallets.${name}.config.words`, ['string', 'function'])
+        break
+      }
     }
   })
 
@@ -145,7 +154,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     throwError(`No value found`, 'networks')
   }
   networkNames.forEach(name => {
-    ensureIsSet(config, `networks.${name}.rpcUrl`)
+    ensureIsType(config, `networks.${name}.rpcUrl`, ['string', 'function'])
     ensure(config, `networks.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0, 'Invalid wallet')
   })
 }

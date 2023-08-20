@@ -16,7 +16,20 @@ export interface Network {
 }
 
 export const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
-  const provider = new ethers.JsonRpcProvider(n.rpcUrl)
+  let rpcUrlStr: string = ''
+
+  switch (typeof n.rpcUrl) {
+    case 'string':
+      rpcUrlStr = n.rpcUrl
+      break
+    case 'function':
+      rpcUrlStr = n.rpcUrl()
+      break
+  }
+
+  trace(`Setting up network with RPC URL: ${rpcUrlStr}`)
+    
+  const provider = new ethers.JsonRpcProvider(rpcUrlStr)
   const chainId = await provider.send('eth_chainId', [])
 
   return {
@@ -28,8 +41,21 @@ export const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
 
 
 export const setupMnemonicWallet = (config: MnemonicWalletConfig): Signer => {
+  let words: string = ''
+
+  switch (typeof config.words) {
+    case 'string':
+      words = config.words
+      break
+    case 'function':
+      words = config.words()
+      break
+  }
+
+  trace(`Setting up mnemonic wallet with mnemonic: ${words}`)
+
   return ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(config.words), 
+    ethers.Mnemonic.fromPhrase(words), 
     `m/44'/60'/0'/0/${config.index}`
   )
 }

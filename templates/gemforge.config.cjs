@@ -71,6 +71,17 @@ module.exports = {
         index: 0,
       }
     },
+    wallet2: {
+      // Wallet type - mnemonic
+      type: 'mnemonic',
+      // Wallet config
+      config: {
+        // Mnemonic phrase
+        words: () => process.env.MNEMONIC,
+        // 0-based index of the account to use
+        index: 0,
+      },
+    },
   },
   // Networks to deploy to
   networks: {
@@ -84,9 +95,9 @@ module.exports = {
     // Local network
     sepolia: {
       // RPC endpoint URL
-      rpcUrl: 'https://sepolia.infura.io/v3/',
+      rpcUrl: () => process.env.SEPOLIA_RPC_URL,
       // Wallet to use for deployment
-      wallet: 'wallet1',
+      wallet: 'wallet2',
     }
   }
 }
