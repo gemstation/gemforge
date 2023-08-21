@@ -74,7 +74,7 @@ Options:
   -h, --help             display help for command
 ```
 
-### init
+### gemforge init
 
 This command will initialize a new Gemforge project by creating a Gemforge config file.
 
@@ -91,7 +91,7 @@ GEMFORGE: Please edit the config file to your liking!
 GEMFORGE: All done.
 ```
 
-### scaffold
+### gemforge scaffold
 
 This command will clone the [Gemforge Foundry example repository](https://github.com/gemstation/contracts-foundry/) locally and set up all of its dependencies locally. 
 
@@ -110,7 +110,7 @@ GEMFORGE: Clone git@github.com:gemstation/contracts-foundry.git...
 GEMFORGE: All done.
 ```
 
-### build
+### gemforge build
 
 This command builds the given smart contract project using Gemforge. 
 
@@ -132,7 +132,7 @@ GEMFORGE: Running build...
 GEMFORGE: All done.
 ```
 
-### deploy
+### gemforge deploy
 
 This command deploys the built code to either a local test network or the named network.
 
