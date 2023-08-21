@@ -24,12 +24,13 @@
     "prepare": "husky install && npx husky add .husky/commit-msg 'npx commitlint --edit $1'",
     "prettify": "prettier --write .",
     "dev": "tsc -b -w tsconfig.json",
-    "build": "rm -fr build/* && tsc -p tsconfig.json"
+    "build": "rm -fr build/* && tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
     "@commitlint/config-conventional": "^17.2.0",
-    "@types/lodash": "^4.14.197",
+    "@types/lodash.get": "^4.4.7",
     "@types/node": "^18.16.16",
     "@types/semver": "^7.5.0",
     "@types/tmp": "^0.2.3",
@@ -51,7 +52,6 @@
   },
   "dependencies": {
     "@solidity-parser/parser": "^0.16.1",
-    "@types/lodash.get": "^4.4.7",
     "chalk": "^5.3.0",
     "commander": "^11.0.0",
     "ethers": "^6.7.1",
