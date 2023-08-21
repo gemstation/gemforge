@@ -1,10 +1,10 @@
 import { ethers } from 'ethers'
 import { error, info } from '../shared/log.js'
 import { Context, getContext } from '../shared/context.js'
-import { $$, FacetDefinition, loadJson, readDeployedAddress, updateDeployedAddress } from '../shared/fs.js'
+import { $$, FacetDefinition, loadJson } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
-import { ContractArtifact, OnChainContract, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet } from '../shared/chain.js'
+import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
 import { getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
 import { Signer } from 'ethers'
 
@@ -39,11 +39,14 @@ export const command = () =>
       const signer = wallet.connect(network.provider)
 
       const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
-      const deployedAddressesJsonPath = path.resolve(ctx.folder, 'gemforge.deployments.json')
+      const deploymentInfoJsonPath = path.resolve(ctx.folder, ctx.config.paths.generated.deployments)
 
       let proxyInterface: OnChainContract
 
       let isNewDeployment = false
+
+      // reset deploment records
+      clearDeploymentRecords()
 
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
@@ -52,11 +55,11 @@ export const command = () =>
       } else {
         info(`Load existing deployment ...`)
 
-        const existing = readDeployedAddress(deployedAddressesJsonPath, network)
+        const existing = readDeploymentInfo(deploymentInfoJsonPath, network).find(r => r.name === 'DiamondProxy')
         if (existing) {
-          info(`   Existing deployment found at: ${existing}`)
+          info(`   Existing deployment found at: ${existing.contract.address}`)
           info(`Checking if existing deployment is still valid...`)
-          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing)
+          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing.contract.address)
 
           const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'])
           if (!isDiamond) {
@@ -124,8 +127,11 @@ export const command = () =>
         await execContractMethod(proxyInterface, 'diamondCut', [cuts, initContractAddress, initData])
       }
 
-      info(`Saving deployment info...`)
-      updateDeployedAddress(deployedAddressesJsonPath, network, proxyInterface.address)
+      const deploymentRecords = getDeploymentRecords()
+      if (deploymentRecords.length) {
+        info(`Deployments took place, saving info...`)
+        saveDeploymentInfo(deploymentInfoJsonPath, network, getDeploymentRecords(), isNewDeployment)
+      }
 
       // run post-deploy hook
       if (ctx.config.hooks.postDeploy) {

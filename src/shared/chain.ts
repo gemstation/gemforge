@@ -2,11 +2,12 @@ import { Contract, ethers, Signer, TransactionResponse } from "ethers";
 import { MnemonicWalletConfig, NetworkConfig, WalletConfig } from "./config.js";
 import { error, trace } from "./log.js";
 import { Provider } from "ethers";
-import { getArtifactsFolderPath, loadJson } from "./fs.js";
+import { getArtifactsFolderPath, loadJson, saveJson } from "./fs.js";
 import { TransactionReceipt } from "ethers";
 import { Fragment } from "ethers";
 import { Context } from "./context.js";
 import path from "node:path";
+import get from "lodash.get";
 
 
 export interface Network {
@@ -139,6 +140,94 @@ export const getContractAtUsingArtifact = async (artifact: ContractArtifact, sig
    }
 }
 
+
+export interface ContractDeploymentRecord {
+  name: string,
+  sender: string,
+  txHash: string,
+  contract: {
+    address: string,
+    constructorArgs: any[],
+  }
+}
+
+export interface ChainDeploymentInfo {
+  [chainId: string]: ContractDeploymentRecord[]
+}
+
+export const readDeploymentInfo = (jsonFilePath: string, network: Network): ContractDeploymentRecord[] =>  {
+  trace(`Reading deployment records for chain id ${network.chainId} from ${jsonFilePath} ...`)
+
+  const chainId = String(network.chainId)
+  let obj: ChainDeploymentInfo = {}
+
+  try {
+    obj = loadJson(jsonFilePath) as ChainDeploymentInfo
+    const records = get(obj, chainId)
+    if (records) {
+      return records
+    } else {
+      trace(`No deployment info found for chain chain id ${chainId} in ${jsonFilePath}`)
+      return []
+    }
+  } catch (err: any) {
+    trace(`Failed to load ${jsonFilePath}: ${err.message}`)
+    return []
+  }
+}
+
+export const saveDeploymentInfo = (jsonFilePath: string, network: Network, records: ContractDeploymentRecord[], isNewDeployment: boolean) => {
+  trace(`Saving deployment info to: ${jsonFilePath} ...`)
+  trace(`${records.length} records to save`)
+
+  try {
+    const chainId = String(network.chainId)
+    
+    const infoData = loadJson(jsonFilePath) as ChainDeploymentInfo
+    
+    const existing = get(infoData, chainId)
+
+    const finalized: ContractDeploymentRecord[] = []
+    if (existing) {
+      trace(`   ${existing.length} existing records found`)
+      if (isNewDeployment) {
+        trace(`New deployment, so overwriting existing records`)
+        finalized.push(...records)
+      } else {
+        trace(`Not a new deployment, so merging existing records with new records`)
+        finalized.push(...records)
+        existing.forEach(r => {
+          if (!finalized.find(f => f.name === r.name)) {
+            finalized.push(r)
+          }
+        })
+      }
+    } else {
+      trace(`No existing records found`)
+      finalized.push(...records)
+    }
+
+    infoData[chainId] = finalized
+
+    trace(`Saving ${finalized.length} records to ${jsonFilePath}`)
+    saveJson(jsonFilePath, infoData)
+  } catch (err: any) {
+    error(`Failed to save records: ${err.message}`)
+  }
+}
+
+
+
+let deploymentRecords: ContractDeploymentRecord[] = []
+
+export const clearDeploymentRecords = () => {
+  deploymentRecords = []
+}
+
+export const getDeploymentRecords = () => {
+  return deploymentRecords.concat([])
+}
+
 export const deployContract = async (ctx: Context, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
   try {
     const artifact = loadContractArtifact(ctx, name)
@@ -146,10 +235,21 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
     trace(`Deployed ${name} ...`)
     const tx = await factory.deploy(...args)
     const contract = await tx.waitForDeployment() as Contract
+    const address = await contract.getAddress()
+
+    deploymentRecords.push({
+      name,
+      sender: await signer.getAddress(),
+      txHash: contract.deploymentTransaction()!.hash,
+      contract: {
+        address,
+        constructorArgs: args,
+      }
+    })
 
     return  {
       artifact,
-      address: await contract.getAddress(),
+      address,
       contract,
     }
    } catch (err: any) {

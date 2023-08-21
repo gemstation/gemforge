@@ -33,6 +33,7 @@ export interface GemforgeConfig {
     generated: {
       solidity: string,
       support: string,
+      deployments: string,
     }
     lib: {
       diamond: string,
@@ -112,6 +113,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   ensureArray(config, 'paths.src.facets')
   ensureIsSet(config, 'paths.generated.solidity')
   ensureIsSet(config, 'paths.generated.support')
+  ensure(config, 'paths.generated.deployments', (v: any) => typeof v === 'string' && v.endsWith('.json'), 'Invalid deployments JSON file')
   ensureIsSet(config, 'paths.lib.diamond')
 
   // diamond

@@ -1,5 +1,5 @@
 import { getContext } from '../shared/context.js'
-import { $$, FacetDefinition, ensureGeneratedFolderExists, fileExists, getFacetsAndFunctions, writeFile, writeTemplate } from '../shared/fs.js'
+import { $$, FacetDefinition, ensureGeneratedFolderExists, fileExists, getFacetsAndFunctions, saveJson, writeFile, writeTemplate } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { error, info, trace } from '../shared/log.js'
@@ -58,7 +58,7 @@ export const command = () =>
         m[f.contractName] = f
         return m
       }, {} as Record<string, FacetDefinition>)
-      writeFile(`${generatedSupportPath}/facets.json`, JSON.stringify(obj, null, 2))
+      saveJson(`${generatedSupportPath}/facets.json`, obj)
 
       // run build
       info('Running build...')

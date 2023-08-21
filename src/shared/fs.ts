@@ -50,17 +50,17 @@ export const captureErrorAndExit = (err: any, msg: string) => {
 }
 
 
-const _loadJson = (file: string | URL): object => {
-  trace(`Loading JSON file: ${file}`)
-  return JSON.parse(readFileSync(file).toString('utf-8'))
+export const saveJson = (file: string, data: object) => {
+  trace(`Saving JSON file: ${file}`)
+  writeFileSync(file, JSON.stringify(data, null, 2), {
+    encoding: 'utf-8',
+    flag: 'w'
+  })
 }
 
 export const loadJson = (file: string | URL): object => {
-  try {
-    return _loadJson(file)
-  } catch (err: any) {
-    return error(`Failed to load JSON file ${file}: ${err.message}`)
-  }
+  trace(`Loading JSON file: ${file}`)
+  return JSON.parse(readFileSync(file).toString('utf-8'))
 }
 
 export const fileExists = (file: string) => {
@@ -88,55 +88,6 @@ export const writeFile = (dst: string, content: string) => {
   })
 }
 
-export interface DeployedAddresses {
-  [chainId: string]: {
-    [contractName: string]: string
-  }
-}
-
-export const readDeployedAddress = (dst: string, network: Network): string | undefined =>  {
-  trace(`Reading diamond proxy address for chain id ${network.chainId} from ${dst} ...`)
-
-  const chainId = String(network.chainId)
-  let obj: DeployedAddresses = {}
-
-  try {
-    obj = _loadJson(dst) as DeployedAddresses
-    const addr = get(obj, ['DiamondProxy', chainId])
-    if (addr) {
-      return addr
-    } else {
-      trace(`Diamond proxy address for chain id ${chainId} does not exist in ${dst}`)
-      return undefined
-    }
-  } catch (err: any) {
-    trace(`Failed to load ${dst}: ${err.message}`)
-    return undefined
-  }
-}
-
-export const updateDeployedAddress = (dst: string, network: Network, address: string) => {
-  trace(`Writing diamond proxy address ${address} for chain id ${network.chainId} to ${dst} ...`)
-
-  const chainId = String(network.chainId)
-  let obj: DeployedAddresses = {}
-
-  try {
-    obj = _loadJson(dst) as DeployedAddresses
-    if (get(obj, ['DiamondProxy', chainId])) {
-      trace(`Diamond proxy address for chain id ${chainId} exists in ${dst}. Overwriting.`)
-    }
-  } catch (err: any) {
-    trace(`Failed to load ${dst}: ${err.message}`)
-  }
-
-  obj['DiamondProxy'] = obj['DiamondProxy'] || {}
-  obj['DiamondProxy'][chainId] = address
-
-  writeFile(dst, JSON.stringify(obj, null, 2))
-
-  trace(`Wrote updated deployed addresses to ${dst}`)
-}
 
 export interface FacetDefinition {
   file: string,

@@ -27,6 +27,8 @@ module.exports = {
       solidity: 'src/generated', 
       // output folder for support scripts and files
       support: '.gemforge',
+      // deployments JSON file
+      deployments: 'gemforge.deployments.json',
     },
     // library source code
     lib: {
