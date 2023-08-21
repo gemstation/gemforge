@@ -4,7 +4,7 @@
 
 ## Why
 
-The Diamond Standard (EIP-2535) is one of _the_ best ways to build and deploy [infinite sized, upgradeable contracts](https://twitter.com/hiddentao/status/1692567215059407048).
+The [Diamond Standard (EIP-2535)](https://eips.ethereum.org/EIPS/eip-2535) is one of _the_ best ways to build and deploy [infinite sized, upgradeable contracts](https://twitter.com/hiddentao/status/1692567215059407048).
 
 But utilizing the standard involves having to write a lot of boilerplate code, including but not limited to the core diamond proxy contract, interface code to enable easy access for dapps, deployment code which calculates what facets to add and remove in each upgrade, etc.
 
