@@ -1,5 +1,5 @@
 import get from 'lodash.get'
-import { execaCommandSync } from 'execa'
+import { SyncOptions, execaCommandSync } from 'execa'
 import { tmpNameSync } from 'tmp'
 import { glob } from 'glob'
 import path from 'node:path'
@@ -18,20 +18,35 @@ import type {
   UserDefinedTypeName,
   NumberLiteral,
 } from '@solidity-parser/parser/dist/src/ast-types.d.ts'
-import { Network, OnChainContract } from './chain.js'
 
-export const $$ = async (strings: TemplateStringsArray, ...values: any[]) => {
+interface CommandOptions {
+  cwd?: string,
+  quiet?: boolean,
+}
+
+export const $ = (opts?: CommandOptions) => async (strings: TemplateStringsArray, ...values: any[]) => {
   const cmd = String.raw({ raw: strings }, ...values)
   trace(`> ${cmd}`)
   return execaCommandSync(cmd, {
-    stdio: 'inherit',
+    stdio: (opts?.quiet) ? 'pipe' : 'inherit',
+    cwd: opts?.cwd,
   })
 }
 
 
 export const ensureGeneratedFolderExists = async (folderPath: string) => {
-  await $$`mkdir -p ${folderPath}`
+  await $()`mkdir -p ${folderPath}`
   writeFile(`${folderPath}/.gitignore`, `*.json\n*.sol\n*.log`)
+}
+
+
+export const ensureFolderExistsAndIsEmpty = async (folderPath: string) => {
+  await $()`mkdir -p ${folderPath}`
+
+  const files = glob.sync(`${folderPath}/*`)
+  if (files.length) {
+    error(`Folder is not empty: ${folderPath}`)
+  }
 }
 
 

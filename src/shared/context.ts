@@ -25,7 +25,7 @@ export const getContext = async (args: Record<string, any>): Promise<Context> =>
   } else {
     context.folder = process.cwd()
   }
-  trace(`Using folder ${context.folder}`)
+  info(`Working folder: ${context.folder}`)
 
   if (config) {
     config = path.resolve(process.cwd(), config)

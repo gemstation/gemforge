@@ -180,29 +180,35 @@ export const saveDeploymentInfo = (jsonFilePath: string, network: Network, recor
   trace(`Saving deployment info to: ${jsonFilePath} ...`)
   trace(`${records.length} records to save`)
 
-  try {
-    const chainId = String(network.chainId)
-    
-    const infoData = loadJson(jsonFilePath) as ChainDeploymentInfo
-    
-    const existing = get(infoData, chainId)
+  const chainId = String(network.chainId)
 
+  try {
+    let infoData: ChainDeploymentInfo = {}
     const finalized: ContractDeploymentRecord[] = []
-    if (existing) {
-      trace(`   ${existing.length} existing records found`)
-      if (isNewDeployment) {
-        trace(`New deployment, so overwriting existing records`)
-        finalized.push(...records)
+
+    try {
+      infoData = loadJson(jsonFilePath) as ChainDeploymentInfo
+      
+      const existing = get(infoData, chainId)
+
+      if (existing) {
+        trace(`   ${existing.length} existing records found`)
+        if (isNewDeployment) {
+          trace(`New deployment, so overwriting existing records`)
+          finalized.push(...records)
+        } else {
+          trace(`Not a new deployment, so merging existing records with new records`)
+          finalized.push(...records)
+          existing.forEach(r => {
+            if (!finalized.find(f => f.name === r.name)) {
+              finalized.push(r)
+            }
+          })
+        }
       } else {
-        trace(`Not a new deployment, so merging existing records with new records`)
-        finalized.push(...records)
-        existing.forEach(r => {
-          if (!finalized.find(f => f.name === r.name)) {
-            finalized.push(r)
-          }
-        })
+        throw new Error('No existing records found')
       }
-    } else {
+    } catch (err: any) {
       trace(`No existing records found`)
       finalized.push(...records)
     }

@@ -7,7 +7,7 @@ export const command = () =>
   createCommand('init', 'Initialize a new project, generating necessary config files.', { skipConfigOption: true })
     .option('-n, --name <name>', 'name to use for the config file', 'gemforge.config.cjs')
     .option('-o, --overwrite', 'overwrite config file if it already exists')
-    .option('--hardhat', 'generate config file for a hardhat project')
+    .option('--hardhat', 'generate config for a Hardhat project')
     .action(async (args) => {
       const ctx = await getContext(args)
 

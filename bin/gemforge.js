@@ -10,7 +10,7 @@ const __dirname = dirname(__filename)
 const index = process.argv.findIndex((arg) => arg.endsWith('bin/gemforge.js'))
 const args = [
   '--no-warnings',
-  resolve(__dirname, "../build/cli.js"),
+  resolve(__dirname, "../build/gemforge.js"),
 ].concat(process.argv.slice(index + 1))
 
 // Say our original entrance script is `app.js`

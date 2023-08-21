@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { error, info } from '../shared/log.js'
 import { Context, getContext } from '../shared/context.js'
-import { $$, FacetDefinition, loadJson } from '../shared/fs.js'
+import { $, FacetDefinition, loadJson } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
@@ -11,9 +11,11 @@ import { Signer } from 'ethers'
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a network.')
     .argument('[network]', 'network to deploy to', 'local')
-    .option('-n, --new', 'do a fresh deployment, ignore any existing one')
+    .option('-n, --new', 'do a fresh deployment, ignoring any existing one')
     .action(async (networkArg, args) => {
       const ctx = await getContext(args)
+
+      const $$ = $({ cwd: ctx.folder, quiet: args.quiet })
 
       // run pre-deploy hook
       if (ctx.config.hooks.preDeploy) {

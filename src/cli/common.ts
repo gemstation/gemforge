@@ -10,10 +10,10 @@ export const createCommand = (name: string, desc: string, opts?: CreateCommandOp
     .description(desc)
     .option('-v, --verbose', 'verbose logging output')
     .option('-q, --quiet', 'disable logging output')
-    .option('-f, --folder <folder>', 'folder to run the build in', '.')
+    .option('-f, --folder <folder>', 'folder to run gemforge in', '.')
 
   if (!opts?.skipConfigOption) {
-    c = c.option('-c, --config <config>', 'gemforge config file', 'gemforge.config.cjs')
+    c = c.option('-c, --config <config>', 'gemforge config file to use', 'gemforge.config.cjs')
   }
 
   return c

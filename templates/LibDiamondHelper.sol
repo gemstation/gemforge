@@ -8,15 +8,18 @@ pragma solidity >=__SOLC_VERSION__;
 /// ------------------------------------------------------------------------------------------------------------
 
 import { IDiamondCut } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondCut.sol";
-import { IDiamondLoupe } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondLoupe.sol";
-import { IERC173 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC173.sol";
-import { IERC165 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC165.sol";
+import { IDiamondProxy } from "./IDiamondProxy.sol";
 
-interface IDiamondProxy is
-    IERC173,
-    IERC165,
-    IDiamondCut,
-    IDiamondLoupe
-{
-__METHODS__
+__FACET_IMPORTS__
+
+library LibDiamondHelper {
+  function deployFacetsAndGetCuts() internal returns (IDiamondCut.FacetCut[] memory cut) {
+    // initialize the diamond as well as cut in all facets
+    cut = new IDiamondCut.FacetCut[](__NUM_FACETS__);
+
+    // yul too slow, so fix stack too deep here
+    {
+      __CUTS__
+    }
+  }
 }
