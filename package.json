@@ -1,6 +1,6 @@
 {
   "name": "gemforge",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.",
   "bin": {
     "gemforge": "./bin/gemforge.js"
@@ -25,7 +25,8 @@
     "prettify": "prettier --write .",
     "dev": "tsc -b -w tsconfig.json",
     "build": "rm -fr build/* && tsc -p tsconfig.json",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release": "standard-version"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
@@ -38,6 +39,7 @@
     "husky": "^8.0.2",
     "prettier": "^2.8.8",
     "prettier-plugin-sort-imports-desc": "^1.0.0",
+    "standard-version": "^9.5.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.3"
   },
