@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.2](https://github.com/gemstation/gemforge/compare/v1.3.1...v1.3.2) (2023-08-22)
+
+
+### Bug Fixes
+
+* argv differences in local vs global mode ([9094efe](https://github.com/gemstation/gemforge/commit/9094efe3e2f68e458d96cdf39ecee75d5fb3d676))
+
 ### [1.3.1](https://github.com/gemstation/gemforge/compare/v1.3.0...v1.3.1) (2023-08-22)
 
 
