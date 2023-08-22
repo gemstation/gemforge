@@ -13,5 +13,4 @@ const args = [
   resolve(__dirname, "../build/gemforge.js"),
 ].concat(process.argv.slice(index + 1))
 
-// Say our original entrance script is `app.js`
-spawnSync('node', args, { stdio: "inherit", shell: true })
+spawnSync(process.argv[0], args, { stdio: "inherit", shell: true })
