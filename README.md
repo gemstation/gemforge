@@ -1,3 +1,7 @@
+<p align="center">
+  <img width="256" height="256" src="./assets/logo.png">
+</p>
+
 # Gemforge
 
 > Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.
