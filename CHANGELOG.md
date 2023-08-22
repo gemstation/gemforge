@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/gemstation/gemforge/compare/v1.2.0...v1.3.0) (2023-08-22)
+
+
+### Features
+
+* hardhat support [#3](https://github.com/gemstation/gemforge/issues/3) ([46262fd](https://github.com/gemstation/gemforge/commit/46262fddc84b61c114ba6fa78a1682825fbda2cd))
+
+
+### Bug Fixes
+
+* logo display in readme on npmjs page ([2ecb457](https://github.com/gemstation/gemforge/commit/2ecb4575d25b9ad2ce5265b8beb42ae550f3187a))
+
 ## 1.2.0 (2023-08-22)
 
 
