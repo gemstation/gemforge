@@ -175,6 +175,25 @@ GEMFORGE: Running post-deploy hook...
 GEMFORGE: All done.
 ```
 
+## Development
+
+Building the tool:
+
+```
+> pnpm build
+```
+
+Watching for changes and re-building:
+
+```
+> pnpm dev
+```
+
+Publishing a new release:
+
+```
+> pnpm release
+```
 
 ## Contributing
 
