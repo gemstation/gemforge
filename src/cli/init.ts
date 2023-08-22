@@ -27,6 +27,10 @@ export const command = () =>
         info(`Writing config file...`)
         writeTemplate('gemforge.config.cjs', configFilePath, {
           __BUILD_COMAND__: args.hardhat ? 'npx hardhat compile' : 'forge build',
+          __ARTIFACTS_DIR__: `${args.hardhat ? 'artifacts' : 'out'}`,
+          __ARTIFACTS_FORMAT__: args.hardhat ? 'hardhat' : 'foundry',
+          __FACETS_SRC__: `${args.hardhat ? 'contracts' : 'src'}/facets/*Facet.sol`,
+          __GENERATED_SOL__: `${args.hardhat ? 'contracts' : 'src'}/generated`,
         })
         info(`Wrote config file: ${configFilePath}`)
 

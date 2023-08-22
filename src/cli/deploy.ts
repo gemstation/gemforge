@@ -2,7 +2,6 @@ import { ethers } from 'ethers'
 import { error, info } from '../shared/log.js'
 import { Context, getContext } from '../shared/context.js'
 import { $, FacetDefinition, loadJson } from '../shared/fs.js'
-import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
 import { getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
@@ -14,14 +13,6 @@ export const command = () =>
     .option('-n, --new', 'do a fresh deployment, ignoring any existing one')
     .action(async (networkArg, args) => {
       const ctx = await getContext(args)
-
-      const $$ = $({ cwd: ctx.folder, quiet: args.quiet })
-
-      // run pre-deploy hook
-      if (ctx.config.hooks.preDeploy) {
-        info('Running pre-deploy hook...')
-        await $$`${ctx.config.hooks.preDeploy}`
-      }
 
       info(`Selected network: ${networkArg}`)
       const n = ctx.config.networks[networkArg]
@@ -40,8 +31,19 @@ export const command = () =>
 
       const signer = wallet.connect(network.provider)
 
-      const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
-      const deploymentInfoJsonPath = path.resolve(ctx.folder, ctx.config.paths.generated.deployments)
+      const $$ = $({ 
+        cwd: ctx.folder, 
+        quiet: args.quiet,
+        env: {
+          GEMFORGE_DEPLOY_CHAIN_ID: `${network.chainId}`,
+        }
+      })
+
+      // run pre-deploy hook
+      if (ctx.config.hooks.preDeploy) {
+        info('Running pre-deploy hook...')
+        await $$`${ctx.config.hooks.preDeploy}`
+      }
 
       let proxyInterface: OnChainContract
 
@@ -57,7 +59,7 @@ export const command = () =>
       } else {
         info(`Load existing deployment ...`)
 
-        const existing = readDeploymentInfo(deploymentInfoJsonPath, network).find(r => r.name === 'DiamondProxy')
+        const existing = readDeploymentInfo(ctx.deploymentInfoJsonPath, network).find(r => r.name === 'DiamondProxy')
         if (existing) {
           info(`   Existing deployment found at: ${existing.contract.address}`)
           info(`Checking if existing deployment is still valid...`)
@@ -80,7 +82,7 @@ export const command = () =>
       }
 
       info('Loading facet artifacts...')
-      const facets = loadJson(`${generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
+      const facets = loadJson(`${ctx.generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
       const facetContractNames = Object.keys(facets)
       info(`   ${facetContractNames.length} facets found.`)
       const facetArtifacts = facetContractNames.reduce((m, name) => {
@@ -132,7 +134,7 @@ export const command = () =>
       const deploymentRecords = getDeploymentRecords()
       if (deploymentRecords.length) {
         info(`Deployments took place, saving info...`)
-        saveDeploymentInfo(deploymentInfoJsonPath, network, getDeploymentRecords(), isNewDeployment)
+        saveDeploymentInfo(ctx.deploymentInfoJsonPath, network, getDeploymentRecords(), isNewDeployment)
       }
 
       // run post-deploy hook

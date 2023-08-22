@@ -26,8 +26,9 @@ export const command = () =>
 
       if (args.hardhat) {
         info(`Generating Hardhat scaffolding...`)
-      info(`Clone ${HARDHAT_GIT_REPO}...`)
+        info(`Clone ${HARDHAT_GIT_REPO}...`)
         await $$`git clone --depth 1 ${HARDHAT_GIT_REPO} ${ctx.folder}`
+        await $$`git submodule update --init --recursive`
         await $$`npm install`
       } else {
         info('Checking that foundry is installed...')

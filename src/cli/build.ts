@@ -18,19 +18,16 @@ export const command = () =>
         await $$`${ctx.config.hooks.preBuild}`
       }
 
-      const generatedSolidityPath = path.resolve(ctx.folder, ctx.config.paths.generated.solidity)
-      const generatedSupportPath = path.resolve(ctx.folder, ctx.config.paths.generated.support)
-
       info('Checking diamond folder lib path...')
-      if (!fileExists(path.join(ctx.folder, ctx.config.paths.lib.diamond, 'contracts/Diamond.sol'))) {
-        error(`Diamond folder lib path does not contain Diamond contracts: ${ctx.config.paths.lib.diamond}`)
+      if (!fileExists(path.join(ctx.libDiamondPath, 'contracts/Diamond.sol'))) {
+        error(`Diamond folder lib path does not contain Diamond contracts: ${ctx.libDiamondPath}`)
       }
 
       info('Creating folder for solidity output...')
-      await ensureGeneratedFolderExists(generatedSolidityPath)
+      await ensureGeneratedFolderExists(ctx.generatedSolidityPath)
 
       info('Generating DiamondProxy.sol...')
-      writeTemplate('DiamondProxy.sol', `${generatedSolidityPath}/DiamondProxy.sol`, {
+      writeTemplate('DiamondProxy.sol', `${ctx.generatedSolidityPath}/DiamondProxy.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
@@ -43,7 +40,7 @@ export const command = () =>
       })
       
       info('Generating IDiamondProxy.sol...')
-      writeTemplate('IDiamondProxy.sol', `${generatedSolidityPath}/IDiamondProxy.sol`, {
+      writeTemplate('IDiamondProxy.sol', `${ctx.generatedSolidityPath}/IDiamondProxy.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
@@ -63,7 +60,7 @@ export const command = () =>
         numMethods += f.functions.length
 
         if (!importPaths[f.contractName]) {
-          const relativeImportPath = path.relative(generatedSolidityPath, f.file)
+          const relativeImportPath = path.relative(ctx.generatedSolidityPath, f.file)
           importPaths[f.contractName] = relativeImportPath.startsWith('.') ? relativeImportPath : `./${relativeImportPath}`
         }
 
@@ -80,7 +77,7 @@ cut[${facetNum}] = IDiamondCut.FacetCut({
 `
       })
       
-      writeTemplate('LibDiamondHelper.sol', `${generatedSolidityPath}/LibDiamondHelper.sol`, {
+      writeTemplate('LibDiamondHelper.sol', `${ctx.generatedSolidityPath}/LibDiamondHelper.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
@@ -90,14 +87,14 @@ cut[${facetNum}] = IDiamondCut.FacetCut({
       })
 
       info('Creating folder for support output...')
-      await ensureGeneratedFolderExists(generatedSupportPath)
+      await ensureGeneratedFolderExists(ctx.generatedSupportPath)
 
       info('Generating facets.json...')
       const obj = facets.reduce((m, f) => {
         m[f.contractName] = f
         return m
       }, {} as Record<string, FacetDefinition>)
-      saveJson(`${generatedSupportPath}/facets.json`, obj)
+      saveJson(`${ctx.generatedSupportPath}/facets.json`, obj)
 
       // run build
       info('Running build...')

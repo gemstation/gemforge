@@ -2,12 +2,13 @@ import { Contract, ethers, Signer, TransactionResponse } from "ethers";
 import { MnemonicWalletConfig, NetworkConfig, WalletConfig } from "./config.js";
 import { error, trace } from "./log.js";
 import { Provider } from "ethers";
-import { getArtifactsFolderPath, loadJson, saveJson } from "./fs.js";
+import { loadJson, saveJson } from "./fs.js";
 import { TransactionReceipt } from "ethers";
 import { Fragment } from "ethers";
 import { Context } from "./context.js";
-import path from "node:path";
 import get from "lodash.get";
+import { glob } from "glob";
+import path from "node:path";
 
 
 export interface Network {
@@ -74,6 +75,7 @@ export const setupWallet = (walletConfig: WalletConfig, provider: Provider) => {
 
 export interface ContractArtifact {
   name: string,
+  fullyQualifiedName: string,
   abi: Fragment[],
   bytecode: string,
   deployedBytecode: string,
@@ -82,27 +84,41 @@ export interface ContractArtifact {
 export const loadContractArtifact = (ctx: Context, name: string) => {
   trace(`Loading contract artifact: ${name} ...`)
   
-  const artifactsFolder = getArtifactsFolderPath(ctx)
-  let filePath = ''
+  let jsonFilePath = ''
+  let fullyQualifiedName = ''
 
   switch (ctx.config.artifacts.format) {
     case 'foundry':
-      filePath = `${artifactsFolder}/${name}.sol/${name}.json`
+      jsonFilePath = `${ctx.artifactsPath}/${name}.sol/${name}.json`
+      fullyQualifiedName = `${name}.sol:${name}`
       break
     case 'hardhat':
-      filePath = `${artifactsFolder}/${name}.json`
+      const files = glob.sync(`${ctx.artifactsPath}/**/*.json`) as string[]
+      const filePath = path.relative(ctx.artifactsPath, files.find(f => path.basename(f) === `${name}.json`)!)
+      jsonFilePath = `${ctx.artifactsPath}/${filePath}`
+      fullyQualifiedName = `${path.dirname(filePath)}:${name}`
       break
     default:
       error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
   }
 
-  const { 
-    abi, 
-    bytecode: { object: bytecode },
-    deployedBytecode: { object: deployedBytecode },
-  } = loadJson(filePath) as any
+  const json = loadJson(jsonFilePath) as any
 
-  return { name, abi, bytecode, deployedBytecode } as ContractArtifact
+  let abi: Fragment[] = json.abi
+  let bytecode: string
+  let deployedBytecode: string
+
+  switch (ctx.config.artifacts.format) {
+    case 'foundry':
+      bytecode = json.bytecode.object
+      deployedBytecode = json.deployedBytecode.object
+      break
+    case 'hardhat':
+      bytecode = json.bytecode
+      deployedBytecode = json.deployedBytecode
+  }
+
+  return { name, fullyQualifiedName, abi, bytecode, deployedBytecode } as ContractArtifact
 }
 
 export interface OnChainContract {
@@ -136,13 +152,14 @@ export const getContractAtUsingArtifact = async (artifact: ContractArtifact, sig
       contract: factory.attach(address) as Contract,
     }
    } catch (err: any) {
-    return error(`Failed to load ${name} at address ${address}: ${err.message}}`)
+    return error(`Failed to load ${artifact.name} at address ${address}: ${err.message}}`)
    }
 }
 
 
 export interface ContractDeploymentRecord {
   name: string,
+  fullyQualifiedName: string,
   sender: string,
   txHash: string,
   contract: {
@@ -238,13 +255,16 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
   try {
     const artifact = loadContractArtifact(ctx, name)
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
-    trace(`Deployed ${name} ...`)
-    const tx = await factory.deploy(...args)
+    trace(`Deploying ${name} ...`)
+    const tx = await factory.deploy(...args, {
+      nonce: await getLatestNonce(signer)
+    })
     const contract = await tx.waitForDeployment() as Contract
     const address = await contract.getAddress()
 
     deploymentRecords.push({
       name,
+      fullyQualifiedName: artifact.fullyQualifiedName,
       sender: await signer.getAddress(),
       txHash: contract.deploymentTransaction()!.hash,
       contract: {
@@ -282,7 +302,9 @@ export const execContractMethod = async (contract: OnChainContract, method: stri
 
   try {
     trace(`Executing ${label} ...`)
-    const tx = (await contract.contract[method](...args)) as TransactionResponse
+    const tx = (await contract.contract[method](...args, {
+      nonce: await getLatestNonce(contract.contract.runner as Signer)
+    })) as TransactionResponse
     const receipt = (await tx.wait())!
     trace(`   ...mined in block ${receipt.blockNumber}`)
     return receipt
@@ -292,3 +314,21 @@ export const execContractMethod = async (contract: OnChainContract, method: stri
 }
 
 
+const latestNonce: Record<string, number> = {}
+
+const getLatestNonce = async (signer: Signer): Promise<number> => {
+  const address = await signer.getAddress()
+
+  trace(`Get nonce for ${address}...`)
+  
+  if (!latestNonce[address]) {
+    latestNonce[address] = await signer.getNonce()
+    trace(`   Live nonce: ${latestNonce[address]}`)
+  } else {
+    latestNonce[address]++
+    trace(`   Incremented nonce: ${latestNonce[address]}`)
+  }
+
+  
+  return latestNonce[address]
+}

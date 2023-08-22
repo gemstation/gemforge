@@ -12,19 +12,19 @@ module.exports = {
   },
   paths: {
     // contract built artifacts folder
-    artifacts: 'out',
+    artifacts: '__ARTIFACTS_DIR__',
     // source files
     src: {
       // file patterns to include in facet parsing
       facets: [
         // include all .sol files in the facets directory ending "Facet"
-        'src/facets/*Facet.sol'
+        '__FACETS_SRC__'
       ],
     },
     // folders for gemforge-generated files
     generated: {
       // output folder for generated .sol files
-      solidity: 'src/generated', 
+      solidity: '__GENERATED_SOL__', 
       // output folder for support scripts and files
       support: '.gemforge',
       // deployments JSON file
@@ -39,7 +39,7 @@ module.exports = {
   // artifacts configuration
   artifacts: {
     // artifact format - "foundry" or "hardhat"
-    format: 'foundry'
+    format: '__ARTIFACTS_FORMAT__',
   },
   // diamond configuration
   diamond: {
@@ -94,7 +94,7 @@ module.exports = {
       // Wallet to use for deployment
       wallet: 'wallet1',
     },
-    // Local network
+    // Sepolia test network
     sepolia: {
       // RPC endpoint URL
       rpcUrl: () => process.env.SEPOLIA_RPC_URL,

@@ -25,6 +25,7 @@ By automating almost all aspects of this boilerplate code whilst still remaining
 * Auto-generates deployment code for Foundry tests.
 * Auto-calculates facet deployment and upgrades accurately and efficiently.
 * Records diamond addresses to JSON file for history tracking.
+* Pre- and post- hooks for both build and deploy steps.
 * Supports [Foundry](https://github.com/foundry-rs/foundry) and [Hardhat](https://hardhat.org/) environments.
 * Highly configurable per project.
 * _Coming soon: Extensive documentation_

@@ -22,6 +22,9 @@ import type {
 interface CommandOptions {
   cwd?: string,
   quiet?: boolean,
+  env?: {
+    [key: string]: string | undefined
+  }
 }
 
 export const $ = (opts?: CommandOptions) => async (strings: TemplateStringsArray, ...values: any[]) => {
@@ -30,6 +33,7 @@ export const $ = (opts?: CommandOptions) => async (strings: TemplateStringsArray
   return execaCommandSync(cmd, {
     stdio: (opts?.quiet) ? 'pipe' : 'inherit',
     cwd: opts?.cwd,
+    env: opts?.env,
   })
 }
 
@@ -111,10 +115,6 @@ export interface FacetDefinition {
     name: string,
     signature: string,
   }[],
-}
-
-export const getArtifactsFolderPath = (ctx: Context): string => {
-  return path.resolve(ctx.folder, ctx.config.paths.artifacts)
 }
 
 export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {

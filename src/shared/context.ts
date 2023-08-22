@@ -5,6 +5,11 @@ import { GemforgeConfig, sanitizeConfig } from './config.js'
 export interface Context {
   config: GemforgeConfig
   folder: string
+  generatedSolidityPath: string
+  generatedSupportPath: string
+  deploymentInfoJsonPath: string
+  artifactsPath: string
+  libDiamondPath: string
 }
 
 export const getContext = async (args: Record<string, any>): Promise<Context> => {
@@ -29,9 +34,16 @@ export const getContext = async (args: Record<string, any>): Promise<Context> =>
 
   if (config) {
     config = path.resolve(process.cwd(), config)
+    
     try {
       context.config = (await import(config)).default as GemforgeConfig
       sanitizeConfig(context.config)
+
+      context.generatedSolidityPath = path.resolve(context.folder, context.config.paths.generated.solidity)
+      context.generatedSupportPath = path.resolve(context.folder, context.config.paths.generated.support)
+      context.deploymentInfoJsonPath = path.resolve(context.folder, context.config.paths.generated.deployments)
+      context.libDiamondPath = path.resolve(context.folder, context.config.paths.lib.diamond)
+      context.artifactsPath = path.resolve(context.folder, context.config.paths.artifacts)
     } catch (err: any) {
       error(`Failed to load config file ${config}: ${err.message}`)
     }
