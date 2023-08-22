@@ -4,6 +4,8 @@
 
 # Gemforge
 
+![build](https://github.com/gemstation/gemforge/actions/workflows/ci.yml/badge.svg?branch=master)
+
 > Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.
 
 ## Why
