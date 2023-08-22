@@ -26,7 +26,7 @@ By automating almost all aspects of this boilerplate code whilst still remaining
 * Auto-calculates facet deployment and upgrades accurately and efficiently.
 * Records diamond addresses to JSON file for history tracking.
 * Pre- and post- hooks for both build and deploy steps.
-* Supports [Foundry](https://github.com/foundry-rs/foundry) and [Hardhat](https://hardhat.org/) environments.
+* Generates [Foundry](https://github.com/gemstation/contracts-foundry/) and [Hardhat](https://github.com/gemstation/contracts-hardhat/) scaffolding.
 * Highly configurable per project.
 * _Coming soon: Extensive documentation_
 
@@ -117,6 +117,8 @@ GEMFORGE: Clone git@github.com:gemstation/contracts-foundry.git...
 ...
 GEMFORGE: All done.
 ```
+
+To use the [Hardhat example repo](https://github.com/gemstation/contracts-hardhat/) use the `--hardhat` CLI option.
 
 ### gemforge build
 
