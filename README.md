@@ -4,7 +4,8 @@
 
 # Gemforge
 
-![build](https://github.com/gemstation/gemforge/actions/workflows/ci.yml/badge.svg?branch=master)
+[![Build](https://github.com/gemstation/gemforge/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/gemstation/gemforge/actions/workflows/ci.yml)
+[![NPM module](https://badge.fury.io/js/gemforge.svg)](https://badge.fury.io/js/gemforge)
 
 > Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.
 
