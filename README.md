@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="256" height="256" src="./assets/logo.png">
+  <img width="256" height="256" src="https://raw.githubusercontent.com/gemstation/gemforge/master/assets/logo.png">
 </p>
 
 # Gemforge
