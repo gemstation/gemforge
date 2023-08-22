@@ -26,7 +26,7 @@
     "dev": "tsc -b -w tsconfig.json",
     "build": "rm -fr build/* && tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
-    "release": "standard-version"
+    "release": "standard-version && git push --follow-tags origin master && npm publish"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
