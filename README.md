@@ -28,7 +28,7 @@ By automating almost all aspects of this boilerplate code whilst still remaining
 * Pre- and post- hooks for both build and deploy steps.
 * Generates [Foundry](https://github.com/gemstation/contracts-foundry/) and [Hardhat](https://github.com/gemstation/contracts-hardhat/) scaffolding.
 * Highly configurable per project.
-* _Coming soon: Extensive documentation_
+* [Full documentation](https://gemforge.xyz)
 
 ## Installation
 
@@ -41,10 +41,6 @@ We recommend installing `gemforge` globally:
 * yarn: `yarn global add gemforge`
 
 ## Usage
-
-_NOTE: Full documentation is coming soon_.
-
-### The basics
 
 You can use `gemforge --help` to see what commands are available:
 
@@ -82,98 +78,7 @@ Options:
   -h, --help             display help for command
 ```
 
-### gemforge init
-
-This command will initialize a Gemforge config file for an existing project.
-
-```
-> gemforge init
-
-GEMFORGE: Working folder: /Users/ram/dev/gemstation/contracts
-GEMFORGE: Initializing for foundry ...
-GEMFORGE: Writing config file...
-GEMFORGE: Wrote config file: /Users/ram/dev/gemstation/contracts/gemforge.config.cjs
-GEMFORGE: Please edit the config file to your liking!
-GEMFORGE: All done.
-```
-
-### gemforge scaffold
-
-This command will clone the [Gemforge Foundry example repository](https://github.com/gemstation/contracts-foundry/) locally and set up all of its dependencies locally. 
-
-If you're not sure about how to configure Gemforge and use it with your own contracts then use this command to see a working example. This example repository contains the bare minimum code and is a great starting point for your own smart contract projects.
-
-```
-> gemforge scaffold --folder ./tmp
-
-GEMFORGE: Working folder: /Users/ram/dev/gemstation/contracts/tmp1
-GEMFORGE: Checking Node.js version...
-GEMFORGE: Ensuring folder is empty...
-GEMFORGE: Checking that foundry is installed...
-GEMFORGE: Generating Foundry scaffolding...
-GEMFORGE: Clone git@github.com:gemstation/contracts-foundry.git...
-...
-GEMFORGE: All done.
-```
-
-To use the [Hardhat example repo](https://github.com/gemstation/contracts-hardhat/) use the `--hardhat` CLI option.
-
-### gemforge build
-
-This command builds the given smart contract project using Gemforge. 
-
-Gemforge will first load the Gemforge config file for the given project and use it to work out all the other information it needs. Gemforge will auto-generate all necessary files to enable you to either test/deploy your code as the next step.
-
-```
-> gemforge build
-
-GEMFORGE: Working folder: /Users/ram/dev/gemstation/contracts
-GEMFORGE: Checking diamond folder lib path...
-GEMFORGE: Creating folder for solidity output...
-GEMFORGE: Generating DiamondProxy.sol...
-GEMFORGE: Generating IDiamondProxy.sol...
-GEMFORGE: Generating LibDiamondHelper.sol ...
-GEMFORGE: Creating folder for support output...
-GEMFORGE: Generating facets.json...
-GEMFORGE: Running build...
-...
-GEMFORGE: All done.
-```
-
-### gemforge deploy
-
-This command deploys the built code to either a local test network or the named network.
-
-All network and deployment wallet information is loaded from the Gemforge config file. All created contracts will have their creation information placed into a generated JSON file, allowing you to save this information in youre repo and/or use it for other purposes.
-
-```
-> gemforge deploy
-
-GEMFORGE: Working folder: /Users/ram/dev/gemstation/contracts
-GEMFORGE: Selected network: local
-GEMFORGE: Setting up network connection...
-GEMFORGE:    Network chainId: 31337
-GEMFORGE: Setting up wallet "wallet1" ...
-GEMFORGE: Wallet deployer address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-GEMFORGE: Load existing deployment ...
-GEMFORGE:    No existing deployment found.
-GEMFORGE: Deploying diamond...
-GEMFORGE:    DiamondProxy deployed at: 0xCD8a1C3ba11CF5ECfa6267617243239504a98d90
-GEMFORGE: Loading facet artifacts...
-GEMFORGE:    1 facets found.
-GEMFORGE: Resolving what changes need to be applied ...
-GEMFORGE:    1 facets need to be deployed.
-GEMFORGE:    1 facet cuts need to be applied.
-GEMFORGE: Deploying facets...
-GEMFORGE:    Deploying ERC20Facet ...
-GEMFORGE:    Deployed ERC20Facet at: 0x82e01223d51Eb87e16A03E24687EDF0F294da6f1
-GEMFORGE: Deploying initialization contract: InitDiamond ...
-GEMFORGE:    Initialization contract deployed at: 0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3
-GEMFORGE: Calling diamondCut() on the proxy...
-GEMFORGE: Deployments took place, saving info...
-GEMFORGE: Running post-deploy hook...
-GEMFORGE: All done.
-```
+**Full documentation is available at https://gemforge.xyz.**
 
 ## Development
 
