@@ -56,7 +56,7 @@ Options:
   -h, --help                  display help for command
 
 Commands:
-  init [options]              Initialize a new project, generating necessary config files.
+  init [options]              Initialize a gemforge config file for an existing project.
   scaffold [options]          Generate diamond smart contract project scaffolding.
   build [options]             Build a project.
   deploy [options] [network]  Deploy the diamond to a network.
@@ -84,9 +84,7 @@ Options:
 
 ### gemforge init
 
-This command will initialize a new Gemforge project by creating a Gemforge config file.
-
-If using Gemforge with an existing smart contract project then this command is the first one to use.
+This command will initialize a Gemforge config file for an existing project.
 
 ```
 > gemforge init
