@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/gemstation/gemforge/compare/v1.3.4...v1.4.0) (2023-08-30)
+
+
+### Features
+
+* structs key for when generating proxy interface ([541adc5](https://github.com/gemstation/gemforge/commit/541adc5d16041f28160af2dc2123203952b74d96))
+
 ### [1.3.4](https://github.com/gemstation/gemforge/compare/v1.3.3...v1.3.4) (2023-08-23)
 
 ### [1.3.3](https://github.com/gemstation/gemforge/compare/v1.3.2...v1.3.3) (2023-08-23)
