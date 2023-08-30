@@ -28,6 +28,7 @@ export interface GemforgeConfig {
   paths: {
     src: {
       facets: string[],
+      structs: string,
     },
     artifacts: string,
     generated: {
@@ -111,6 +112,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   // paths
   ensureIsSet(config, 'paths.artifacts')
   ensureArray(config, 'paths.src.facets')
+  ensureIsType(config, 'paths.src.structs', ['undefined', 'string'])
   ensureIsSet(config, 'paths.generated.solidity')
   ensureIsSet(config, 'paths.generated.support')
   ensure(config, 'paths.generated.deployments', (v: any) => typeof v === 'string' && v.endsWith('.json'), 'Invalid deployments JSON file')

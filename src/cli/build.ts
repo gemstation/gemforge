@@ -39,11 +39,18 @@ export const command = () =>
         trace(`  ${f.contractName} => ${f.functions.length} functions`)
       })
       
+      let structsImportPath;
+      if (ctx.config.paths.src.structs) {
+        structsImportPath = path.relative(ctx.generatedSolidityPath, path.resolve(ctx.folder, ctx.config.paths.src.structs))
+        trace(`Structs relative import path ${structsImportPath}`)
+      }
+
       info('Generating IDiamondProxy.sol...')
       writeTemplate('IDiamondProxy.sol', `${ctx.generatedSolidityPath}/IDiamondProxy.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
+        __STRUCTS_SRC_IMPORT__: structsImportPath ? `import "${structsImportPath}";` : '',
         __METHODS__: facets
           .reduce((m, f) => m.concat(f.functions), [] as any[])
           .map(f => `${f.signature};`)

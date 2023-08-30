@@ -20,6 +20,8 @@ module.exports = {
         // include all .sol files in the facets directory ending "Facet"
         '__FACETS_SRC__'
       ],
+      // path to file containing all structs, to be included in the generated proxy interface file
+      structs: "",
     },
     // folders for gemforge-generated files
     generated: {
