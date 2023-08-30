@@ -20,8 +20,6 @@ module.exports = {
         // include all .sol files in the facets directory ending "Facet"
         '__FACETS_SRC__'
       ],
-      // path to file containing all structs, to be included in the generated proxy interface file
-      structs: "",
     },
     // folders for gemforge-generated files
     generated: {
@@ -42,6 +40,14 @@ module.exports = {
   artifacts: {
     // artifact format - "foundry" or "hardhat"
     format: '__ARTIFACTS_FORMAT__',
+  },
+  // generator options
+  generator: {
+    // proxy interface options
+    proxyInterface: {
+      // imports to include in the generated IDiamondProxy interface
+      imports: [],
+    },
   },
   // diamond configuration
   diamond: {

@@ -28,7 +28,6 @@ export interface GemforgeConfig {
   paths: {
     src: {
       facets: string[],
-      structs: string,
     },
     artifacts: string,
     generated: {
@@ -39,6 +38,11 @@ export interface GemforgeConfig {
     lib: {
       diamond: string,
     }
+  },
+  generator: {
+    proxyInterface: {
+      imports: string[],
+    },
   },
   diamond: {
     publicMethods: boolean,
@@ -87,10 +91,12 @@ const ensureIsType = (config: GemforgeConfig, key: string, types: string[]) => {
   }
 }
 
-const ensureArray = (config: GemforgeConfig, key: string) => {
+const ensureArray = (config: GemforgeConfig, key: string, minLen = 0) => {
   const val = get(config, key)
-  if (!Array.isArray(val) || val.length === 0) {
+  if (!Array.isArray(val)) {
     throwError(`Invalid array`, key, val)
+  } else if (val.length < minLen) {
+    throwError(`Invalid array length (must be ${minLen})`, key, val)
   }
 }
 
@@ -111,12 +117,14 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
 
   // paths
   ensureIsSet(config, 'paths.artifacts')
-  ensureArray(config, 'paths.src.facets')
-  ensureIsType(config, 'paths.src.structs', ['undefined', 'string'])
+  ensureArray(config, 'paths.src.facets', 1)
   ensureIsSet(config, 'paths.generated.solidity')
   ensureIsSet(config, 'paths.generated.support')
   ensure(config, 'paths.generated.deployments', (v: any) => typeof v === 'string' && v.endsWith('.json'), 'Invalid deployments JSON file')
   ensureIsSet(config, 'paths.lib.diamond')
+
+  // generator
+  ensureArray(config, 'generator.proxyInterface.imports')
 
   // diamond
   ensureBool(config, 'diamond.publicMethods')

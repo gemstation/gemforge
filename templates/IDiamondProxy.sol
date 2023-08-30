@@ -11,7 +11,7 @@ import { IDiamondCut } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondC
 import { IDiamondLoupe } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IDiamondLoupe.sol";
 import { IERC173 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC173.sol";
 import { IERC165 } from "__LIB_DIAMOND_PATH__/contracts/interfaces/IERC165.sol";
-__STRUCTS_SRC_IMPORT__
+__CUSTOM_IMPORTS__
 
 interface IDiamondProxy is
     IERC173,
