@@ -9,6 +9,7 @@ import { Context } from "./context.js";
 import get from "lodash.get";
 import { glob } from "glob";
 import path from "node:path";
+import { Mutex } from "./mutex.js";
 
 
 export interface Network {
@@ -328,19 +329,29 @@ export const execContractMethod = async (contract: OnChainContract, method: stri
 
 const latestNonce: Record<string, number> = {}
 
+const nonceMutex = new Mutex()
+
 const getLatestNonce = async (signer: Signer): Promise<number> => {
-  const address = await signer.getAddress()
+  try {
+    await nonceMutex.lock()
 
-  trace(`Get nonce for ${address}...`)
-  
-  if (!latestNonce[address]) {
-    latestNonce[address] = await signer.getNonce()
-    trace(`   Live nonce: ${latestNonce[address]}`)
-  } else {
-    latestNonce[address]++
-    trace(`   Incremented nonce: ${latestNonce[address]}`)
+    const address = await signer.getAddress()
+
+    trace(`Get nonce for ${address}...`)
+    
+    if (!latestNonce[address]) {
+      latestNonce[address] = await signer.getNonce()
+      trace(`   Live nonce: ${latestNonce[address]}`)
+    } else {
+      latestNonce[address]++
+      trace(`   Incremented nonce: ${latestNonce[address]}`)
+    }
+
+    await nonceMutex.unlock()
+
+    return latestNonce[address]
+  } catch (err: any) {
+    await nonceMutex.unlock()
+    return error(`Failed to get nonce: ${err.message}`)
   }
-
-  
-  return latestNonce[address]
 }
