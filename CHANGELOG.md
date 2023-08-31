@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.2](https://github.com/gemstation/gemforge/compare/v1.4.1...v1.4.2) (2023-08-31)
+
+
+### Bug Fixes
+
+* import path resolution bug ([a1a5c04](https://github.com/gemstation/gemforge/commit/a1a5c049781fa76f114fe2169f027527cbaf9a0f))
+* typescript config ([c593a21](https://github.com/gemstation/gemforge/commit/c593a2141bdeea6f7ac6df43b180f54c635da7d9))
+
 ### [1.4.1](https://github.com/gemstation/gemforge/compare/v1.4.0...v1.4.1) (2023-08-30)
 
 ## [1.4.0](https://github.com/gemstation/gemforge/compare/v1.3.4...v1.4.0) (2023-08-30)
