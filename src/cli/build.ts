@@ -1,5 +1,5 @@
 import { getContext } from '../shared/context.js'
-import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getFacetsAndFunctions, saveJson, writeFile, writeTemplate } from '../shared/fs.js'
+import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFacetsAndFunctions, saveJson, writeFile, writeTemplate } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { error, info, trace } from '../shared/log.js'
@@ -26,17 +26,17 @@ export const command = () =>
       info('Creating folder for solidity output...')
       await ensureGeneratedFolderExists(ctx.generatedSolidityPath)
 
+      info('Loading user facets...')
+      const facets = getUserFacetsAndFunctions(ctx)
+      trace(`${facets.length} facets found`)
+      facets.forEach(f => {
+        trace(`  ${f.contractName} => ${f.functions.length} functions`)
+      })
       info('Generating DiamondProxy.sol...')
       writeTemplate('DiamondProxy.sol', `${ctx.generatedSolidityPath}/DiamondProxy.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
-      })
-
-      const facets = getFacetsAndFunctions(ctx)
-      trace(`${facets.length} facets found`)
-      facets.forEach(f => {
-        trace(`  ${f.contractName} => ${f.functions.length} functions`)
       })
       
       info('Generating IDiamondProxy.sol...')

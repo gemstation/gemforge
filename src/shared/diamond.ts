@@ -1,5 +1,5 @@
-import { Signer, FunctionFragment, Interface } from "ethers"
-import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, getContractValue } from "./chain.js"
+import { Signer, FunctionFragment, Interface, ZeroAddress } from "ethers"
+import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, getContractBytecode, getContractValue } from "./chain.js"
 import { trace } from "./log.js"
 
 interface FunctionSelector {
@@ -48,11 +48,14 @@ export interface Upgrade {
   facetsToDeploy: string[],
 }
 
-export const resolveUpgrade = async (
-  artifacts: Record<string, ContractArtifact>, 
+export const resolveUpgrade = async (params: {
+  userFacets: Record<string, ContractArtifact>, 
+  coreFacets: Record<string, ContractArtifact>,
   diamondProxy: OnChainContract,
   signer: Signer,
-): Promise<Upgrade> => {
+}): Promise<Upgrade> => {
+  const { userFacets, coreFacets, diamondProxy, signer } = params
+
   // get what's on-chain
   trace('Resolving methods on-chain ...')
   const facets = await getContractValue(diamondProxy, 'facets', [])
@@ -67,8 +70,8 @@ export const resolveUpgrade = async (
   trace('Resolving methods in artifacts ...')
   const newFunctions: Record<string, string> = {}
   const functionNames: Record<string, string> = {}
-  Object.keys(artifacts).forEach((k: string) => {
-    const artifact = artifacts[k]
+  Object.keys(userFacets).forEach((k: string) => {
+    const artifact = userFacets[k]
     getSelectors(artifact).forEach((s: FunctionSelector) => {
       newFunctions[s.selector] = k
       functionNames[s.selector] = s.name
@@ -82,6 +85,14 @@ export const resolveUpgrade = async (
     remove: {} as Record<string, string[]>,
   }
 
+  const _bytecodes: Record<string, string> = {}
+  const _getBytecode = async (address: string) => {
+    if (!_bytecodes[address]) {
+      _bytecodes[address] = await getContractBytecode(signer, address)
+    }
+    return _bytecodes[address]
+  }
+
   // resolve additions and replacements
   for (let f in newFunctions) {
     // add new function
@@ -93,15 +104,9 @@ export const resolveUpgrade = async (
       todo.add[newFunctions[f]].push(f)
     } else {
       // check bytecode of deployed contract against artifact bytecode
-      const artifact = artifacts[newFunctions[f]]
+      const artifact = userFacets[newFunctions[f]]
       const newBytecode = artifact.deployedBytecode
-      const liveContract = await getContractAtUsingArtifact(
-        artifact, 
-        signer, 
-        liveFunctions[f]
-      )
-      const liveBytecode = await liveContract.contract.getDeployedCode()
-
+      const liveBytecode = await _getBytecode(liveFunctions[f])
       if (liveBytecode !== newBytecode) {
         trace(`[Replace] method ${functionNames[f]} [${f}] by deploying new facet ${newFunctions[f]}`)
 
@@ -112,19 +117,29 @@ export const resolveUpgrade = async (
     }
   }
 
-  /*
-  TODO: removals
-
-  We need to make sure we don't remove loupe, cut and other required methods.
-  */
+  // removals
+  for (let f in liveFunctions) {
+    if (!newFunctions[f]) {
+      const liveBytecode = await _getBytecode(liveFunctions[f])
+      // check bytecode of deployed contract against core facet bytecodes
+      const matchesCore = Object.values(coreFacets).find((artifact: ContractArtifact) => {
+        return artifact.deployedBytecode == liveBytecode
+      })
+      if (!matchesCore) {
+        trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
+        todo.remove[ZeroAddress] = todo.remove[liveFunctions[f]] || []
+        todo.remove[ZeroAddress].push(f)
+      }
+    }
+  }
 
   const namedCuts: NamedFacetCut[] = []
   const _createNamedCuts = (src: Record<string, string[]>, action: FacetCutAction) => {
-    Object.keys(src).forEach(facetName => {
+    Object.keys(src).forEach(facetNameOrAddress => {
       namedCuts.push({
-        facetNameOrAddress: facetName,
+        facetNameOrAddress: facetNameOrAddress,
         action,
-        functionSelectors: src[facetName],
+        functionSelectors: src[facetNameOrAddress],
       })
     })
   }

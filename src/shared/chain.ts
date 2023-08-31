@@ -157,6 +157,18 @@ export const getContractAtUsingArtifact = async (artifact: ContractArtifact, sig
 }
 
 
+export const getContractBytecode = async (signer: Signer, address: string): Promise<string> => {
+  try {
+    trace(`Getting bytecode for contract at address ${address} ...`)
+    const code = await signer.provider!.getCode(address)
+    return code
+   } catch (err: any) {
+    return error(`Failed to get bytecode at address ${address}: ${err.message}}`)
+   }
+}
+
+
+
 export interface ContractDeploymentRecord {
   name: string,
   fullyQualifiedName: string,

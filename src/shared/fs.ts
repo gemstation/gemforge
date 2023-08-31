@@ -117,19 +117,18 @@ export interface FacetDefinition {
   }[],
 }
 
-export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
+
+export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   if (ctx.config.diamond.publicMethods) {
     trace('Including public methods in facet cuts')
   }
-
-  // load facets
-  const facetFiles = glob.sync(ctx.config.paths.src.facets, { cwd: ctx.folder })
 
   const ret: FacetDefinition[] = []
   const contractNames: Record<string, boolean> = {}
   const functionSigs: Record<string, boolean> = {}
 
-  // get definitions
+  // load user facets
+  const facetFiles = glob.sync(ctx.config.paths.src.facets, { cwd: ctx.folder })
   facetFiles.forEach(file => {
     const ast = parser.parse(readFileSync(path.join(ctx.folder, file), 'utf-8'), {
       loc: true,

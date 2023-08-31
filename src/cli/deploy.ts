@@ -81,17 +81,28 @@ export const command = () =>
         }
       }
 
-      info('Loading facet artifacts...')
-      const facets = loadJson(`${ctx.generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
-      const facetContractNames = Object.keys(facets)
-      info(`   ${facetContractNames.length} facets found.`)
-      const facetArtifacts = facetContractNames.reduce((m, name) => {
+      info('Loading user facet artifacts...')
+      const userFacets = loadJson(`${ctx.generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
+      const userFacetContractNames = Object.keys(userFacets)
+      info(`   ${userFacetContractNames.length} facets found.`)
+      const userFacetArtifacts = userFacetContractNames.reduce((m, name) => {
+        m[name] = loadContractArtifact(ctx, name)
+        return m
+      }, {} as Record<string, ContractArtifact>)
+
+      info('Loading core facet artifacts...')
+      const coreFacets = ctx.config.diamond.coreFacets.reduce((m, name) => {
         m[name] = loadContractArtifact(ctx, name)
         return m
       }, {} as Record<string, ContractArtifact>)
 
       info('Resolving what changes need to be applied ...')
-      const changes = await resolveUpgrade(facetArtifacts, proxyInterface, signer)
+      const changes = await resolveUpgrade({
+        userFacets: userFacetArtifacts,
+        coreFacets,
+        diamondProxy: proxyInterface,
+        signer
+      })
       info(`   ${changes.facetsToDeploy.length} facets need to be deployed.`)
       info(`   ${changes.namedCuts.length} facet cuts need to be applied.`)
 
