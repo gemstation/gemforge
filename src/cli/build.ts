@@ -42,9 +42,10 @@ export const command = () =>
       info('Generating IDiamondProxy.sol...')
       let customImportsStr = ''
       ctx.config.generator.proxyInterface.imports.forEach(imp => {
-        const p = path.resolve(ctx.generatedSolidityPath, imp)
+        const p = path.resolve(ctx.folder, imp)
         if (fileExists(p)) {
-          customImportsStr += `import "${imp}";\n`
+          const impPath = path.relative(ctx.generatedSolidityPath, p)
+          customImportsStr += `import "${impPath}";\n`
         } else {
           error(`Import file not found: ${p}`)
         }
