@@ -141,6 +141,8 @@ export const getFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
     contractDefinitions.forEach(contract => {
       if (contractNames[contract.name]) {
         error(`Duplicate contract name found in ${file}: ${contract.name}`)
+      } else if (ctx.config.diamond.coreFacets.includes(contract.name)) {
+        error(`Core facet contract name used in ${file}: ${contract.name}`)
       } else {
         contractNames[contract.name] = true
       }

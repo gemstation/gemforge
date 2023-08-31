@@ -47,6 +47,7 @@ export interface GemforgeConfig {
   diamond: {
     publicMethods: boolean,
     init: string,
+    coreFacets: string[],
   },
   hooks: {
     preBuild: string,
@@ -129,6 +130,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   // diamond
   ensureBool(config, 'diamond.publicMethods')
   ensureIsType(config, 'diamond.init', ['undefined', 'string'])
+  ensureArray(config, 'diamond.coreFacets')
 
   // artifacts
   ensure(config, 'artifacts.format', (v: any) => ['foundry', 'hardhat'].indexOf(v) >= 0, 'Invalid artifacts format')

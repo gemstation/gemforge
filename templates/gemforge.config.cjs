@@ -55,6 +55,14 @@ module.exports = {
     publicMethods: false,
     // The diamond initialization contract - to be called when first deploying the diamond.
     init: 'InitDiamond',
+    // Names of core facet contracts - these will not be modified/removed once deployed and are also reserved names.
+    // This default list is taken from the diamond-2-hardhat library.
+    // NOTE: we recommend not removing any of these existing names unless you know what you are doing.
+    coreFacets: [
+      'OwnershipFacet',
+      'DiamondCutFacet',
+      'DiamondLoupeFacet',
+    ],
   },
   // lifecycle hooks
   hooks: {
