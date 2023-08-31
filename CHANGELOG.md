@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/gemstation/gemforge/compare/v1.4.2...v1.5.0) (2023-08-31)
+
+
+### Features
+
+* core facets with reserved names ([131316b](https://github.com/gemstation/gemforge/commit/131316b0b0cc2568ab64627f4b8c5185d50629f0))
+* selector removal - [#8](https://github.com/gemstation/gemforge/issues/8) ([33224fd](https://github.com/gemstation/gemforge/commit/33224fd0915ce45c83960064b2d23056a258d78d))
+
 ### [1.4.2](https://github.com/gemstation/gemforge/compare/v1.4.1...v1.4.2) (2023-08-31)
 
 
