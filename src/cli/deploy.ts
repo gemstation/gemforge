@@ -4,7 +4,7 @@ import { Context, getContext } from '../shared/context.js'
 import { $, FacetDefinition, loadJson } from '../shared/fs.js'
 import { createCommand, logSuccess } from './common.js'
 import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
-import { getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
+import { FacetCutAction, getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
 import { Signer } from 'ethers'
 
 export const command = () =>
@@ -103,8 +103,11 @@ export const command = () =>
         diamondProxy: proxyInterface,
         signer
       })
+      const numAdds = changes.namedCuts.filter(c => c.action === FacetCutAction.Add).length
+      const numReplacements = changes.namedCuts.filter(c => c.action === FacetCutAction.Replace).length
+      const numRemovals = changes.namedCuts.filter(c => c.action === FacetCutAction.Remove).length
       info(`   ${changes.facetsToDeploy.length} facets need to be deployed.`)
-      info(`   ${changes.namedCuts.length} facet cuts need to be applied.`)
+      info(`   ${changes.namedCuts.length} facet cuts need to be applied (Add = ${numAdds}, Replace = ${numReplacements}, Remove = ${numRemovals}).`)
 
       if (changes.namedCuts.length === 0) {
         info('No changes need to be applied.')
