@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.2](https://github.com/gemstation/gemforge/compare/v1.5.1...v1.5.2) (2023-08-31)
+
+
+### Bug Fixes
+
+* avoid race conditions when fetching nonce ([77d5707](https://github.com/gemstation/gemforge/commit/77d5707623b237eeb01f9b09aed2fa8483e3d533))
+* parallel facet deployment sometimes failing ([4335b05](https://github.com/gemstation/gemforge/commit/4335b0530e9ddfb9111681c58fa5245696cfe452))
+
 ### [1.5.1](https://github.com/gemstation/gemforge/compare/v1.5.0...v1.5.1) (2023-08-31)
 
 ## [1.5.0](https://github.com/gemstation/gemforge/compare/v1.4.2...v1.5.0) (2023-08-31)
