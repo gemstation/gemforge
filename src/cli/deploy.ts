@@ -1,3 +1,4 @@
+import * as timersPromises from 'node:timers/promises';
 import { ethers } from 'ethers'
 import { error, info } from '../shared/log.js'
 import { Context, getContext } from '../shared/context.js'
@@ -116,12 +117,23 @@ export const command = () =>
 
         if (changes.facetsToDeploy.length) {
           info('Deploying facets...')
-          await Promise.all(changes.facetsToDeploy.map(async name => {
+          /* 
+            TODO: sometimes the parallelization fails so let's do it sequentially for now (above)
+            
+            await Promise.all(changes.facetsToDeploy.map(async name => {
+              info(`   Deploying ${name} ...`)
+              const contract = await deployContract(ctx, name, signer)
+              await timersPromises.setTimeout(1000)
+              facetContracts[name] = contract
+              info(`   Deployed ${name} at: ${await contract.address}`)
+            }))
+          */
+          for (const name of changes.facetsToDeploy) {
             info(`   Deploying ${name} ...`)
             const contract = await deployContract(ctx, name, signer)
             facetContracts[name] = contract
             info(`   Deployed ${name} at: ${await contract.address}`)
-          }))
+          }
         } else {
           info('No new facets need to be deployed.')
         }
