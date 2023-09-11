@@ -297,20 +297,25 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
 }
 
 
-export const getContractValue = async (contract: OnChainContract, method: string, args: any[]): Promise<any> => {  
+export const getContractValue = async (contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<any> => {  
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
     trace(`Calling ${label} ...`)
     return (await contract.contract[method](...args)) as any
   } catch (err: any) {
-    return error(`Failed to call ${label}: ${err.message}`)
+    const errorMessage = `Failed to call ${label}: ${err.message}`
+    if (dontExitOnError) {
+      throw new Error(errorMessage)
+    } else {
+      return error(errorMessage)
+    }
   }
 }
 
 
 
-export const execContractMethod = async (contract: OnChainContract, method: string, args: any[]): Promise<TransactionReceipt> => {  
+export const execContractMethod = async (contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<TransactionReceipt> => {  
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
@@ -322,7 +327,12 @@ export const execContractMethod = async (contract: OnChainContract, method: stri
     trace(`   ...mined in block ${receipt.blockNumber}`)
     return receipt
   } catch (err: any) {
-    return error(`Failed to execute ${label}: ${err.message}`)
+    const errorMessage = `Failed to execute ${label}: ${err.message}`
+    if (dontExitOnError) {
+      throw new Error(errorMessage)
+    } else {
+      return error(errorMessage)
+    }
   }
 }
 

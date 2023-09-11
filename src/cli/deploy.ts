@@ -66,14 +66,18 @@ export const command = () =>
           info(`Checking if existing deployment is still valid...`)
           proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing.contract.address)
 
-          const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'])
-          if (!isDiamond) {
-            error(`Existing deployment is not a diamond: supportsInterface() error`)
-          }
+          try {
+            const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
+            if (!isDiamond) {
+              throw new Error(`supportsInterface() error`)
+            }
 
-          const facets = await getContractValue(proxyInterface, 'facets', [])
-          if (!facets) {
-          error(`Existing deployment is not a diamond: facets() error`)
+            const facets = await getContractValue(proxyInterface, 'facets', [], true)
+            if (!facets) {
+              throw new Error(`facets() error`)
+            }
+          } catch (err: any) {
+            error(`Existing deployment is not a diamond: ${err.message}\n\nYou may want to run with --new to force a fresh deployment.`)
           }
         } else {
           info(`   No existing deployment found.`)
