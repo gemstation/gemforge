@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/gemstation/gemforge/compare/v1.6.0...v1.7.0) (2023-09-11)
+
+
+### Features
+
+* output warning if custom structs detected ([9229994](https://github.com/gemstation/gemforge/commit/92299945ff825c9f1c8af7d1c67ee8cd084a225d))
+
 ## [1.6.0](https://github.com/gemstation/gemforge/compare/v1.5.2...v1.6.0) (2023-09-11)
 
 
