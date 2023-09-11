@@ -117,6 +117,10 @@ export interface FacetDefinition {
   }[],
 }
 
+interface ParserMeta {
+  userDefinedTypes: string[],
+}
+
 
 export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   if (ctx.config.diamond.publicMethods) {
@@ -126,6 +130,7 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   const ret: FacetDefinition[] = []
   const contractNames: Record<string, boolean> = {}
   const functionSigs: Record<string, boolean> = {}
+  const parserMeta: ParserMeta = { userDefinedTypes: [] }
 
   // load user facets
   const facetFiles = glob.sync(ctx.config.paths.src.facets, { cwd: ctx.folder })
@@ -159,12 +164,12 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
       // export declare type TypeName = ElementaryTypeName | UserDefinedTypeName | ArrayTypeName;
 
       const functions = functionDefinitions.map(node => {
-        let signature = `function ${node.name}(${getParamString(node.parameters)}) ${node.visibility}${
+        let signature = `function ${node.name}(${getParamString(node.parameters, parserMeta)}) ${node.visibility}${
           node.stateMutability ? ` ${node.stateMutability}` : ''
         }`
 
         if (node.returnParameters?.length) {
-          signature += ` returns (${getParamString(node.returnParameters)})`
+          signature += ` returns (${getParamString(node.returnParameters, parserMeta)})`
         }
 
         const r = {
@@ -189,18 +194,23 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
     })
   })
 
+  if (parserMeta.userDefinedTypes.length) {
+    warn(`Custom structs found in facet method signatures: ${parserMeta.userDefinedTypes.join(', ')}`)
+    warn(`Please ensure your gemforge config is setup properly to handle this, see https://gemforge.xyz/advanced/custom-structs/.`)
+  }
+
   return ret
 }
 
 
 
-const getParamString = (params: VariableDeclaration[]): string => {
+const getParamString = (params: VariableDeclaration[], meta: ParserMeta): string => {
   const p: string[] = []
 
   params.map(param => {
     const name = param.name ? ` ${param.name}` : ''
     const storage = param.storageLocation ? ` ${param.storageLocation}`: ''
-    const typeNameString = _getTypeNameString(param.typeName!)
+    const typeNameString = _getTypeNameString(param.typeName!, meta)
     p.push(`${typeNameString}${storage}${name}`)
   })
 
@@ -208,7 +218,7 @@ const getParamString = (params: VariableDeclaration[]): string => {
 }
 
 
-const _getTypeNameString = (typeName: TypeName): string => {
+const _getTypeNameString = (typeName: TypeName, meta: ParserMeta): string => {
   switch (typeName.type) {
     case 'ElementaryTypeName': {
       const t = typeName as ElementaryTypeName
@@ -216,11 +226,12 @@ const _getTypeNameString = (typeName: TypeName): string => {
     }
     case 'UserDefinedTypeName': {
       const t = typeName as UserDefinedTypeName
+      meta.userDefinedTypes.push(t.namePath)
       return t.namePath
     }
     case 'ArrayTypeName': {
       const t = typeName as ArrayTypeName
-      const innerType = _getTypeNameString(t.baseTypeName as TypeName)
+      const innerType = _getTypeNameString(t.baseTypeName as TypeName, meta)
       const lenStr = t.length ? `[${(t.length as NumberLiteral).number}]` : '[]'
       return `${innerType}${lenStr}`
     }
