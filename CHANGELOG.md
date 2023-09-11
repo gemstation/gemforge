@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/gemstation/gemforge/compare/v1.5.2...v1.6.0) (2023-09-11)
+
+
+### Features
+
+* better error reporting if existing diamond is invalid ([6d31b10](https://github.com/gemstation/gemforge/commit/6d31b10f561b94ff74ade96a1bdc948bf79402ca))
+
 ### [1.5.2](https://github.com/gemstation/gemforge/compare/v1.5.1...v1.5.2) (2023-08-31)
 
 

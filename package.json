@@ -1,6 +1,6 @@
 {
   "name": "gemforge",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.",
   "bin": {
     "gemforge": "./bin/gemforge.js"
