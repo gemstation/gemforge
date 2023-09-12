@@ -83,6 +83,8 @@ Options:
 
 ## Development
 
+_Note: This section is only relevant for those wishing to work on the Gemforge tool itself. To use Gemforge with your own project please read the [official documentation](https://gemforge.xyz)._
+
 Building the tool:
 
 ```
