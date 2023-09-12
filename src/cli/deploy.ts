@@ -1,17 +1,18 @@
 import * as timersPromises from 'node:timers/promises';
-import { ethers } from 'ethers'
-import { error, info } from '../shared/log.js'
+import { ZeroAddress, ethers } from 'ethers'
+import { error, info, warn } from '../shared/log.js'
 import { Context, getContext } from '../shared/context.js'
 import { $, FacetDefinition, loadJson } from '../shared/fs.js'
 import { createCommand, logSuccess } from './common.js'
 import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
-import { FacetCutAction, getFinalizedFacetCuts, resolveUpgrade } from '../shared/diamond.js'
+import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
 import { Signer } from 'ethers'
 
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a network.')
     .argument('[network]', 'network to deploy to', 'local')
-    .option('-n, --new', 'do a fresh deployment, ignoring any existing one')
+    .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
+    .option('--clean', 'remove all non-core facet selectors from an existing deployment and start afresh')
     .action(async (networkArg, args) => {
       const ctx = await getContext(args)
 
@@ -101,7 +102,20 @@ export const command = () =>
         return m
       }, {} as Record<string, ContractArtifact>)
 
-      info('Resolving what changes need to be applied ...')
+      // clean existing deployment?
+      if (!isNewDeployment && args.clean) {
+        info('Cleaning existing deployment...')
+        warn('This will remove all non-core facet selectors from the existing deployment.')
+        const cleanCut = await resolveClean({
+          coreFacets,
+          diamondProxy: proxyInterface,
+          signer
+        })
+        info(`   ${cleanCut.functionSelectors.length} selectors to remove.`)
+        await callDiamondCut(proxyInterface, [cleanCut])
+      }
+
+      info('Resolving what changes need to be applied ...')      
       const changes = await resolveUpgrade({
         userFacets: userFacetArtifacts,
         coreFacets,
@@ -156,9 +170,8 @@ export const command = () =>
           info(`   Initialization contract deployed at: ${initContractAddress}`)
         }
         
-        info('Calling diamondCut() on the proxy...')
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
-        await execContractMethod(proxyInterface, 'diamondCut', [cuts, initContractAddress, initData])
+        await callDiamondCut(proxyInterface, cuts, initContractAddress, initData)
       }
 
       const deploymentRecords = getDeploymentRecords()
@@ -175,6 +188,12 @@ export const command = () =>
 
       logSuccess()
     })
+
+
+  const callDiamondCut = async (diamondProxy: OnChainContract, cuts: FacetCut[], initContractAddress: string = ZeroAddress, initData: string = '0x') => {
+    info('Calling diamondCut() on the proxy...')        
+    await execContractMethod(diamondProxy, 'diamondCut', [cuts, initContractAddress, initData])
+  }
 
   
   const deployNewDiamond = async (ctx: Context, signer: Signer) => {

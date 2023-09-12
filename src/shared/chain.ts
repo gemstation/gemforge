@@ -158,16 +158,26 @@ export const getContractAtUsingArtifact = async (artifact: ContractArtifact, sig
 }
 
 
-export const getContractBytecode = async (signer: Signer, address: string): Promise<string> => {
-  try {
-    trace(`Getting bytecode for contract at address ${address} ...`)
-    const code = await signer.provider!.getCode(address)
-    return code
-   } catch (err: any) {
-    return error(`Failed to get bytecode at address ${address}: ${err.message}}`)
-   }
-}
+export class BytecodeFetcher {
+  private _signer: Signer
+  private _cache: Record<string, string> = {}
 
+  constructor(signer: Signer) {
+    this._signer = signer
+  }
+
+  async getBytecode(address: string): Promise<string> {
+    if (!this._cache[address]) {
+      try {
+        trace(`Getting bytecode for contract at address ${address} ...`)
+        this._cache[address] = await this._signer.provider!.getCode(address)
+      } catch (err: any) {
+        return error(`Failed to get bytecode at address ${address}: ${err.message}}`)
+      }
+    }
+    return this._cache[address]
+  }
+}
 
 
 export interface ContractDeploymentRecord {

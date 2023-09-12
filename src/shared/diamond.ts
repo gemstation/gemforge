@@ -1,5 +1,5 @@
 import { Signer, FunctionFragment, Interface, ZeroAddress } from "ethers"
-import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, getContractBytecode, getContractValue } from "./chain.js"
+import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, BytecodeFetcher, getContractValue } from "./chain.js"
 import { trace } from "./log.js"
 
 interface FunctionSelector {
@@ -24,6 +24,21 @@ const getSelectors = (artifact: ContractArtifact): FunctionSelector[] => {
   return selectors
 }
 
+
+const getLiveFunctions = async (diamondProxy: OnChainContract): Promise<Record<string, string>> => {
+  // get what's on-chain
+  trace('Resolving methods on-chain ...')
+  const facets = await getContractValue(diamondProxy, 'facets', [])
+  const liveFunctions: Record<string, string> = {}
+  facets.forEach((v: any) => {
+    v[1].forEach((f: string) => {
+      liveFunctions[f] = v[0]
+    })
+  })
+  return liveFunctions
+}
+
+
 export enum FacetCutAction { 
   Add = 0, 
   Replace = 1,
@@ -42,6 +57,38 @@ export interface FacetCut {
   functionSelectors: string[]
 }
 
+export const resolveClean = async (params: {
+  coreFacets: Record<string, ContractArtifact>,
+  diamondProxy: OnChainContract,
+  signer: Signer,
+}): Promise<FacetCut> => {
+  const { coreFacets, diamondProxy, signer } = params
+
+  const cut: FacetCut = {
+    action: FacetCutAction.Remove,
+    facetAddress: ZeroAddress,
+    functionSelectors: [],
+  }
+  const liveFunctions = await getLiveFunctions(diamondProxy)
+  const bytecodeFetcher = new BytecodeFetcher(signer)
+
+  for (let f in liveFunctions) {
+    const liveBytecode = await bytecodeFetcher.getBytecode(liveFunctions[f])
+
+    // check bytecode of deployed contract against core facet bytecodes
+    const matchesCore = Object.values(coreFacets).find((artifact: ContractArtifact) => {
+      return artifact.deployedBytecode == liveBytecode
+    })
+
+    if (!matchesCore) {
+      trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
+      cut.functionSelectors.push(f)
+    }
+  }
+
+  return cut
+}
+
 
 export interface Upgrade {
   namedCuts: NamedFacetCut[],
@@ -57,14 +104,7 @@ export const resolveUpgrade = async (params: {
   const { userFacets, coreFacets, diamondProxy, signer } = params
 
   // get what's on-chain
-  trace('Resolving methods on-chain ...')
-  const facets = await getContractValue(diamondProxy, 'facets', [])
-  const liveFunctions: Record<string, string> = {}
-  facets.forEach((v: any) => {
-    v[1].forEach((f: string) => {
-      liveFunctions[f] = v[0]
-    })
-  })
+  const liveFunctions = await getLiveFunctions(diamondProxy)
 
   // get what's in artifacts
   trace('Resolving methods in artifacts ...')
@@ -85,13 +125,7 @@ export const resolveUpgrade = async (params: {
     remove: {} as Record<string, string[]>,
   }
 
-  const _bytecodes: Record<string, string> = {}
-  const _getBytecode = async (address: string) => {
-    if (!_bytecodes[address]) {
-      _bytecodes[address] = await getContractBytecode(signer, address)
-    }
-    return _bytecodes[address]
-  }
+  const bytecodeFetcher = new BytecodeFetcher(signer)
 
   // resolve additions and replacements
   for (let f in newFunctions) {
@@ -106,7 +140,7 @@ export const resolveUpgrade = async (params: {
       // check bytecode of deployed contract against artifact bytecode
       const artifact = userFacets[newFunctions[f]]
       const newBytecode = artifact.deployedBytecode
-      const liveBytecode = await _getBytecode(liveFunctions[f])
+      const liveBytecode = await bytecodeFetcher.getBytecode(liveFunctions[f])
       if (liveBytecode !== newBytecode) {
         trace(`[Replace] method ${functionNames[f]} [${f}] by deploying new facet ${newFunctions[f]}`)
 
@@ -120,7 +154,7 @@ export const resolveUpgrade = async (params: {
   // removals
   for (let f in liveFunctions) {
     if (!newFunctions[f]) {
-      const liveBytecode = await _getBytecode(liveFunctions[f])
+      const liveBytecode = await bytecodeFetcher.getBytecode(liveFunctions[f])
       // check bytecode of deployed contract against core facet bytecodes
       const matchesCore = Object.values(coreFacets).find((artifact: ContractArtifact) => {
         return artifact.deployedBytecode == liveBytecode
