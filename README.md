@@ -24,11 +24,12 @@ By automating almost all aspects of this boilerplate code whilst still remaining
 * Auto-generates Diamond proxy code.
 * Auto-generates deployment code for Foundry tests.
 * Auto-calculates facet deployment and upgrades accurately and efficiently.
+* [Clean](https://gemforge.xyz/commands/deploy/#fresh-deployments) existing deployments.
 * Records diamond addresses to JSON file for history tracking.
 * Pre- and post- hooks for both build and deploy steps.
 * Generates [Foundry](https://github.com/gemstation/contracts-foundry/) and [Hardhat](https://github.com/gemstation/contracts-hardhat/) scaffolding.
 * Highly configurable per project.
-* [Full documentation](https://gemforge.xyz)
+* [Fully documented](https://gemforge.xyz)
 
 ## Installation
 
