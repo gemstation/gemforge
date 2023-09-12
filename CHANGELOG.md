@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/gemstation/gemforge/compare/v1.7.0...v1.8.0) (2023-09-12)
+
+
+### Features
+
+* --clean deploy to reset a diamond to a fresh start - [#15](https://github.com/gemstation/gemforge/issues/15) ([4823f6e](https://github.com/gemstation/gemforge/commit/4823f6eb7c3a31bd3a64fa1a6d354072f9f79f8d))
+
 ## [1.7.0](https://github.com/gemstation/gemforge/compare/v1.6.0...v1.7.0) (2023-09-11)
 
 
