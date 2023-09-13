@@ -32,6 +32,7 @@ export const command = () =>
       facets.forEach(f => {
         trace(`  ${f.contractName} => ${f.functions.length} functions`)
       })
+
       info('Generating DiamondProxy.sol...')
       writeTemplate('DiamondProxy.sol', `${ctx.generatedSolidityPath}/DiamondProxy.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { disableLogging, enableVerboseLogging, error, info, trace } from './log.js'
-import { GemforgeConfig, sanitizeConfig } from './config.js'
+import { GemforgeConfig, sanitizeConfig } from './config/index.js'
 
 export interface Context {
   config: GemforgeConfig
@@ -45,7 +45,7 @@ export const getContext = async (args: Record<string, any>): Promise<Context> =>
       context.libDiamondPath = path.resolve(context.folder, context.config.paths.lib.diamond)
       context.artifactsPath = path.resolve(context.folder, context.config.paths.artifacts)
     } catch (err: any) {
-      error(`Failed to load config file ${config}: ${err.message}`)
+      error(`Failed to load config file ${config}\n\n${err.message}`)
     }
   }
 

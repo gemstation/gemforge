@@ -1,5 +1,5 @@
 import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, NetworkConfig, WalletConfig } from "./config.js";
+import { MnemonicWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
 import { error, trace } from "./log.js";
 import { Provider } from "ethers";
 import { loadJson, saveJson } from "./fs.js";
@@ -12,13 +12,13 @@ import path from "node:path";
 import { Mutex } from "./mutex.js";
 
 
-export interface Network {
+interface Network {
   config: NetworkConfig,
   provider: Provider,
   chainId: number,
 }
 
-export const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
+const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
   let rpcUrlStr: string = ''
 
   switch (typeof n.rpcUrl) {
@@ -39,6 +39,20 @@ export const setupNetwork = async (n: NetworkConfig): Promise<Network> => {
     config: n,
     provider,
     chainId: ethers.toNumber(chainId),
+  }
+}
+
+export interface Target {
+  config: TargetConfig,
+  network: Network,
+}
+
+export const setupTarget = async (ctx: Context, config: TargetConfig): Promise<Target> => {
+  const n = ctx.config.networks[config.network]
+  const network = await setupNetwork(n)
+  return {
+    config,
+    network,
   }
 }
 
@@ -192,18 +206,20 @@ export interface ContractDeploymentRecord {
 }
 
 export interface ChainDeploymentInfo {
-  [chainId: string]: ContractDeploymentRecord[]
+  [targetName: string]: {
+    [chainId: string]: ContractDeploymentRecord[]
+  }
 }
 
-export const readDeploymentInfo = (jsonFilePath: string, network: Network): ContractDeploymentRecord[] =>  {
-  trace(`Reading deployment records for chain id ${network.chainId} from ${jsonFilePath} ...`)
+export const readDeploymentInfo = (jsonFilePath: string, targetName: string, target: Target): ContractDeploymentRecord[] =>  {
+  trace(`Reading deployment records for target ${targetName} from ${jsonFilePath} ...`)
 
-  const chainId = String(network.chainId)
+  const chainId = String(target.network.chainId)
   let obj: ChainDeploymentInfo = {}
 
   try {
     obj = loadJson(jsonFilePath) as ChainDeploymentInfo
-    const records = get(obj, chainId)
+    const records = get(obj, `${targetName}.${chainId}`) as any as ContractDeploymentRecord[]
     if (records) {
       return records
     } else {
@@ -216,11 +232,11 @@ export const readDeploymentInfo = (jsonFilePath: string, network: Network): Cont
   }
 }
 
-export const saveDeploymentInfo = (jsonFilePath: string, network: Network, records: ContractDeploymentRecord[], isNewDeployment: boolean) => {
+export const saveDeploymentInfo = (jsonFilePath: string, targetName: string, target: Target, records: ContractDeploymentRecord[], isNewDeployment: boolean) => {
   trace(`Saving deployment info to: ${jsonFilePath} ...`)
   trace(`${records.length} records to save`)
 
-  const chainId = String(network.chainId)
+  const chainId = String(target.network.chainId)
 
   try {
     let infoData: ChainDeploymentInfo = {}
@@ -229,7 +245,7 @@ export const saveDeploymentInfo = (jsonFilePath: string, network: Network, recor
     try {
       infoData = loadJson(jsonFilePath) as ChainDeploymentInfo
       
-      const existing = get(infoData, chainId)
+      const existing = get(infoData, `${targetName}.${chainId}`) as any as ContractDeploymentRecord[]
 
       if (existing) {
         trace(`   ${existing.length} existing records found`)
@@ -253,7 +269,8 @@ export const saveDeploymentInfo = (jsonFilePath: string, network: Network, recor
       finalized.push(...records)
     }
 
-    infoData[chainId] = finalized
+    infoData[targetName] = infoData[targetName] || {}
+    infoData[targetName][chainId] = finalized
 
     trace(`Saving ${finalized.length} records to ${jsonFilePath}`)
     saveJson(jsonFilePath, infoData)
@@ -264,14 +281,14 @@ export const saveDeploymentInfo = (jsonFilePath: string, network: Network, recor
 
 
 
-let deploymentRecords: ContractDeploymentRecord[] = []
+let deploymentRecorder: ContractDeploymentRecord[] = []
 
-export const clearDeploymentRecords = () => {
-  deploymentRecords = []
+export const clearDeploymentRecorder = () => {
+  deploymentRecorder = []
 }
 
-export const getDeploymentRecords = () => {
-  return deploymentRecords.concat([])
+export const getDeploymentRecorderData = () => {
+  return deploymentRecorder.concat([])
 }
 
 export const deployContract = async (ctx: Context, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
@@ -285,7 +302,7 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
     const contract = await tx.waitForDeployment() as Contract
     const address = await contract.getAddress()
 
-    deploymentRecords.push({
+    deploymentRecorder.push({
       name,
       fullyQualifiedName: artifact.fullyQualifiedName,
       sender: await signer.getAddress(),

@@ -1,23 +1,24 @@
 import get from 'lodash.get'
+import { ensure, ensureArray, ensureBool, ensureIsSet, ensureIsType, throwError } from './common.js'
 // @ts-ignore
 import spdxLicenseIds from 'spdx-license-ids' assert { type: "json" }
 
-export interface MnemonicWalletConfig {
+interface MnemonicWalletConfig {
   words: string | Function,
   index: number,
 }
 
-export type WalletConfig = {
+type WalletConfig = {
   type: 'mnemonic',
   config: MnemonicWalletConfig,
 }
 
-export interface NetworkConfig {
+interface NetworkConfig {
   rpcUrl: string | Function,
   wallet: string,
 }
 
-export interface GemforgeConfig {
+export interface GemforgeConfigV1 {
   solc: {
     license: string
     version: string
@@ -63,52 +64,10 @@ export interface GemforgeConfig {
   },
   networks: {
     [name: string]: NetworkConfig,
-  }
+  },
 }
 
-const throwError = (msg: string, key: string, val?: any) => {
-  throw new Error(`${msg} for [${key}]${typeof val !== undefined ? `: ${val}` : ''}`)
-}
-
-const ensure = (config: GemforgeConfig, key: string, isValid: (v: any) => boolean, msg: string = 'Invalid value') => {
-  const val = get(config, key)
-  if (!isValid(val)) {
-    throwError(msg, key, val)
-  }
-}
-
-const ensureIsSet = (config: GemforgeConfig, key: string) => {
-  const val = get(config, key)
-  if (!val) {
-    throwError(`Value not found`, key)
-  }
-}
-
-const ensureIsType = (config: GemforgeConfig, key: string, types: string[]) => {
-  const val = get(config, key)
-  const type = typeof val
-  if (types.indexOf(type) < 0) {
-    throwError(`Invalid type: ${type}, must be one of (${types.join(', ')})`, key, val)
-  }
-}
-
-const ensureArray = (config: GemforgeConfig, key: string, minLen = 0) => {
-  const val = get(config, key)
-  if (!Array.isArray(val)) {
-    throwError(`Invalid array`, key, val)
-  } else if (val.length < minLen) {
-    throwError(`Invalid array length (must be ${minLen})`, key, val)
-  }
-}
-
-const ensureBool = (config: GemforgeConfig, key: string) => {
-  const val = get(config, key)
-  if (typeof val !== 'boolean') {
-    throwError(`Invalid boolean value`, key, val)
-  }
-}
-
-export const sanitizeConfig = (config: GemforgeConfig) => {
+export const sanitizeConfigV1 = (config: GemforgeConfigV1) => {
   // solc
   ensureIsSet(config, 'solc.version')
   ensure(config, 'solc.license', (v: any) => spdxLicenseIds.indexOf(v) >= 0, 'Invalid SPDX license ID')

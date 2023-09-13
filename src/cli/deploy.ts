@@ -1,43 +1,42 @@
-import * as timersPromises from 'node:timers/promises';
-import { ZeroAddress, ethers } from 'ethers'
-import { error, info, warn } from '../shared/log.js'
+import { Signer, ZeroAddress, ethers } from 'ethers'
+import { ContractArtifact, OnChainContract, clearDeploymentRecorder, deployContract, execContractMethod, getContractAt, getContractValue, getDeploymentRecorderData, loadContractArtifact, readDeploymentInfo, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
 import { Context, getContext } from '../shared/context.js'
-import { $, FacetDefinition, loadJson } from '../shared/fs.js'
-import { createCommand, logSuccess } from './common.js'
-import { ContractArtifact, OnChainContract, saveDeploymentInfo, deployContract, execContractMethod, getContractAt, getContractValue, loadContractArtifact, setupNetwork, setupWallet, clearDeploymentRecords, getDeploymentRecords, readDeploymentInfo } from '../shared/chain.js'
 import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
-import { Signer } from 'ethers'
+import { $, FacetDefinition, loadJson } from '../shared/fs.js'
+import { error, info, trace, warn } from '../shared/log.js'
+import { createCommand, logSuccess } from './common.js'
 
 export const command = () =>
-  createCommand('deploy', 'Deploy the diamond to a network.')
-    .argument('[network]', 'network to deploy to', 'local')
+  createCommand('deploy', 'Deploy the diamond to a target.')
+    .argument('target', 'target to deploy')
     .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
-    .option('--clean', 'remove all non-core facet selectors from an existing deployment and start afresh')
-    .action(async (networkArg, args) => {
+    .option('--clean', 'remove all non-core facet selectors from the existing deployment and start afresh')
+    .action(async (targetArg, args) => {
       const ctx = await getContext(args)
 
-      info(`Selected network: ${networkArg}`)
-      const n = ctx.config.networks[networkArg]
-      if (!n) {
-        error(`Network not found in config: ${networkArg}`)
+      info(`Selected target: ${targetArg}`)
+      const t = ctx.config.targets[targetArg]
+      if (!t) {
+        error(`Target not found in config: ${targetArg}`)
       }
-      info('Setting up network connection...')
-      const network = await setupNetwork(n)
-      info(`   Network chainId: ${network.chainId}`)
 
-      info(`Setting up wallet "${network.config.wallet}" ...`)
-      const walletConfig = ctx.config.wallets[network.config.wallet]
-      const wallet = setupWallet(walletConfig, network.provider)!
+      info(`Setting up target network connection "${t.network}" ...`)
+      const target = await setupTarget(ctx, t)
+      info(`   Network chainId: ${target.network.chainId}`)
+
+      info(`Setting up wallet "${t.wallet}" ...`)
+      const walletConfig = ctx.config.wallets[t.wallet]
+      const wallet = setupWallet(walletConfig, target.network.provider)!
       const walletAddress = await wallet.getAddress()
       info(`Wallet deployer address: ${walletAddress}`)
 
-      const signer = wallet.connect(network.provider)
+      const signer = wallet.connect(target.network.provider)
 
       const $$ = $({ 
         cwd: ctx.folder, 
         quiet: args.quiet,
         env: {
-          GEMFORGE_DEPLOY_CHAIN_ID: `${network.chainId}`,
+          GEMFORGE_DEPLOY_CHAIN_ID: `${target.network.chainId}`,
         }
       })
 
@@ -52,7 +51,7 @@ export const command = () =>
       let isNewDeployment = false
 
       // reset deploment records
-      clearDeploymentRecords()
+      clearDeploymentRecorder()
 
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
@@ -61,7 +60,7 @@ export const command = () =>
       } else {
         info(`Load existing deployment ...`)
 
-        const existing = readDeploymentInfo(ctx.deploymentInfoJsonPath, network).find(r => r.name === 'DiamondProxy')
+        const existing = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target).find(r => r.name === 'DiamondProxy')
         if (existing) {
           info(`   Existing deployment found at: ${existing.contract.address}`)
           info(`Checking if existing deployment is still valid...`)
@@ -160,24 +159,37 @@ export const command = () =>
         let initData: string = '0x'
 
         if (isNewDeployment && ctx.config.diamond.init) {
-          info(`Deploying initialization contract: ${ctx.config.diamond.init} ...`)
-          const init = await deployContract(ctx, ctx.config.diamond.init, signer)
-          if (!init.contract.interface.getFunction('init')) {
-            error(`Initialization contract does not have an init() function.`)
-          }
+          const { contract: initContract, function: initFunction } = ctx.config.diamond.init
+
+          info(`Deploying initialization contract: ${initContract} ...`)
+          const init = await deployContract(ctx, initContract, signer)
           initContractAddress = init.address
-          initData = init.contract.interface.getFunction('init')!.selector
           info(`   Initialization contract deployed at: ${initContractAddress}`)
+
+          const initSelector = init.contract.interface.getFunction(initFunction)
+          if (!initSelector) {
+            error(`Initialization contract ${initContract} does not have an ${initFunction}() function.`)
+          }
+
+          // encode init args with function signature to get the init data
+          info(`Encoding initialization call data...`)
+          try {
+            trace(`   Encoding initialization call data: [${target.config.initArgs.join(", ")}]`)
+            initData = init.contract.interface.encodeFunctionData(initSelector!, target.config.initArgs)            
+            trace(`   Encoded initialization call data: ${initData}`)
+          } catch (err: any) {
+            error(`Error encoding initialization call data: ${err.message}\n\nCheck your initArgs in the target config.`)
+          }
         }
         
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
         await callDiamondCut(proxyInterface, cuts, initContractAddress, initData)
       }
 
-      const deploymentRecords = getDeploymentRecords()
+      const deploymentRecords = getDeploymentRecorderData()
       if (deploymentRecords.length) {
         info(`Deployments took place, saving info...`)
-        saveDeploymentInfo(ctx.deploymentInfoJsonPath, network, getDeploymentRecords(), isNewDeployment)
+        saveDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target, getDeploymentRecorderData(), isNewDeployment)
       }
 
       // run post-deploy hook

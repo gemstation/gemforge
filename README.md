@@ -24,6 +24,7 @@ By automating almost all aspects of this boilerplate code whilst still remaining
 * Auto-generates Diamond proxy code.
 * Auto-generates deployment code for Foundry tests.
 * Auto-calculates facet deployment and upgrades accurately and efficiently.
+* Deploy multiple instances to a single chain.
 * [Clean](https://gemforge.xyz/commands/deploy/#fresh-deployments) existing deployments.
 * Records diamond addresses to JSON file for history tracking.
 * Pre- and post- hooks for both build and deploy steps.

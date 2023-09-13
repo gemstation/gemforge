@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadJson } from './shared/fs.js'
+import { gemforgeVersion } from './shared/config/index.js'
 import { command as init } from './cli/init.js'
 import { command as scaffold } from './cli/scaffold.js'
 import { command as build } from './cli/build.js'
@@ -8,10 +8,8 @@ import { command as deploy } from './cli/deploy.js'
 
 const cli = new Command()
 
-const { version } = loadJson(new URL('../package.json', import.meta.url)) as any
-
 cli
-  .version(version)
+  .version(gemforgeVersion)
   .addCommand(init())
   .addCommand(scaffold())
   .addCommand(build())
