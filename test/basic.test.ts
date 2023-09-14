@@ -1,13 +1,11 @@
 import 'mocha'
 import { expect } from "chai"
 
-import { getCli } from './utils.js'
-
-const cli = getCli()
+import { cli } from './utils.js'
 
 describe("Basic CLI output", () => {
   it("--help should show help output", async () => {
     const ret = cli('--help')
-    expect(ret.msg).to.contain("Usage: gemforge [options] [command]")
+    expect(ret.output).to.contain("Usage: gemforge [options] [command]")
   })
 })
