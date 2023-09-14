@@ -3,7 +3,6 @@ import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFac
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { error, info, trace } from '../shared/log.js'
-import { getFinalizedFacetCuts } from '../shared/diamond.js'
 
 export const command = () =>
   createCommand('build', 'Build a project.')

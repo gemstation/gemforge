@@ -1,8 +1,9 @@
+import { execaCommandSync } from 'execa'
 import { expect } from "chai"
 import { spawnSync } from "node:child_process"
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { dirname, resolve } from "node:path"
+import { dirname, resolve, join } from "node:path"
 import tmp from 'tmp'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -12,7 +13,7 @@ interface CliOptions {
   cwd?: string
 }
 
-tmp.setGracefulCleanup()
+// tmp.setGracefulCleanup()
 
 export const cli = (...gemforgeArgs: any[]) => {
   let opts: CliOptions = {}
@@ -21,7 +22,7 @@ export const cli = (...gemforgeArgs: any[]) => {
     opts = gemforgeArgs.pop()
   }
   
-  const cwd = opts.cwd || tmp.dirSync().name
+  const cwd = opts.cwd || createTmpFolder()
 
   const args = [
     '--no-warnings',
@@ -37,12 +38,30 @@ export const cli = (...gemforgeArgs: any[]) => {
   }
 }
 
+export const createTmpFolder = () => tmp.dirSync().name
+
+export const createTmpFolderFromSrc = (testTemplateFolderName: string) => {
+  const cwd = createTmpFolder()
+  const srcPath = resolve(__dirname, `./data/${testTemplateFolderName}`)
+  execaCommandSync(`cp -rf ${srcPath} .`, {
+    stdio: 'pipe',
+    cwd,
+  })
+  return join(cwd, testTemplateFolderName)
+}
+
 export const loadFile = (filePath: string) => {
   return fs.readFileSync(filePath, 'utf8')
 }
 
-export const assertFileMatchesTestTemplate = async (jsFilePath: string, testTemplateName: string) => {
+export const writeFile = (filePath: string, contents: string) => {
+  fs.writeFileSync(filePath, contents, 'utf8')
+}
+
+export const assertFileMatchesTemplate = async (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
   const actual = fs.readFileSync(jsFilePath, 'utf8')
-  const expected = fs.readFileSync(resolve(__dirname, `../test-data/${testTemplateName}`), 'utf8')
+  const tmpl = fs.readFileSync(resolve(__dirname, `../templates/${templateName}`), 'utf8')
+  // @ts-ignore
+  const expected = Object.entries(replacements).reduce((acc, [key, value]) => acc.replaceAll(key, value), tmpl)
   expect(actual).to.deep.equal(expected)
 }
