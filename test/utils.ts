@@ -50,6 +50,11 @@ export const createTmpFolderFromSrc = (testTemplateFolderName: string) => {
   return join(cwd, testTemplateFolderName)
 }
 
+export const loadJsonFile = (filePath: string) => {
+  const src = loadFile(filePath)
+  return JSON.parse(src)
+}
+
 export const loadFile = (filePath: string) => {
   return fs.readFileSync(filePath, 'utf8')
 }
@@ -58,7 +63,7 @@ export const writeFile = (filePath: string, contents: string) => {
   fs.writeFileSync(filePath, contents, 'utf8')
 }
 
-export const assertFileMatchesTemplate = async (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
+export const assertFileMatchesTemplate = (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
   const actual = fs.readFileSync(jsFilePath, 'utf8')
   const tmpl = fs.readFileSync(resolve(__dirname, `../templates/${templateName}`), 'utf8')
   // @ts-ignore
