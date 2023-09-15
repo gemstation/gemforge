@@ -88,6 +88,8 @@ Options:
 
 _Note: This section is only relevant for those wishing to work on the Gemforge tool itself. To use Gemforge with your project please read the [official documentation](https://gemforge.xyz)._
 
+**Building**
+
 Building the tool:
 
 ```
@@ -100,13 +102,26 @@ Watching for changes and re-building:
 > pnpm dev
 ```
 
-To run the tests (you will need Foundry and the Solidity compiler installed, see [ci-docker-image](https://github.com/gemstation/ci-builder=image)):
+**Testing**
+
+To run the tests, you will need Foundry and the Solidity compiler installed, see [ci-docker-image](https://github.com/gemstation/ci-builder=image). 
+
+Then run the following commands in 2 new terminal windows to start up local test nodes:
+
+```
+> pnpm run-foundry-testnet # terminal 1
+> pnpm run-hardhat-testnet # terminal 2
+```
+
+Now you can run the tests in the original terminal:
 
 ```
 > pnpm test
 ```
 
-Publishing a new release:
+**Publishing**
+
+To publish a new release:
 
 ```
 > pnpm release

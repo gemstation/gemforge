@@ -60,7 +60,7 @@ module.exports = {
   },
   "networks": {
     "local": {
-      "rpcUrl": "http://localhost:8545"
+      "rpcUrl": "http://localhost:58546"
     },
   },
   "targets": {

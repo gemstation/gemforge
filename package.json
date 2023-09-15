@@ -26,6 +26,8 @@
     "dev": "tsc -b -w tsconfig.json",
     "build": "rm -fr build/* && tsc -p tsconfig.json",
     "test": "mocha",
+    "run-foundry-testnet": "anvil --port 58545",
+    "run-hardhat-testnet": "hardhat node --port 58546",
     "prepublishOnly": "npm run build",
     "release": "standard-version && git push --follow-tags origin master && npm publish"
   },
@@ -40,6 +42,7 @@
     "@types/tmp": "^0.2.3",
     "chai": "^4.3.8",
     "eslint": "8.27.0",
+    "hardhat": "^2.17.3",
     "husky": "^8.0.2",
     "mocha": "^10.2.0",
     "prettier": "^2.8.8",
