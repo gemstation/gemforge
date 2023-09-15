@@ -19,6 +19,8 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
+      # disable safe.directory system to avoid husky install errors
+      - run: git config --global --add safe.directory '*' 
       - run: pnpm i
       - run: pnpm build
       - run: pnpm test
