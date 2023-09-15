@@ -20,9 +20,8 @@ jobs:
         with:
           version: 8
       - run: echo "/root/.cargo/bin:/root/.foundry/bin" >> $GITHUB_PATH          
-      # disable safe.directory system to avoid forge & husky install errors
+      # disable safe.directory system to avoid later installation errors
       - run: git config --global --add safe.directory '*' 
-      - run: forge install
       - run: pnpm i
       - run: pnpm build
       - run: pnpm test
