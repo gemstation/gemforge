@@ -25,4 +25,4 @@ jobs:
       - run: forge install
       - run: pnpm i
       - run: pnpm build
-      - run: pnpm run-hardhat-testnet & pnpm run-foundry-testnet & pnpm test
+      - run: pnpm test

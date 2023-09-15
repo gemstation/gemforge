@@ -22,6 +22,43 @@ export const exec = (cmd: string, args: any[], opts: ExecOptions = {}) => {
   return spawnSync(cmd, args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd: opts.cwd || process.cwd() })
 }
 
+export interface ExecDaemonResult {
+  pid: number
+  stdout: string
+  stderr: string
+  shutdown: () => void
+}
+
+export const execDaemon = (cmd: string, args: any[], opts: ExecOptions = {}) => {
+  const cp = spawn(cmd, args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd: opts.cwd || process.cwd() })
+
+  const ret = {
+    pid: cp.pid,
+    stdout: '',
+    stderr: '',
+    shutdown: () => {
+      cp.kill('SIGINT')
+    }
+  }  as ExecDaemonResult
+
+  cp.stderr!.on('data', (data) => {
+    ret.stderr += data
+  })
+
+  cp.stdout!.on('data', (data) => {
+    ret.stdout += data
+  })
+
+  cp.on('close', (code) => {
+    if (code !== 0) {
+      console.error(`${cmd} process exited with code ${code}`);
+      process.exit(-1)
+    }
+  })
+
+  return ret
+}
+
 export const cli = (...gemforgeArgs: any[]) => {
   let opts: ExecOptions = {}
 
