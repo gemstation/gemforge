@@ -6,15 +6,15 @@ import { expect } from 'chai'
 describe("Command: deploy() - Foundry", () => {
   let testNetwork: ExecDaemonResult
 
-  before(async () => {
-    testNetwork = execDaemon('anvil', ['--port', 55845])
-    await setTimeout(2000)
-    expect(testNetwork.stdout).to.contain('Listening on')
-  })
+  // before(async () => {
+  //   testNetwork = execDaemon('anvil', ['--port', 55845])
+  //   await setTimeout(2000)
+  //   expect(testNetwork.stdout).to.contain('Listening on')
+  // })
 
-  after(() => {
-    testNetwork.shutdown()
-  })
+  // after(() => {
+  //   testNetwork.shutdown()
+  // })
 
   it.only('deploys the project', async () => {
     console.log('TODO')

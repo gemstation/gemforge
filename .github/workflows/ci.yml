@@ -24,4 +24,4 @@ jobs:
       - run: git config --global --add safe.directory '*' 
       - run: pnpm i
       - run: pnpm build
-      - run: pnpm test
+      - run: pnpm run-foundry-testnet & pnpm test
