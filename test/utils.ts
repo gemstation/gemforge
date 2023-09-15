@@ -5,12 +5,16 @@ import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import { dirname, resolve, join } from "node:path"
 import tmp from 'tmp'
+import type { GemforgeConfig } from '../src/shared/config/index.js'
+
+export { GemforgeConfig }
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 interface CliOptions {
   cwd?: string
+  verbose?: boolean
 }
 
 // tmp.setGracefulCleanup()
@@ -29,11 +33,11 @@ export const cli = (...gemforgeArgs: any[]) => {
     resolve(__dirname, "../build/gemforge.js"),
   ].concat(gemforgeArgs)
 
-  const output = spawnSync(process.argv[0], args, { stdio: "pipe", shell: true, cwd })
+  const output = spawnSync(process.argv[0], args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd })
   
   return { 
     cwd,
-    output: output.stdout.toString(), 
+    output: output.stdout?.toString(), 
     success: output.status === 0 
   }
 }
@@ -61,6 +65,12 @@ export const loadFile = (filePath: string) => {
 
 export const writeFile = (filePath: string, contents: string) => {
   fs.writeFileSync(filePath, contents, 'utf8')
+}
+
+export const updateConfigFile = async (cfgFilePath: string, cb: (src: GemforgeConfig) => GemforgeConfig) => {
+  const obj = (await import(cfgFilePath)).default as GemforgeConfig
+  const final = cb(obj)
+  writeFile(cfgFilePath, `module.exports = ${JSON.stringify(final, null, 2)}`)
 }
 
 export const assertFileMatchesTemplate = (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
