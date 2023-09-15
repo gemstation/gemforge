@@ -7,6 +7,8 @@ jobs:
     name: Build code
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    container:
+      image: ghcr.io/gemstation/ci-docker-image:latest    
     steps:
       - uses: actions/checkout@v3
         with:

@@ -100,6 +100,12 @@ Watching for changes and re-building:
 > pnpm dev
 ```
 
+To run the tests (you will need Foundry and the Solidity compiler installed, see [ci-docker-image](https://github.com/gemstation/ci-builder=image)):
+
+```
+> pnpm test
+```
+
 Publishing a new release:
 
 ```
