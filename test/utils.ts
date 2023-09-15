@@ -37,7 +37,7 @@ export const execDaemon = (cmd: string, args: any[], opts: ExecOptions = {}) => 
     stdout: '',
     stderr: '',
     shutdown: () => {
-      cp.kill('SIGINT')
+      cp.kill()
     }
   }  as ExecDaemonResult
 
