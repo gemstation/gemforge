@@ -9,9 +9,9 @@ const setupFolder = () => {
 }
 
 describe("Command: build() - Foundry", () => {
-  it('builds the project', async () => {
+  it.only('builds the project', async () => {
     const cwd = setupFolder()
-    const ret = cli('build', { cwd })
+    const ret = cli('build', { cwd, verbose: true })
     expect(ret.success).to.be.true
 
     const filePath = path.join(cwd, 'out/ExampleFacet.sol/ExampleFacet.json')
