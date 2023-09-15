@@ -1,7 +1,6 @@
 import 'mocha'
-import { expect } from "chai"
 
-import { cli } from './utils.js'
+import { cli, expect } from './utils.js'
 
 describe("Basic CLI output", () => {
   it("--help should show help output", async () => {

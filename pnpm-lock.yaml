@@ -46,6 +46,9 @@ devDependencies:
   '@types/chai':
     specifier: ^4.3.6
     version: 4.3.6
+  '@types/chai-as-promised':
+    specifier: ^7.1.6
+    version: 7.1.6
   '@types/lodash.get':
     specifier: ^4.4.7
     version: 4.4.7
@@ -64,6 +67,9 @@ devDependencies:
   chai:
     specifier: ^4.3.8
     version: 4.3.8
+  chai-as-promised:
+    specifier: ^7.1.1
+    version: 7.1.1(chai@4.3.8)
   eslint:
     specifier: 8.27.0
     version: 8.27.0
@@ -1150,6 +1156,12 @@ packages:
       '@types/node': 18.16.16
     dev: true
 
+  /@types/chai-as-promised@7.1.6:
+    resolution: {integrity: sha512-cQLhk8fFarRVZAXUQV1xEnZgMoPxqKojBvRkqPCKPQCzEhpbbSKl1Uu75kDng7k5Ln6LQLUmNBjLlFthCgm1NA==}
+    dependencies:
+      '@types/chai': 4.3.6
+    dev: true
+
   /@types/chai@4.3.6:
     resolution: {integrity: sha512-VOVRLM1mBxIRxydiViqPcKn6MIxZytrbMpd6RJLIWKxUNr3zux8no0Oc7kJx0WAPIitgZ0gkrDS+btlqQpubpw==}
     dev: true
@@ -1537,6 +1549,15 @@ packages:
   /catering@2.1.1:
     resolution: {integrity: sha512-K7Qy8O9p76sL3/3m7/zLKbRkyOlSZAgzEaLhyj2mXS8PsCud2Eo4hAb8aLtZqHh0QGqLcb9dlJSu6lHRVENm1w==}
     engines: {node: '>=6'}
+    dev: true
+
+  /chai-as-promised@7.1.1(chai@4.3.8):
+    resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}
+    peerDependencies:
+      chai: '>= 2.1.2 < 5'
+    dependencies:
+      chai: 4.3.8
+      check-error: 1.0.2
     dev: true
 
   /chai@4.3.8:

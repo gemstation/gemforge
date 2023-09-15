@@ -1,8 +1,7 @@
-import { expect } from "chai"
 import 'mocha'
 import path from "node:path"
-import { addBuildTestSteps } from "./common-steps.js"
-import { cli, createTmpFolderFromFolder, exec, getTestDataFolderPath, loadJsonFile } from './utils.js'
+import { addBuildTestSteps } from "./common-build-steps.js"
+import { cli, createTmpFolderFromFolder, exec, expect, getTestDataFolderPath, loadJsonFile } from './utils.js'
 
 const setupFolder = () => {
   const cwd = createTmpFolderFromFolder(getTestDataFolderPath('hardhat-project'))

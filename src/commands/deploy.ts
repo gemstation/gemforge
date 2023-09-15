@@ -26,7 +26,7 @@ export const command = () =>
 
       info(`Setting up wallet "${t.wallet}" ...`)
       const walletConfig = ctx.config.wallets[t.wallet]
-      const wallet = setupWallet(walletConfig, target.network.provider)!
+      const wallet = setupWallet(walletConfig)!
       const walletAddress = await wallet.getAddress()
       info(`Wallet deployer address: ${walletAddress}`)
 
@@ -60,11 +60,12 @@ export const command = () =>
       } else {
         info(`Load existing deployment ...`)
 
-        const existing = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target).find(r => r.name === 'DiamondProxy')
-        if (existing) {
-          info(`   Existing deployment found at: ${existing.contract.address}`)
+        const existingTargetRecord = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target)
+        const existingProxy = (existingTargetRecord && existingTargetRecord.chainId == target.network.chainId) ? existingTargetRecord.contracts.find(r => r.name === 'DiamondProxy') : undefined
+        if (existingProxy) {
+          info(`   Existing deployment found at: ${existingProxy.onChain.address}`)
           info(`Checking if existing deployment is still valid...`)
-          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing.contract.address)
+          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existingProxy.onChain.address)
 
           try {
             const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)

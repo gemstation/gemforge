@@ -1,7 +1,14 @@
 import 'mocha'
+import { addDeployTestSteps } from './common-deploy-steps.js'
+import { createTmpFolderFromFolder, getTestDataFolderPath } from './utils.js'
+
+const setupFolder = () => {
+  return createTmpFolderFromFolder(getTestDataFolderPath('foundry-project'))
+}
 
 describe("Command: deploy() - Foundry", () => {
-  it('deploys the project', async () => {
-    console.log('TODO')
+  addDeployTestSteps({
+    framework: 'foundry',
+    setupFolderCallback: setupFolder
   })
 })

@@ -1,7 +1,6 @@
-import { expect } from "chai"
 import 'mocha'
 import path, { join } from "node:path"
-import { GemforgeConfig, assertFileMatchesTemplate, cli, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
 
 export const addBuildTestSteps = ({
   framework, 
@@ -325,4 +324,5 @@ cut[1] = IDiamondCut.FacetCut({
     })
   })
 }
+
 

@@ -33,10 +33,6 @@ module.exports = {
   },
   "diamond": {
     "publicMethods": false,
-    "init": {
-      "contract": "InitDiamond",
-      "function": "init"
-    },
     "coreFacets": [
       "OwnershipFacet",
       "DiamondCutFacet",

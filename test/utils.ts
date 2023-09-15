@@ -1,12 +1,18 @@
-import { expect } from "chai"
+import chai, { expect } from "chai"
+import chaiAsPromised from 'chai-as-promised'
 import { spawn, spawnSync } from "node:child_process"
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { dirname, resolve, join, basename } from "node:path"
+import { dirname, resolve, join, basename, relative } from "node:path"
 import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
+import get from "lodash.get"
+import { Contract, ContractTransactionResponse, Fragment, ethers } from "ethers"
+import { glob } from "glob"
 
-export { GemforgeConfig }
+chai.use(chaiAsPromised)
+
+export { GemforgeConfig, expect }
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -94,3 +100,57 @@ export const assertFileMatchesTemplate = (jsFilePath: string, templateName: stri
   const expected = Object.entries(replacements).reduce((acc, [key, value]) => acc.replaceAll(key, value), tmpl)
   expect(actual).to.deep.equal(expected)
 }
+
+export interface LoadedContract {
+  contract: Contract,
+  walletAddress: string,
+}
+
+export const sendTx = async (tx: Promise<ContractTransactionResponse>) => {
+  const response = await tx
+  return await response
+}
+
+export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): Promise<LoadedContract> => {
+  const cfgFilePath = join(cwd, 'gemforge.config.cjs')
+  const config = (await import(cfgFilePath)).default as GemforgeConfig
+
+  const filePath = join(cwd, 'gemforge.deployments.json')
+  const json = loadJsonFile(filePath)
+  const address = get(json, `local.contracts`, []).find((a: any) => a.name === 'DiamondProxy')!.onChain.address
+
+  let abi: Fragment[]
+  let bytecode: string
+
+  switch (config.artifacts.format) {
+    case 'foundry': {
+      const json = loadJsonFile(`${cwd}/out/IDiamondProxy.sol/IDiamondProxy.json`) as any
+      abi = json.abi as Fragment[]
+      bytecode = json.bytecode.object
+      break
+    }
+    case 'hardhat': {
+      const files = glob.sync(`${cwd}/artifacts/**/*.json`) as string[]
+      const filePath = relative(`${cwd}/artifacts`, files.find(f => basename(f) === `IDiamondProxy.json`)!)
+      const json = loadJsonFile(`${cwd}/artifacts/${filePath}`) as any
+      abi = json.abi as Fragment[]
+      bytecode = json.bytecode
+      break
+    }
+  }
+
+  const provider = new ethers.JsonRpcProvider(config.networks.local.rpcUrl as string)
+  const wallet = ethers.HDNodeWallet.fromMnemonic(
+    ethers.Mnemonic.fromPhrase(config.wallets.wallet1.config.words as string),
+    `m/44'/60'/0'/0/${config.wallets.wallet1.config.index}`
+  ) 
+  const signer = wallet.connect(provider)
+
+  const factory = new ethers.ContractFactory(abiOverride || abi, bytecode, signer)
+
+  return {
+    contract: factory.attach(address) as Contract,
+    walletAddress: await signer.getAddress(),
+  }
+}
+

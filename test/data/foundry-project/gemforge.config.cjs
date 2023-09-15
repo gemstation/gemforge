@@ -33,10 +33,6 @@ module.exports = {
   },
   "diamond": {
     "publicMethods": false,
-    "init": {
-      "contract": "InitDiamond",
-      "function": "init"
-    },
     "coreFacets": [
       "OwnershipFacet",
       "DiamondCutFacet",
@@ -60,7 +56,7 @@ module.exports = {
   },
   "networks": {
     "local": {
-      "rpcUrl": "http://localhost:55845"
+      "rpcUrl": "http://localhost:58545"
     },
   },
   "targets": {

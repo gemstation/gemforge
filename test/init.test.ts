@@ -1,7 +1,6 @@
 import path from "node:path"
 import 'mocha'
-import { expect } from "chai"
-import { assertFileMatchesTemplate, cli, createTmpFolder, loadFile, writeFile } from './utils.js'
+import { assertFileMatchesTemplate, cli, createTmpFolder, expect, loadFile, writeFile } from './utils.js'
 
 const FOUNDRY_CONFIG_REPLACEMENTS = {
   __BUILD_COMAND__: 'forge build',

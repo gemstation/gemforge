@@ -1,8 +1,7 @@
-import { expect } from "chai"
 import 'mocha'
 import path from "node:path"
-import { addBuildTestSteps } from "./common-steps.js"
-import { cli, createTmpFolderFromFolder, getTestDataFolderPath, loadJsonFile } from './utils.js'
+import { addBuildTestSteps } from "./common-build-steps.js"
+import { cli, createTmpFolderFromFolder, expect, getTestDataFolderPath, loadJsonFile } from './utils.js'
 
 const setupFolder = () => {
   return createTmpFolderFromFolder(getTestDataFolderPath('foundry-project'))
@@ -11,7 +10,7 @@ const setupFolder = () => {
 describe("Command: build() - Foundry", () => {
   it('builds the project', async () => {
     const cwd = setupFolder()
-    const ret = cli('build', { cwd, verbose: true })
+    const ret = cli('build', { cwd })
     expect(ret.success).to.be.true
 
     const filePath = path.join(cwd, 'out/ExampleFacet.sol/ExampleFacet.json')
