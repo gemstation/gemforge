@@ -211,60 +211,114 @@ cut[1] = IDiamondCut.FacetCut({
     })
   })
 
-  describe('with duplicate function signatures', () => {
-    beforeEach(async () => {
-      writeFile(join(cwd, 'src/facets/ExampleFacet.sol'), `
-        pragma solidity >=0.8.21;
-        import "../libs/LibAppStorage.sol";
-        contract ExampleFacet {
-          function setData(address a1) external {
-          }
-          function setData(address a2DifferentName) external {
-          }
+  it('complains if duplicate function signature found', () => {
+    writeFile(join(cwd, 'src/facets/ExampleFacet.sol'), `
+      pragma solidity >=0.8.21;
+      import "../libs/LibAppStorage.sol";
+      contract ExampleFacet {
+        function setData(address a1) external {
         }
-      `)
+        function setData(address a2DifferentName) external {
+        }
+      }
+    `)
+
+    const ret = cli('build', { cwd })
+    expect(ret.success).to.be.false
+    expect(ret.output).to.contain('Duplicate function found')
+  })
+
+  it('complains if duplicate contract name found', () => {
+    writeFile(join(cwd, 'src/facets/SecondExampleFacet.sol'), `
+      pragma solidity >=0.8.21;
+      import "../libs/LibAppStorage.sol";
+      contract ExampleFacet {
+        function setA1(address a1) external {}
+      }
+    `)
+
+    const ret = cli('build', { cwd })
+    expect(ret.success).to.be.false
+    expect(ret.output).to.contain('Duplicate contract name found')
+  })
+
+  it('complains if using core facet contract name', () => {
+    writeFile(join(cwd, 'src/facets/DiamondCutFacet.sol'), `
+      pragma solidity >=0.8.21;
+      import "../libs/LibAppStorage.sol";
+      contract DiamondCutFacet {
+        function setA1(address a1) external {}
+      }
+    `)
+
+    const ret = cli('build', { cwd })
+    expect(ret.success).to.be.false
+    expect(ret.output).to.contain('Core facet contract name used')
+  })
+
+  describe('calls a pre-build hook first', async () => {
+    beforeEach(async () => {
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.hooks.preBuild = join(cwd, 'prebuild.sh')
+        return cfg
+      })
     })
 
-    it('complains with an error', async () => {
+    it('and fails if the hook fails', async () => {
+      writeFile(join(cwd, 'prebuild.sh'), `#!/usr/bin/env node
+        throw new Error('test');
+      `, { executable: true })
+
       const ret = cli('build', { cwd })
+
       expect(ret.success).to.be.false
-      expect(ret.output).to.contain('Duplicate function found')
+      expect(ret.output).to.contain('Error: test')
+    })
+
+    it('and passes if the hook passes', async () => {
+      writeFile(join(cwd, 'prebuild.sh'), `#!/usr/bin/env node
+        const fs = require('fs')
+        const path = require('path')
+        fs.writeFileSync(path.join(__dirname, '.gemforge/facets.json'), 'test')
+      `, { executable: true })
+
+      const ret = cli('build', { cwd })
+
+      expect(ret.success).to.be.true
+      expect(loadFile(join(cwd, '.gemforge/facets.json'))).to.not.equal('test')
     })
   })
 
-  describe('with duplicate contract name', () => {
+  describe('calls a post-build hook last', async () => {
     beforeEach(async () => {
-      writeFile(join(cwd, 'src/facets/SecondExampleFacet.sol'), `
-        pragma solidity >=0.8.21;
-        import "../libs/LibAppStorage.sol";
-        contract ExampleFacet {
-          function setA1(address a1) external {}
-        }
-      `)
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.hooks.postBuild = join(cwd, 'postbuild.sh')
+        return cfg
+      })
     })
 
-    it('complains with an error', async () => {
+    it('and fails if the hook fails', async () => {
+      writeFile(join(cwd, 'postbuild.sh'), `#!/usr/bin/env node
+        throw new Error('test');
+      `, { executable: true })
+
       const ret = cli('build', { cwd })
+
       expect(ret.success).to.be.false
-      expect(ret.output).to.contain('Duplicate contract name found')
-    })
-  })
-
-  describe('with core facet contract name', () => {
-    beforeEach(async () => {
-      writeFile(join(cwd, 'src/facets/DiamondCutFacet.sol'), `
-        pragma solidity >=0.8.21;
-        import "../libs/LibAppStorage.sol";
-        contract DiamondCutFacet {
-          function setA1(address a1) external {}
-        }
-      `)
+      expect(ret.output).to.contain('Error: test')
     })
 
-    it('complains with an error', async () => {
+    it('and passes if the hook passes', async () => {
+      writeFile(join(cwd, 'postbuild.sh'), `#!/usr/bin/env node
+        const fs = require('fs')
+        const path = require('path')
+        fs.writeFileSync(path.join(__dirname, '.gemforge/facets.json'), 'test')
+      `, { executable: true })
+
       const ret = cli('build', { cwd })
-      expect(ret.success).to.be.false
-      expect(ret.output).to.contain('Core facet contract name used')
+
+      expect(ret.success).to.be.true
+      expect(loadFile(join(cwd, '.gemforge/facets.json'))).to.equal('test')
     })
   })
 })

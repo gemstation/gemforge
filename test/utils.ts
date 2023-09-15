@@ -37,7 +37,7 @@ export const cli = (...gemforgeArgs: any[]) => {
   
   return { 
     cwd,
-    output: output.stdout?.toString(), 
+    output: output.stdout?.toString() + output.stderr?.toString(), 
     success: output.status === 0 
   }
 }
@@ -63,8 +63,15 @@ export const loadFile = (filePath: string) => {
   return fs.readFileSync(filePath, 'utf8')
 }
 
-export const writeFile = (filePath: string, contents: string) => {
+interface WriteFileOpts {
+  executable?: boolean
+}
+
+export const writeFile = (filePath: string, contents: string, opts: WriteFileOpts = {}) => {
   fs.writeFileSync(filePath, contents, 'utf8')
+  if (opts.executable) {
+    fs.chmodSync(filePath, '755')
+  }
 }
 
 export const updateConfigFile = async (cfgFilePath: string, cb: (src: GemforgeConfig) => GemforgeConfig) => {

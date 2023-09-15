@@ -19,6 +19,8 @@ But utilizing the standard involves having to write a lot of boilerplate code, i
 
 By automating almost all aspects of this boilerplate code whilst still remaining highly configurable, Gemforge lessens the workload and saves time when developing with Diamond Standard.
 
+Gemforge is [already used in production](https://gemforge.xyz/#who-is-using-gemforge).
+
 ## Features
 
 * Auto-generates Diamond proxy code.
