@@ -19,6 +19,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
+      - run: echo "/root/.cargo/bin:/root/.foundry/bin" >> $GITHUB_PATH          
       # disable safe.directory system to avoid husky install errors
       - run: git config --global --add safe.directory '*' 
       - run: pnpm i
