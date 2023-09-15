@@ -16,7 +16,7 @@ describe("Command: deploy() - Foundry", () => {
     testNetwork.shutdown()
   })
 
-  it('deploys the project', async () => {
+  it.only('deploys the project', async () => {
     console.log('TODO')
   })
 })

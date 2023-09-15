@@ -9,7 +9,7 @@ const setupFolder = () => {
 }
 
 describe("Command: build() - Foundry", () => {
-  it.only('builds the project', async () => {
+  it('builds the project', async () => {
     const cwd = setupFolder()
     const ret = cli('build', { cwd, verbose: true })
     expect(ret.success).to.be.true
