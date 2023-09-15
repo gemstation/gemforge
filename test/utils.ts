@@ -7,7 +7,7 @@ import { dirname, resolve, join, basename, relative } from "node:path"
 import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
 import get from "lodash.get"
-import { Contract, ContractTransactionResponse, Fragment, ethers } from "ethers"
+import { Contract, ContractTransactionResponse, Fragment, TransactionResponse, ethers } from "ethers"
 import { glob } from "glob"
 
 chai.use(chaiAsPromised)
@@ -106,9 +106,9 @@ export interface LoadedContract {
   walletAddress: string,
 }
 
-export const sendTx = async (tx: Promise<ContractTransactionResponse>) => {
-  const response = await tx
-  return await response
+export const sendTx = async (txCall: Promise<TransactionResponse>) => {
+  const tx = await txCall
+  return await tx.wait()
 }
 
 export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): Promise<LoadedContract> => {

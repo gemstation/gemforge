@@ -239,8 +239,6 @@ export const saveDeploymentInfo = (jsonFilePath: string, targetName: string, tar
   trace(`Saving deployment info to: ${jsonFilePath} ...`)
   trace(`${records.length} records to save`)
 
-  const chainId = String(target.network.chainId)
-
   try {
     let infoData: TargetDeploymentRecords = {}
     const finalized: ContractDeploymentRecord[] = []
@@ -248,9 +246,10 @@ export const saveDeploymentInfo = (jsonFilePath: string, targetName: string, tar
     try {
       infoData = loadJson(jsonFilePath) as TargetDeploymentRecords
       
-      const existing = get(infoData, `${targetName}`) as any as TargetDeploymentRecord
+      let existing = get(infoData, `${targetName}`) as any as TargetDeploymentRecord
+      const isValid = !!(existing && existing.chainId === target.network.chainId)
 
-      if (existing) {
+      if (isValid) {
         trace(`   ${existing.contracts.length} existing contract records found`)
         if (isNewDeployment) {
           trace(`New deployment, so overwriting existing records`)

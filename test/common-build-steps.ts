@@ -31,6 +31,11 @@ export const addBuildTestSteps = ({
             "name": "getInt1",
             "signature": "function getInt1() external view returns (uint)",
             "signaturePacked": "getInt1()"
+          },
+          {
+            "name": "setInt1",
+            "signature": "function setInt1(uint i) external",
+            "signaturePacked": "setInt1(uint)"
           }
         ]
       }
@@ -57,7 +62,8 @@ export const addBuildTestSteps = ({
       __SOLC_VERSION__: '0.8.21',
       __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
       __CUSTOM_IMPORTS__: '',
-      __METHODS__: `function getInt1() external view returns (uint);`,
+      __METHODS__: `function getInt1() external view returns (uint);
+function setInt1(uint i) external;`,
     })
   })
 
@@ -73,8 +79,9 @@ export const addBuildTestSteps = ({
         __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
         __NUM_FACETS__: '1',
         __CUTS__: `
-bytes4[] memory f0 = new bytes4[](1);
+bytes4[] memory f0 = new bytes4[](2);
 f0[0] = IDiamondProxy.getInt1.selector;
+f0[1] = IDiamondProxy.setInt1.selector;
 cut[0] = IDiamondCut.FacetCut({
   facetAddress: address(new ExampleFacet()),
   action: IDiamondCut.FacetCutAction.Add,

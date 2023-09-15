@@ -11,4 +11,9 @@ contract ExampleFacet {
     AppStorage storage s = LibAppStorage.diamondStorage();
     return s.data.i1;
   }
+
+  function setInt1(uint i) external {
+    AppStorage storage s = LibAppStorage.diamondStorage();
+    s.data.i1 = i;
+  }
 }

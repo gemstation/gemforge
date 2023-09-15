@@ -10,7 +10,7 @@ export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a target.')
     .argument('target', 'target to deploy')
     .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
-    .option('--clean', 'remove all non-core facet selectors from the existing deployment and start afresh')
+    .option('-r, --reset', 'remove all non-core facet selectors from an existing deployment and start afresh')
     .action(async (targetArg, args) => {
       const ctx = await getContext(args)
 
@@ -36,6 +36,7 @@ export const command = () =>
         cwd: ctx.folder, 
         quiet: args.quiet,
         env: {
+          GEMFORGE_DEPLOY_TARGET: targetArg,
           GEMFORGE_DEPLOY_CHAIN_ID: `${target.network.chainId}`,
         }
       })
@@ -102,9 +103,9 @@ export const command = () =>
         return m
       }, {} as Record<string, ContractArtifact>)
 
-      // clean existing deployment?
-      if (!isNewDeployment && args.clean) {
-        info('Cleaning existing deployment...')
+      // reset existing deployment?
+      if (!isNewDeployment && args.reset) {
+        info('Resetting existing deployment...')
         warn('This will remove all non-core facet selectors from the existing deployment.')
         const cleanCut = await resolveClean({
           coreFacets,
