@@ -1,9 +1,8 @@
-import { execaCommandSync } from 'execa'
 import { expect } from "chai"
 import { spawnSync } from "node:child_process"
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { dirname, resolve, join } from "node:path"
+import { dirname, resolve, join, basename } from "node:path"
 import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
 
@@ -12,31 +11,39 @@ export { GemforgeConfig }
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-interface CliOptions {
+// tmp.setGracefulCleanup()
+
+interface ExecOptions {
   cwd?: string
   verbose?: boolean
 }
 
-// tmp.setGracefulCleanup()
+export const exec = (cmd: string, args: any[], opts: ExecOptions = {}) => {
+  return spawnSync(cmd, args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd: opts.cwd || process.cwd() })
+}
 
 export const cli = (...gemforgeArgs: any[]) => {
-  let opts: CliOptions = {}
+  let opts: ExecOptions = {}
 
   if (typeof gemforgeArgs[gemforgeArgs.length - 1] === 'object') {
     opts = gemforgeArgs.pop()
   }
   
-  const cwd = opts.cwd || createTmpFolder()
+
+  opts = {
+    verbose: !!opts.verbose,
+    cwd: opts.cwd || createTmpFolder(),
+  }
 
   const args = [
     '--no-warnings',
     resolve(__dirname, "../build/gemforge.js"),
   ].concat(gemforgeArgs)
 
-  const output = spawnSync(process.argv[0], args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd })
+  const output = exec(process.argv[0], args, opts)
   
   return { 
-    cwd,
+    cwd: opts.cwd!,
     output: output.stdout?.toString() + output.stderr?.toString(), 
     success: output.status === 0 
   }
@@ -44,14 +51,14 @@ export const cli = (...gemforgeArgs: any[]) => {
 
 export const createTmpFolder = () => tmp.dirSync().name
 
-export const createTmpFolderFromSrc = (testTemplateFolderName: string) => {
+export const createTmpFolderFromFolder = (srcFolderPath: string) => {
   const cwd = createTmpFolder()
-  const srcPath = resolve(__dirname, `./data/${testTemplateFolderName}`)
-  execaCommandSync(`cp -rf ${srcPath} .`, {
-    stdio: 'pipe',
-    cwd,
-  })
-  return join(cwd, testTemplateFolderName)
+  exec('cp', ['-rf', srcFolderPath, '.'], { cwd })
+  return join(cwd, basename(srcFolderPath))
+}
+
+export const getTestDataFolderPath = (testTemplateFolderName: string) => {
+  return resolve(__dirname, `./data/${testTemplateFolderName}`)
 }
 
 export const loadJsonFile = (filePath: string) => {
