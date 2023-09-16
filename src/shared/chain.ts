@@ -77,7 +77,7 @@ export const setupMnemonicWallet = (config: MnemonicWalletConfig): Signer => {
   )
 }
 
-export const setupWallet = (walletConfig: WalletConfig, provider: Provider) => {
+export const setupWallet = (walletConfig: WalletConfig) => {
   trace(`Setting up wallet of type: ${walletConfig.type}`)
 
   switch (walletConfig.type) {
@@ -199,36 +199,39 @@ export interface ContractDeploymentRecord {
   fullyQualifiedName: string,
   sender: string,
   txHash: string,
-  contract: {
+  onChain: {
     address: string,
     constructorArgs: any[],
   }
 }
 
-export interface ChainDeploymentInfo {
-  [targetName: string]: {
-    [chainId: string]: ContractDeploymentRecord[]
-  }
+export interface TargetDeploymentRecord {
+  chainId: number,
+  contracts: ContractDeploymentRecord[]
 }
 
-export const readDeploymentInfo = (jsonFilePath: string, targetName: string, target: Target): ContractDeploymentRecord[] =>  {
+export interface TargetDeploymentRecords {
+  [targetName: string]: TargetDeploymentRecord
+}
+
+export const readDeploymentInfo = (jsonFilePath: string, targetName: string, target: Target): TargetDeploymentRecord | undefined =>  {
   trace(`Reading deployment records for target ${targetName} from ${jsonFilePath} ...`)
 
   const chainId = String(target.network.chainId)
-  let obj: ChainDeploymentInfo = {}
+  let obj: TargetDeploymentRecords = {}
 
   try {
-    obj = loadJson(jsonFilePath) as ChainDeploymentInfo
-    const records = get(obj, `${targetName}.${chainId}`) as any as ContractDeploymentRecord[]
+    obj = loadJson(jsonFilePath) as TargetDeploymentRecords
+    const records = get(obj, `${targetName}`) as any as TargetDeploymentRecord
     if (records) {
       return records
     } else {
       trace(`No deployment info found for chain chain id ${chainId} in ${jsonFilePath}`)
-      return []
+      return
     }
   } catch (err: any) {
     trace(`Failed to load ${jsonFilePath}: ${err.message}`)
-    return []
+    return
   }
 }
 
@@ -236,26 +239,25 @@ export const saveDeploymentInfo = (jsonFilePath: string, targetName: string, tar
   trace(`Saving deployment info to: ${jsonFilePath} ...`)
   trace(`${records.length} records to save`)
 
-  const chainId = String(target.network.chainId)
-
   try {
-    let infoData: ChainDeploymentInfo = {}
+    let infoData: TargetDeploymentRecords = {}
     const finalized: ContractDeploymentRecord[] = []
 
     try {
-      infoData = loadJson(jsonFilePath) as ChainDeploymentInfo
+      infoData = loadJson(jsonFilePath) as TargetDeploymentRecords
       
-      const existing = get(infoData, `${targetName}.${chainId}`) as any as ContractDeploymentRecord[]
+      let existing = get(infoData, `${targetName}`) as any as TargetDeploymentRecord
+      const isValid = !!(existing && existing.chainId === target.network.chainId)
 
-      if (existing) {
-        trace(`   ${existing.length} existing records found`)
+      if (isValid) {
+        trace(`   ${existing.contracts.length} existing contract records found`)
         if (isNewDeployment) {
           trace(`New deployment, so overwriting existing records`)
           finalized.push(...records)
         } else {
           trace(`Not a new deployment, so merging existing records with new records`)
           finalized.push(...records)
-          existing.forEach(r => {
+          existing.contracts.forEach(r => {
             if (!finalized.find(f => f.name === r.name)) {
               finalized.push(r)
             }
@@ -270,7 +272,8 @@ export const saveDeploymentInfo = (jsonFilePath: string, targetName: string, tar
     }
 
     infoData[targetName] = infoData[targetName] || {}
-    infoData[targetName][chainId] = finalized
+    infoData[targetName].chainId = target.network.chainId
+    infoData[targetName].contracts = finalized
 
     trace(`Saving ${finalized.length} records to ${jsonFilePath}`)
     saveJson(jsonFilePath, infoData)
@@ -307,7 +310,7 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
       fullyQualifiedName: artifact.fullyQualifiedName,
       sender: await signer.getAddress(),
       txHash: contract.deploymentTransaction()!.hash,
-      contract: {
+      onChain: {
         address,
         constructorArgs: args,
       }

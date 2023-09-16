@@ -1,10 +1,10 @@
 import { Command } from 'commander'
 
 import { gemforgeVersion } from './shared/config/index.js'
-import { command as init } from './cli/init.js'
-import { command as scaffold } from './cli/scaffold.js'
-import { command as build } from './cli/build.js'
-import { command as deploy } from './cli/deploy.js'
+import { command as init } from './commands/init.js'
+import { command as scaffold } from './commands/scaffold.js'
+import { command as build } from './commands/build.js'
+import { command as deploy } from './commands/deploy.js'
 
 const cli = new Command()
 

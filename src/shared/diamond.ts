@@ -177,9 +177,9 @@ export const resolveUpgrade = async (params: {
       })
     })
   }
-  _createNamedCuts(todo.add, FacetCutAction.Add)
-  _createNamedCuts(todo.replace, FacetCutAction.Replace)
   _createNamedCuts(todo.remove, FacetCutAction.Remove)
+  _createNamedCuts(todo.replace, FacetCutAction.Replace)
+  _createNamedCuts(todo.add, FacetCutAction.Add)
 
   return {
     namedCuts,

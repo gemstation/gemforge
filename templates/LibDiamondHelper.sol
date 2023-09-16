@@ -19,7 +19,7 @@ library LibDiamondHelper {
 
     // yul too slow, so fix stack too deep here
     {
-      __CUTS__
+__CUTS__
     }
   }
 }

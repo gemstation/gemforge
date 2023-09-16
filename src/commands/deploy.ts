@@ -10,7 +10,7 @@ export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a target.')
     .argument('target', 'target to deploy')
     .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
-    .option('--clean', 'remove all non-core facet selectors from the existing deployment and start afresh')
+    .option('-r, --reset', 'remove all non-core facet selectors from an existing deployment and start afresh')
     .action(async (targetArg, args) => {
       const ctx = await getContext(args)
 
@@ -26,7 +26,7 @@ export const command = () =>
 
       info(`Setting up wallet "${t.wallet}" ...`)
       const walletConfig = ctx.config.wallets[t.wallet]
-      const wallet = setupWallet(walletConfig, target.network.provider)!
+      const wallet = setupWallet(walletConfig)!
       const walletAddress = await wallet.getAddress()
       info(`Wallet deployer address: ${walletAddress}`)
 
@@ -36,6 +36,7 @@ export const command = () =>
         cwd: ctx.folder, 
         quiet: args.quiet,
         env: {
+          GEMFORGE_DEPLOY_TARGET: targetArg,
           GEMFORGE_DEPLOY_CHAIN_ID: `${target.network.chainId}`,
         }
       })
@@ -60,11 +61,12 @@ export const command = () =>
       } else {
         info(`Load existing deployment ...`)
 
-        const existing = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target).find(r => r.name === 'DiamondProxy')
-        if (existing) {
-          info(`   Existing deployment found at: ${existing.contract.address}`)
+        const existingTargetRecord = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target)
+        const existingProxy = (existingTargetRecord && existingTargetRecord.chainId == target.network.chainId) ? existingTargetRecord.contracts.find(r => r.name === 'DiamondProxy') : undefined
+        if (existingProxy) {
+          info(`   Existing deployment found at: ${existingProxy.onChain.address}`)
           info(`Checking if existing deployment is still valid...`)
-          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existing.contract.address)
+          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existingProxy.onChain.address)
 
           try {
             const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
@@ -101,9 +103,9 @@ export const command = () =>
         return m
       }, {} as Record<string, ContractArtifact>)
 
-      // clean existing deployment?
-      if (!isNewDeployment && args.clean) {
-        info('Cleaning existing deployment...')
+      // reset existing deployment?
+      if (!isNewDeployment && args.reset) {
+        info('Resetting existing deployment...')
         warn('This will remove all non-core facet selectors from the existing deployment.')
         const cleanCut = await resolveClean({
           coreFacets,

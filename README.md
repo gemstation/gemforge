@@ -19,6 +19,8 @@ But utilizing the standard involves having to write a lot of boilerplate code, i
 
 By automating almost all aspects of this boilerplate code whilst still remaining highly configurable, Gemforge lessens the workload and saves time when developing with Diamond Standard.
 
+Gemforge is [already used in production](https://gemforge.xyz/#who-is-using-gemforge).
+
 ## Features
 
 * Auto-generates Diamond proxy code.
@@ -86,6 +88,8 @@ Options:
 
 _Note: This section is only relevant for those wishing to work on the Gemforge tool itself. To use Gemforge with your project please read the [official documentation](https://gemforge.xyz)._
 
+**Building**
+
 Building the tool:
 
 ```
@@ -98,7 +102,26 @@ Watching for changes and re-building:
 > pnpm dev
 ```
 
-Publishing a new release:
+**Testing**
+
+To run the tests, you will need Foundry and the Solidity compiler installed, see [ci-docker-image](https://github.com/gemstation/ci-builder=image). 
+
+Then run the following commands in 2 new terminal windows to start up local test nodes:
+
+```
+> pnpm run-foundry-testnet # terminal 1
+> pnpm run-hardhat-testnet # terminal 2
+```
+
+Now you can run the tests in the original terminal:
+
+```
+> pnpm test
+```
+
+**Publishing**
+
+To publish a new release:
 
 ```
 > pnpm release

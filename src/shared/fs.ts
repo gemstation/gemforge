@@ -114,6 +114,7 @@ export interface FacetDefinition {
   functions: {
     name: string,
     signature: string,
+    signaturePacked: string,
   }[],
 }
 
@@ -172,15 +173,18 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
           signature += ` returns (${getParamString(node.returnParameters, parserMeta)})`
         }
 
+        let signaturePacked = `${node.name}(${getPackedParamString(node.parameters, parserMeta)})`
+
         const r = {
           name: node.name!,
           signature,
+          signaturePacked,
         }
 
-        if (functionSigs[r.signature]) {
+        if (functionSigs[r.signaturePacked]) {
           error(`Duplicate function found in ${file}: ${signature}`)
         } else {
-          functionSigs[r.signature] = true
+          functionSigs[r.signaturePacked] = true
         }
 
         return r
@@ -215,6 +219,18 @@ const getParamString = (params: VariableDeclaration[], meta: ParserMeta): string
   })
 
   return p.join(', ')
+}
+
+
+const getPackedParamString = (params: VariableDeclaration[], meta: ParserMeta): string => {
+  const p: string[] = []
+
+  params.map(param => {
+    const typeNameString = _getTypeNameString(param.typeName!, meta)
+    p.push(`${typeNameString}`)
+  })
+
+  return p.join(',')
 }
 
 
