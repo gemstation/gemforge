@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/gemstation/gemforge/compare/v1.8.0...v2.1.0) (2023-09-16)
+
+
+### Features
+
+* deployment targets, upgrade from v1 config - [#16](https://github.com/gemstation/gemforge/issues/16) ([cc12a63](https://github.com/gemstation/gemforge/commit/cc12a63429d2100ddc807367e93fcb64fc3042d9))
+
 ## [1.8.0](https://github.com/gemstation/gemforge/compare/v1.7.0...v1.8.0) (2023-09-12)
 
 
