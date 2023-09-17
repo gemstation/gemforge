@@ -56,13 +56,6 @@ module.exports = {
   diamond: {
     // Whether to include public methods when generating the IDiamondProxy interface. Default is to only include external methods.
     publicMethods: false,
-    // OPTIONAL - The diamond initialization contract - to be called when first deploying the diamond.
-    init: {
-      // The diamond initialization contract name
-      contract: 'InitDiamond',
-      // The diamond initialization function name
-      function: 'init',
-    },  
     // Names of core facet contracts - these will not be modified/removed once deployed and are also reserved names.
     // This default list is taken from the diamond-2-hardhat library.
     // NOTE: WE RECOMMEND NOT CHANGING ANY OF THESE EXISTING NAMES UNLESS YOU KNOW WHAT YOU ARE DOING.
