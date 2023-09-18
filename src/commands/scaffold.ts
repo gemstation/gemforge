@@ -4,8 +4,8 @@ import { getContext } from '../shared/context.js'
 import { $, ensureFolderExistsAndIsEmpty, fileExists, writeTemplate } from '../shared/fs.js'
 import { createCommand, logSuccess } from './common.js'
 
-const HARDHAT_GIT_REPO = 'git@github.com:gemstation/contracts-hardhat.git'
-const FOUNDRY_GIT_REPO = 'git@github.com:gemstation/contracts-foundry.git'
+const HARDHAT_GIT_REPO = 'https://github.com/gemstation/contracts-hardhat.git'
+const FOUNDRY_GIT_REPO = 'https://github.com/gemstation/contracts-foundry.git'
 
 export const command = () =>
   createCommand('scaffold', 'Generate diamond smart contract project scaffolding.', { skipConfigOption: true })
