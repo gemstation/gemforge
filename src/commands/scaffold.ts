@@ -8,8 +8,8 @@ const HARDHAT_GIT_REPO = 'https://github.com/gemstation/contracts-hardhat.git'
 const FOUNDRY_GIT_REPO = 'https://github.com/gemstation/contracts-foundry.git'
 
 export const command = () =>
-  createCommand('scaffold', 'Generate diamond smart contract project scaffolding.', { skipConfigOption: true })
-    .option('--hardhat', 'generate Hardhat scaffolding instead of Foundry')
+  createCommand('scaffold', 'Generate a demo Gemforge Foundry project as a starting point.', { skipConfigOption: true })
+    .option('--hardhat', 'generate Hardhat scaffolding instead')
     .action(async (args) => {
       const ctx = await getContext(args)
 
