@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.4](https://github.com/gemstation/gemforge/compare/v2.1.3...v2.1.4) (2023-09-18)
+
+
+### Bug Fixes
+
+* demo project git repo paths should use https ([daf3158](https://github.com/gemstation/gemforge/commit/daf3158683653f9891e279439a1eea53b4036b2a))
+
 ### [2.1.3](https://github.com/gemstation/gemforge/compare/v2.1.1...v2.1.3) (2023-09-18)
 
 ### [2.1.2](https://github.com/gemstation/gemforge/compare/v2.1.1...v2.1.2) (2023-09-18)
