@@ -4,10 +4,10 @@ import { fileExists, writeTemplate } from '../shared/fs.js'
 import { createCommand, logSuccess } from './common.js'
 
 export const command = () =>
-  createCommand('init', 'Initialize a gemforge config file for an existing Foundry project.', { skipConfigOption: true })
+  createCommand('init', 'Initialize a gemforge config file for an existing Diamond standard project.', { skipConfigOption: true })
     .option('-n, --name <name>', 'name to use for the config file', 'gemforge.config.cjs')
     .option('-o, --overwrite', 'overwrite config file if it already exists')
-    .option('--hardhat', 'generate config for a Hardhat project instead')
+    .option('--hardhat', 'generate config for a Hardhat project instead of Foundry (default)')
     .action(async (args) => {
       const ctx = await getContext(args)
 
