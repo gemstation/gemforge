@@ -36,7 +36,7 @@ Gemforge is [already used in production](https://gemforge.xyz/#who-is-using-gemf
 
 ## Installation
 
-_[Node.js](https://nodejs.org/) 16+ is required to run Gemforge. We recommend using [nvm](https://github.com/nvm-sh/nvm) to handle different Node versions._
+**_[Node.js](https://nodejs.org/) 20+ is required to run Gemforge. We recommend using [nvm](https://github.com/nvm-sh/nvm) to handle different Node versions._**
 
 We recommend installing `gemforge` globally:
 
