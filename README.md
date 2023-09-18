@@ -34,6 +34,8 @@ Gemforge is [already used in production](https://gemforge.xyz/#who-is-using-gemf
 * Highly configurable per project.
 * [Fully documented](https://gemforge.xyz)
 
+See [who is using Gemforge](https://gemforge.xyz/#who-is-using-gemforge).
+
 ## Installation
 
 **_[Node.js](https://nodejs.org/) 20+ is required to run Gemforge. We recommend using [nvm](https://github.com/nvm-sh/nvm) to handle different Node versions._**
