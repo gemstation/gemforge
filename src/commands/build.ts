@@ -75,10 +75,15 @@ export const command = () =>
           importPaths[f.contractName] = relativeImportPath.startsWith('.') ? relativeImportPath : `./${relativeImportPath}`
         }
 
-        const varName = `f${facetNum}`
+        const varName = `f`
+
+        let arrayDeclaration = `bytes4[] memory ${varName} = new bytes4[](${f.functions.length});`;
+        if (facetNum > 0) {
+          arrayDeclaration = `${varName} = new bytes4[](${f.functions.length});`;
+        }
 
         cutStr += `
-bytes4[] memory ${varName} = new bytes4[](${f.functions.length});
+${arrayDeclaration}
 ${f.functions.map((f, i) => `${varName}[${i}] = IDiamondProxy.${f.name}.selector;`).join('\n')}
 cut[${facetNum}] = IDiamondCut.FacetCut({
   facetAddress: address(new ${f.contractName}()),

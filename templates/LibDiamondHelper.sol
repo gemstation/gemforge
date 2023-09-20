@@ -17,9 +17,6 @@ library LibDiamondHelper {
     // initialize the diamond as well as cut in all facets
     cut = new IDiamondCut.FacetCut[](__NUM_FACETS__);
 
-    // yul too slow, so fix stack too deep here
-    {
 __CUTS__
-    }
   }
 }
