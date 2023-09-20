@@ -207,7 +207,7 @@ cut[0] = IDiamondCut.FacetCut({
   functionSelectors: f
 });
 
-bytes4[] memory f1 = new bytes4[](1);
+f = new bytes4[](1);
 f[0] = IDiamondProxy.setData.selector;
 cut[1] = IDiamondCut.FacetCut({
   facetAddress: address(new Example2Facet()),
