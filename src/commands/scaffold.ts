@@ -18,7 +18,18 @@ export const command = () =>
       info('Checking Node.js version...')
       const nodeVersion = (await $({ quiet: true })`node --version`).stdout.trim()
       if (semver.lt(nodeVersion, 'v20.0.0')) {
-        error(`Node.js version is too old. Please upgrade to at least v20 to run the scaffolding project.`)
+        error(`Node.js version is too old. Please upgrade to at least v20 to run the scaffolding command.`)
+      }
+
+      info('Checking for Python...')
+      try {
+        await $({ quiet: true })`python --version`
+      } catch (err) {
+        try {
+          await $({ quiet: true })`python3 --version`
+        } catch (err2) {
+          error(`Python is not installed. Please goto https://www.python.org/downloads/ for instructions.\n${err2}`)
+        }
       }
 
       info('Ensuring folder is empty...')
