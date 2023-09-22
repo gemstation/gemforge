@@ -59,7 +59,7 @@ export interface FacetCut {
 
 export const resolveClean = async (params: {
   coreFacets: Record<string, ContractArtifact>,
-  diamondProxy: OnChainContract,
+  diamondProxy?: OnChainContract,
   signer: Signer,
 }): Promise<FacetCut> => {
   const { coreFacets, diamondProxy, signer } = params
@@ -69,7 +69,7 @@ export const resolveClean = async (params: {
     facetAddress: ZeroAddress,
     functionSelectors: [],
   }
-  const liveFunctions = await getLiveFunctions(diamondProxy)
+  const liveFunctions = diamondProxy ? await getLiveFunctions(diamondProxy) : {}
   const bytecodeFetcher = new BytecodeFetcher(signer)
 
   for (let f in liveFunctions) {
@@ -98,13 +98,13 @@ export interface Upgrade {
 export const resolveUpgrade = async (params: {
   userFacets: Record<string, ContractArtifact>, 
   coreFacets: Record<string, ContractArtifact>,
-  diamondProxy: OnChainContract,
+  diamondProxy?: OnChainContract,
   signer: Signer,
 }): Promise<Upgrade> => {
   const { userFacets, coreFacets, diamondProxy, signer } = params
 
   // get what's on-chain
-  const liveFunctions = await getLiveFunctions(diamondProxy)
+  const liveFunctions = diamondProxy ? await getLiveFunctions(diamondProxy) : {}
 
   // get what's in artifacts
   trace('Resolving methods in artifacts ...')

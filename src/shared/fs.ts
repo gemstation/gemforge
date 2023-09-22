@@ -4,7 +4,7 @@ import { tmpNameSync } from 'tmp'
 import { glob } from 'glob'
 import path from 'node:path'
 import { ethers } from 'ethers'
-import { error, trace, warn } from './log.js'
+import { error, info, trace, warn } from './log.js'
 import { Context } from './context.js'
 import parser from '@solidity-parser/parser'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -199,9 +199,12 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   })
 
   if (parserMeta.userDefinedTypes.length) {
-    warn(`Custom structs found in facet method signatures: ${parserMeta.userDefinedTypes.join(', ')}`)
-    warn(`Please ensure your gemforge config is setup properly to handle this, see https://gemforge.xyz/advanced/custom-structs/.`)
+    info(`Custom structs found in facet method signatures: ${parserMeta.userDefinedTypes.join(', ')}`)
+    info(`Please ensure your gemforge config is setup properly to handle this, see https://gemforge.xyz/advanced/custom-structs/.`)
   }
+
+  // sort alphabetically
+  ret.sort((a, b) => a.contractName.localeCompare(b.contractName))
 
   return ret
 }

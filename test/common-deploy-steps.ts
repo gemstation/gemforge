@@ -2,7 +2,7 @@ import get from "lodash.get"
 import 'mocha'
 import { setTimeout } from "node:timers/promises"
 import { join } from "node:path"
-import { GemforgeConfig, cli, expect, loadDiamondContract, loadFile, loadJsonFile, sendTx, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, sendTx, updateConfigFile, writeFile } from './utils.js'
 
 
 export const addDeployTestSteps = ({
@@ -215,6 +215,105 @@ export const addDeployTestSteps = ({
 
       const n = await contract.getInt1()
       expect(n.toString()).to.equal('2') // still the same as before!
+    })
+
+    it('and allows for a dry update, with nothing actually getting deployed', async () => {
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const jsonOld = loadFile(filePath)
+
+      const { contract } = await loadDiamondContract(cwd)
+      await sendTx(contract.setInt1(2))
+
+      const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
+      const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract ExampleFacet {
+          // existing method to be removed
+          // function getInt1() external view returns (uint) {
+            // AppStorage storage s = LibAppStorage.diamondStorage();
+            // return s.data.i1 + 1;
+          // }
+
+          function setInt1(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i;
+          }
+        }
+      `)
+      // re-build
+      expect(cli('build', { cwd }).success).to.be.true
+
+      expect(cli('deploy', 'local', '--dry', { cwd, verbose: false }).success).to.be.true
+
+      const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(startingBal).to.equal(endingBal)
+
+      const jsonNew = loadFile(filePath)
+      expect(jsonNew).to.equal(jsonOld)
+    })
+
+    it('and allows for a dry reset, with nothing actually getting deployed', async () => {
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const jsonOld = loadFile(filePath)
+
+      const { contract } = await loadDiamondContract(cwd)
+      await sendTx(contract.setInt1(2))
+
+      const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
+      const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(cli('deploy', 'local', '--reset', '--dry', { cwd, verbose: false }).success).to.be.true
+
+      const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(startingBal).to.equal(endingBal)
+
+      const jsonNew = loadFile(filePath)
+      expect(jsonNew).to.equal(jsonOld)
+    })
+
+    it('and allows for a dry new deployment, with nothing actually getting deployed', async () => {
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const jsonOld = loadFile(filePath)
+
+      const { contract } = await loadDiamondContract(cwd)
+      await sendTx(contract.setInt1(2))
+
+      const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
+      const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(cli('deploy', 'local', '--new', '--dry', { cwd, verbose: false }).success).to.be.true
+
+      const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(startingBal).to.equal(endingBal)
+
+      const jsonNew = loadFile(filePath)
+      expect(jsonNew).to.equal(jsonOld)
+    })
+  })
+
+  describe('can do a dry deploy', () => {
+    beforeEach(() => {
+      cwd = setupFolderCallback()
+    })
+
+    it('and nothing gets deployed', async () => {
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      
+      const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
+      const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(cli('deploy', 'local', '--dry', { cwd, verbose: false }).success).to.be.true
+
+      const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(startingBal).to.equal(endingBal)
+      expect(fileExists(join(cwd, 'gemforge.deployments.json'))).to.be.false
     })
   })
 

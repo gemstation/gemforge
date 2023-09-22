@@ -9,6 +9,7 @@ import { createCommand, logSuccess } from './common.js'
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a target.')
     .argument('target', 'target to deploy')
+    .option('-d, --dry', 'do a dry run without actually deploying anything')
     .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
     .option('-r, --reset', 'remove all non-core facet selectors from an existing deployment and start afresh')
     .action(async (targetArg, args) => {
@@ -43,8 +44,12 @@ export const command = () =>
 
       // run pre-deploy hook
       if (ctx.config.hooks.preDeploy) {
-        info('Running pre-deploy hook...')
-        await $$`${ctx.config.hooks.preDeploy}`
+        if (args.dry) {
+          warn(`Dry run requested. Skipping pre-deploy hook...`)
+        } else {
+          info('Running pre-deploy hook...')
+          await $$`${ctx.config.hooks.preDeploy}`
+        }
       }
 
       let proxyInterface: OnChainContract
@@ -56,7 +61,11 @@ export const command = () =>
 
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
-        proxyInterface = await deployNewDiamond(ctx, signer)
+        if (args.dry) {
+          warn(`Dry run requested. Skipping new deployment...`)
+        } else {
+          proxyInterface = await deployNewDiamond(ctx, signer)
+        }
         isNewDeployment = true
       } else {
         info(`Load existing deployment ...`)
@@ -83,7 +92,11 @@ export const command = () =>
           }
         } else {
           info(`   No existing deployment found.`)
-          proxyInterface = await deployNewDiamond(ctx, signer)
+          if (args.dry) {
+            warn(`Dry run requested. Skipping deployment...`)
+          } else {
+            proxyInterface = await deployNewDiamond(ctx, signer)
+          }
           isNewDeployment = true
         }
       }
@@ -109,18 +122,22 @@ export const command = () =>
         warn('This will remove all non-core facet selectors from the existing deployment.')
         const cleanCut = await resolveClean({
           coreFacets,
-          diamondProxy: proxyInterface,
+          diamondProxy: proxyInterface!,
           signer
         })
         info(`   ${cleanCut.functionSelectors.length} selectors to remove.`)
-        await callDiamondCut(proxyInterface, [cleanCut])
+        if (args.dry) {
+          warn(`Dry run requested. Skipping the reset...`)
+        } else {
+          await callDiamondCut(proxyInterface!, [cleanCut])
+        }
       }
 
       info('Resolving what changes need to be applied ...')      
       const changes = await resolveUpgrade({
         userFacets: userFacetArtifacts,
         coreFacets,
-        diamondProxy: proxyInterface,
+        diamondProxy: proxyInterface!,
         signer
       })
       const numAdds = changes.namedCuts.filter(c => c.action === FacetCutAction.Add).length
@@ -135,23 +152,16 @@ export const command = () =>
         const facetContracts: Record<string, OnChainContract> = {}
 
         if (changes.facetsToDeploy.length) {
-          info('Deploying facets...')
-          /* 
-            TODO: sometimes the parallelization fails so let's do it sequentially for now (above)
-            
-            await Promise.all(changes.facetsToDeploy.map(async name => {
+          if (args.dry) {
+            warn(`Dry run requested. Skipping facet deployment...`)
+          } else {
+            info('Deploying facets...')
+            for (const name of changes.facetsToDeploy) {
               info(`   Deploying ${name} ...`)
               const contract = await deployContract(ctx, name, signer)
-              await timersPromises.setTimeout(1000)
               facetContracts[name] = contract
               info(`   Deployed ${name} at: ${await contract.address}`)
-            }))
-          */
-          for (const name of changes.facetsToDeploy) {
-            info(`   Deploying ${name} ...`)
-            const contract = await deployContract(ctx, name, signer)
-            facetContracts[name] = contract
-            info(`   Deployed ${name} at: ${await contract.address}`)
+            }
           }
         } else {
           info('No new facets need to be deployed.')
@@ -163,29 +173,37 @@ export const command = () =>
         if (isNewDeployment && ctx.config.diamond.init) {
           const { contract: initContract, function: initFunction } = ctx.config.diamond.init
 
-          info(`Deploying initialization contract: ${initContract} ...`)
-          const init = await deployContract(ctx, initContract, signer)
-          initContractAddress = init.address
-          info(`   Initialization contract deployed at: ${initContractAddress}`)
+          if (args.dry) {
+            warn(`Dry run requested. Skipping initialization...`)
+          } else {
+            info(`Deploying initialization contract: ${initContract} ...`)
+            const init = await deployContract(ctx, initContract, signer)
+            initContractAddress = init.address
+            info(`   Initialization contract deployed at: ${initContractAddress}`)
 
-          const initSelector = init.contract.interface.getFunction(initFunction)
-          if (!initSelector) {
-            error(`Initialization contract ${initContract} does not have an ${initFunction}() function.`)
-          }
+            const initSelector = init.contract.interface.getFunction(initFunction)
+            if (!initSelector) {
+              error(`Initialization contract ${initContract} does not have an ${initFunction}() function.`)
+            }
 
-          // encode init args with function signature to get the init data
-          info(`Encoding initialization call data...`)
-          try {
-            trace(`   Encoding initialization call data: [${target.config.initArgs.join(", ")}]`)
-            initData = init.contract.interface.encodeFunctionData(initSelector!, target.config.initArgs)            
-            trace(`   Encoded initialization call data: ${initData}`)
-          } catch (err: any) {
-            error(`Error encoding initialization call data: ${err.message}\n\nCheck your initArgs in the target config.`)
+            // encode init args with function signature to get the init data
+            info(`Encoding initialization call data...`)
+            try {
+              trace(`   Encoding initialization call data: [${target.config.initArgs.join(", ")}]`)
+              initData = init.contract.interface.encodeFunctionData(initSelector!, target.config.initArgs)            
+              trace(`   Encoded initialization call data: ${initData}`)
+            } catch (err: any) {
+              error(`Error encoding initialization call data: ${err.message}\n\nCheck your initArgs in the target config.`)
+            }
           }
         }
         
         const cuts = getFinalizedFacetCuts(changes.namedCuts, facetContracts)
-        await callDiamondCut(proxyInterface, cuts, initContractAddress, initData)
+        if (args.dry) {
+          warn(`Dry run requested. Skipping diamondCut() call...`)
+        } else {
+          await callDiamondCut(proxyInterface!, cuts, initContractAddress, initData)
+        }
       }
 
       const deploymentRecords = getDeploymentRecorderData()
@@ -196,8 +214,12 @@ export const command = () =>
 
       // run post-deploy hook
       if (ctx.config.hooks.postDeploy) {
-        info('Running post-deploy hook...')
-        await $$`${ctx.config.hooks.postDeploy}`
+        if (args.dry) {
+          warn(`Dry run requested. Skipping post-deploy hook...`)
+        } else {
+          info('Running post-deploy hook...')
+          await $$`${ctx.config.hooks.postDeploy}`
+        }
       }
 
       logSuccess()
