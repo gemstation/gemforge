@@ -80,6 +80,10 @@ interface WriteFileOpts {
   executable?: boolean
 }
 
+export const removeFile = (filePath:string) => {
+  fs.unlinkSync(filePath)
+}
+
 export const writeFile = (filePath: string, contents: string, opts: WriteFileOpts = {}) => {
   fs.writeFileSync(filePath, contents, 'utf8')
   if (opts.executable) {

@@ -1,6 +1,6 @@
 import 'mocha'
 import path, { join } from "node:path"
-import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, removeFile, updateConfigFile, writeFile } from './utils.js'
 
 export const addBuildTestSteps = ({
   framework, 
@@ -18,7 +18,7 @@ export const addBuildTestSteps = ({
   })
 
   it('generates JSON with facet info', async () => {
-    cli('build', { cwd })
+    expect(cli('build', { cwd }).success).to.be.true
 
     const filePath = path.join(cwd, '.gemforge/facets.json')
     const json = loadJsonFile(filePath)
@@ -43,7 +43,7 @@ export const addBuildTestSteps = ({
   })
 
   it("generates proxy contract", async () => {
-    cli('build', { cwd })
+    expect(cli('build', { cwd }).success).to.be.true
 
     const filePath = path.join(cwd, `${contractSrcBasePath}/generated/DiamondProxy.sol`)
     assertFileMatchesTemplate(filePath, 'DiamondProxy.sol', {
@@ -54,7 +54,7 @@ export const addBuildTestSteps = ({
   })
 
   it("generates proxy interface", async () => {
-    cli('build', { cwd })
+    expect(cli('build', { cwd }).success).to.be.true
 
     const filePath = path.join(cwd, `${contractSrcBasePath}/generated/IDiamondProxy.sol`)
     assertFileMatchesTemplate(filePath, 'IDiamondProxy.sol', {
@@ -69,7 +69,7 @@ function setInt1(uint i) external;`,
 
   if (framework === 'foundry') {
     it("generates test helper", async () => {
-      cli('build', { cwd })
+      expect(cli('build', { cwd }).success).to.be.true
 
       const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
       assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
@@ -79,13 +79,13 @@ function setInt1(uint i) external;`,
         __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
         __NUM_FACETS__: '1',
         __CUTS__: `
-bytes4[] memory f0 = new bytes4[](2);
-f0[0] = IDiamondProxy.getInt1.selector;
-f0[1] = IDiamondProxy.setInt1.selector;
+bytes4[] memory f = new bytes4[](2);
+f[0] = IDiamondProxy.getInt1.selector;
+f[1] = IDiamondProxy.setInt1.selector;
 cut[0] = IDiamondCut.FacetCut({
   facetAddress: address(new ExampleFacet()),
   action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f0
+  functionSelectors: f
 });
 `,          
       })
@@ -134,8 +134,7 @@ cut[0] = IDiamondCut.FacetCut({
     })
 
     it('generates JSON with facet info', async () => {
-      const ret = cli('build', { cwd })
-      expect(ret.success).to.be.true
+      expect(cli('build', { cwd }).success).to.be.true
 
       const filePath = path.join(cwd, '.gemforge/facets.json')
       const json = loadJsonFile(filePath)
@@ -171,7 +170,7 @@ cut[0] = IDiamondCut.FacetCut({
     })
 
     it("generates proxy interface", async () => {
-      cli('build', { cwd })
+      expect(cli('build', { cwd }).success).to.be.true
 
       const filePath = path.join(cwd, `${contractSrcBasePath}/generated/IDiamondProxy.sol`)
       assertFileMatchesTemplate(filePath, 'IDiamondProxy.sol', {
@@ -179,38 +178,38 @@ cut[0] = IDiamondCut.FacetCut({
         __SOLC_VERSION__: '0.8.21',
         __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
         __CUSTOM_IMPORTS__: `import "../shared/Structs.sol";\n`,
-        __METHODS__: `function getInts() external view returns (uint a, uint b);
-function getData() external view returns (Data memory);
-function setData(Data calldata d) external;`,
+        __METHODS__: `function setData(Data calldata d) external;
+function getInts() external view returns (uint a, uint b);
+function getData() external view returns (Data memory);`,
       })
     })
 
     if (framework === 'foundry') {
       it("generates test helper", async () => {
-        cli('build', { cwd })
+        expect(cli('build', { cwd }).success).to.be.true
 
         const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
         assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
           __SOLC_SPDX__: 'MIT',
           __SOLC_VERSION__: '0.8.21',
           __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
-          __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";
-import { Example2Facet } from "../facets/Example2Facet.sol";`,
+          __FACET_IMPORTS__: `import { Example2Facet } from "../facets/Example2Facet.sol";
+import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
           __NUM_FACETS__: '2',
           __CUTS__: `
-bytes4[] memory f = new bytes4[](2);
-f[0] = IDiamondProxy.getInts.selector;
-f[1] = IDiamondProxy.getData.selector;
+bytes4[] memory f = new bytes4[](1);
+f[0] = IDiamondProxy.setData.selector;
 cut[0] = IDiamondCut.FacetCut({
-  facetAddress: address(new ExampleFacet()),
+  facetAddress: address(new Example2Facet()),
   action: IDiamondCut.FacetCutAction.Add,
   functionSelectors: f
 });
 
-f = new bytes4[](1);
-f[0] = IDiamondProxy.setData.selector;
+f = new bytes4[](2);
+f[0] = IDiamondProxy.getInts.selector;
+f[1] = IDiamondProxy.getData.selector;
 cut[1] = IDiamondCut.FacetCut({
-  facetAddress: address(new Example2Facet()),
+  facetAddress: address(new ExampleFacet()),
   action: IDiamondCut.FacetCutAction.Add,
   functionSelectors: f
 });
@@ -219,6 +218,71 @@ cut[1] = IDiamondCut.FacetCut({
       })    
     }
   })
+
+  if (framework === 'foundry') {
+    describe('with a large no. of facets and methods', () => {
+      const LARGE_NUM_FACETS = 30
+      const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      const getFacetName = (i: number) => {
+        const firstNum = ~~(Math.floor(i / 10))
+        const secondNum = i % 10
+        return `Example${ALPHABET[firstNum]}${ALPHABET[secondNum]}Facet`
+      }
+
+      beforeEach(async () => {
+        removeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`))
+
+        for (let i = 0; i < LARGE_NUM_FACETS; i++) {
+          const name = getFacetName(i)
+          writeFile(join(cwd, `${contractSrcBasePath}/facets/${name}.sol`), `
+            pragma solidity >=0.8.21;
+            import "../libs/LibAppStorage.sol";
+            contract ${name} {
+              function getInts${i}() external view returns (uint a, uint b) {
+                AppStorage storage s = LibAppStorage.diamondStorage();
+                a = s.data.i1;
+                b = s.data.i2;
+              }
+            }
+          `)
+        }
+      })
+
+      it("generates test helper", async () => {
+        expect(cli('build', { cwd }).success).to.be.true
+
+        const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
+
+        let expectedFacetImports = ''
+        let expectedCuts = ''
+        for (let i = 0; i < LARGE_NUM_FACETS; i++) {
+          const name = getFacetName(i)
+          const prefix = i ? `` : 'bytes4[] memory '
+          expectedFacetImports += `${i ? "\n" : ''}import { ${name} } from "../facets/${name}.sol";`
+          expectedCuts += `
+${prefix}f = new bytes4[](1);
+f[0] = IDiamondProxy.getInts${i}.selector;
+cut[${i}] = IDiamondCut.FacetCut({
+  facetAddress: address(new ${name}()),
+  action: IDiamondCut.FacetCutAction.Add,
+  functionSelectors: f
+});
+`
+        }
+
+        // console.log(expectedFacetImports)
+
+        assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
+          __SOLC_SPDX__: 'MIT',
+          __SOLC_VERSION__: '0.8.21',
+          __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+          __FACET_IMPORTS__: expectedFacetImports,
+          __NUM_FACETS__: `${LARGE_NUM_FACETS}`,
+          __CUTS__: expectedCuts,
+        })
+      })    
+    })
+  }
 
   it('complains if duplicate function signature found', () => {
     writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `

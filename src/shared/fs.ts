@@ -203,6 +203,9 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
     warn(`Please ensure your gemforge config is setup properly to handle this, see https://gemforge.xyz/advanced/custom-structs/.`)
   }
 
+  // sort alphabetically
+  ret.sort((a, b) => a.contractName.localeCompare(b.contractName))
+
   return ret
 }
 
