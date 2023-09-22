@@ -198,21 +198,21 @@ function setData(Data calldata d) external;`,
 import { Example2Facet } from "../facets/Example2Facet.sol";`,
           __NUM_FACETS__: '2',
           __CUTS__: `
-bytes4[] memory f0 = new bytes4[](2);
-f0[0] = IDiamondProxy.getInts.selector;
-f0[1] = IDiamondProxy.getData.selector;
+bytes4[] memory f = new bytes4[](2);
+f[0] = IDiamondProxy.getInts.selector;
+f[1] = IDiamondProxy.getData.selector;
 cut[0] = IDiamondCut.FacetCut({
   facetAddress: address(new ExampleFacet()),
   action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f0
+  functionSelectors: f
 });
 
-bytes4[] memory f1 = new bytes4[](1);
-f1[0] = IDiamondProxy.setData.selector;
+f = new bytes4[](1);
+f[0] = IDiamondProxy.setData.selector;
 cut[1] = IDiamondCut.FacetCut({
   facetAddress: address(new Example2Facet()),
   action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f1
+  functionSelectors: f
 });
 `,          
         })
