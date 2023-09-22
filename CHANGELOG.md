@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/gemstation/gemforge/compare/v2.1.6...v2.2.0) (2023-09-22)
+
+
+### Features
+
+* dry run deployments - closes [#22](https://github.com/gemstation/gemforge/issues/22) ([#23](https://github.com/gemstation/gemforge/issues/23)) ([bc9ce38](https://github.com/gemstation/gemforge/commit/bc9ce3847132eb48e34bdbe497ae390e4e0afced))
+* scaffold command checks for python existence, fixes [#19](https://github.com/gemstation/gemforge/issues/19) ([28c5ee2](https://github.com/gemstation/gemforge/commit/28c5ee220ec2844bb3fb880144a51b86381d990c))
+
+
+### Bug Fixes
+
+* stack too deep in LibDiamondHelper ([#21](https://github.com/gemstation/gemforge/issues/21)) ([277ffd7](https://github.com/gemstation/gemforge/commit/277ffd78906c8523287955e8be55156792a8c5e1))
+
 ### [2.1.6](https://github.com/gemstation/gemforge/compare/v2.1.5...v2.1.6) (2023-09-18)
 
 ### [2.1.5](https://github.com/gemstation/gemforge/compare/v2.1.4...v2.1.5) (2023-09-18)
