@@ -7,7 +7,7 @@ import { dirname, resolve, join, basename, relative } from "node:path"
 import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
 import get from "lodash.get"
-import { Contract, ContractTransactionResponse, Fragment, TransactionResponse, ethers } from "ethers"
+import { Contract, Fragment, TransactionResponse, ethers } from "ethers"
 import { glob } from "glob"
 
 chai.use(chaiAsPromised)
@@ -72,6 +72,10 @@ export const loadJsonFile = (filePath: string) => {
   return JSON.parse(src)
 }
 
+export const fileExists = (filePath: string) => {
+  return fs.existsSync(filePath)
+}
+
 export const loadFile = (filePath: string) => {
   return fs.readFileSync(filePath, 'utf8')
 }
@@ -113,6 +117,24 @@ export interface LoadedContract {
 export const sendTx = async (txCall: Promise<TransactionResponse>) => {
   const tx = await txCall
   return await tx.wait()
+}
+
+export const loadWallet = async (cfgFilePath: string, network: string, wallet: string) => {
+  const obj = (await import(cfgFilePath)).default as GemforgeConfig
+  
+  const provider = new ethers.JsonRpcProvider(obj.networks[network].rpcUrl as string)
+  
+  let words = obj.wallets[wallet].config.words
+  if (typeof words === 'function') {
+    words = words()
+  }
+  
+  const w = ethers.HDNodeWallet.fromMnemonic(
+    ethers.Mnemonic.fromPhrase(words as string), 
+    `m/44'/60'/0'/0/${obj.wallets[wallet].config.index}`
+  )
+
+  return w.connect(provider)
 }
 
 export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): Promise<LoadedContract> => {

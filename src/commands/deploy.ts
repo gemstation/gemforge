@@ -61,7 +61,11 @@ export const command = () =>
 
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
-        proxyInterface = await deployNewDiamond(ctx, signer)
+        if (args.dry) {
+          warn(`Dry run requested. Skipping new deployment...`)
+        } else {
+          proxyInterface = await deployNewDiamond(ctx, signer)
+        }
         isNewDeployment = true
       } else {
         info(`Load existing deployment ...`)
