@@ -187,6 +187,101 @@ export const resolveUpgrade = async (params: {
   }
 }
 
+export interface ResolvedChainData {
+  proxyAddress: string,
+  unrecognizedFacets: number,
+  unrecognizedFunctions: number,
+  facets: Record<string, {
+    unrecognized?: boolean,
+    address: string,
+    functions: {
+      name?: string,
+      unrecognized?: boolean,
+      selector: string,
+    }[]
+  }>
+}
+
+export const resolveChainData = async (params: {
+  userFacets: Record<string, ContractArtifact>, 
+  coreFacets: Record<string, ContractArtifact>,
+  diamondProxy?: OnChainContract,
+  signer: Signer,
+}): Promise<ResolvedChainData> => {
+  const { userFacets, coreFacets, diamondProxy, signer } = params
+
+  // get what's on-chain
+  const liveFunctions = diamondProxy ? await getLiveFunctions(diamondProxy) : {}
+
+  // merge facets
+  const allFacets = { ...userFacets, ...coreFacets }
+
+  // get what's in artifacts
+  trace('Resolving methods in artifacts ...')
+  const bytecodeFacetNames: Record<string, string> = {}
+  const functionFacetNames: Record<string, string> = {}
+  const functionNames: Record<string, string> = {}
+  
+  Object.keys(allFacets).forEach((k: string) => {
+    const artifact = allFacets[k]
+    bytecodeFacetNames[artifact.deployedBytecode] = k
+    getSelectors(artifact).forEach((s: FunctionSelector) => {
+      functionFacetNames[s.selector] = k
+      functionNames[s.selector] = s.name
+    })
+  })
+
+  const ret: ResolvedChainData = {
+    proxyAddress: diamondProxy ? diamondProxy.address : ZeroAddress,
+    unrecognizedFacets: 0,
+    unrecognizedFunctions: 0,
+    facets: {},
+  }
+
+  const bytecodeFetcher = new BytecodeFetcher(signer)
+
+  for (let f in liveFunctions) {
+    const liveBytecode = await bytecodeFetcher.getBytecode(liveFunctions[f])
+    const matchingFacetName = bytecodeFacetNames[liveBytecode]
+
+    if (matchingFacetName) {
+      if (!ret.facets[matchingFacetName]) {
+        ret.facets[matchingFacetName] = {
+          address: liveFunctions[f],
+          functions: [],
+        }
+      }
+      
+      if (!functionNames[f]) {
+        ret.unrecognizedFunctions++
+      }
+
+      ret.facets[matchingFacetName].functions.push({
+        ...(functionNames[f] ? { name: functionNames[f] } : { unrecognized: true }),
+        selector: f,
+      })
+    } else {
+      if (!ret.facets[liveFunctions[f]]) {
+        ret.unrecognizedFacets++
+
+        ret.facets[liveFunctions[f]] = {
+          unrecognized: true,
+          address: liveFunctions[f],
+          functions: [],
+        }
+      }
+
+      ret.unrecognizedFunctions++
+
+      ret.facets[liveFunctions[f]].functions.push({
+        selector: f,
+        unrecognized: true,
+      })
+    }
+  }
+
+  return ret
+}
 
 export const getFinalizedFacetCuts = (namedCuts: NamedFacetCut[], facetContracts: Record<string, OnChainContract>): FacetCut[] => {
   return namedCuts.map(({ facetNameOrAddress, action, functionSelectors }) => {
