@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/gemstation/gemforge/compare/v2.2.0...v2.3.0) (2023-09-24)
+
+
+### Features
+
+* query() command ([#24](https://github.com/gemstation/gemforge/issues/24)) ([efd2dae](https://github.com/gemstation/gemforge/commit/efd2dae9a7c89b87dc9cb777f7c4b6dfef01e015)), closes [#12](https://github.com/gemstation/gemforge/issues/12) [#12](https://github.com/gemstation/gemforge/issues/12)
+
 ## [2.2.0](https://github.com/gemstation/gemforge/compare/v2.1.6...v2.2.0) (2023-09-22)
 
 
