@@ -188,6 +188,7 @@ export const resolveUpgrade = async (params: {
 }
 
 export interface ResolvedChainData {
+  proxyAddress: string,
   unrecognizedFacets: number,
   unrecognizedFunctions: number,
   facets: Record<string, {
@@ -231,6 +232,7 @@ export const resolveChainData = async (params: {
   })
 
   const ret: ResolvedChainData = {
+    proxyAddress: diamondProxy ? diamondProxy.address : ZeroAddress,
     unrecognizedFacets: 0,
     unrecognizedFunctions: 0,
     facets: {},

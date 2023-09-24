@@ -82,10 +82,10 @@ export const command = () =>
         signer
       })
 
-      let outputStr = ''
+      let outputStr = `Diamond (${diff.proxyAddress})`
 
       if (!args.json) {
-        outputStr = `Unrecognized facets: ${diff.unrecognizedFacets}\nUnrecognized functions: ${diff.unrecognizedFunctions}\n\n`
+        outputStr += `Unrecognized facets: ${diff.unrecognizedFacets}\nUnrecognized functions: ${diff.unrecognizedFunctions}\n\n`
 
         Object.keys(diff.facets).forEach(f => {
           const facet = diff.facets[f]
