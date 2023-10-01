@@ -1,23 +1,22 @@
-import get from 'lodash.get'
-import { SyncOptions, execaCommandSync } from 'execa'
-import { tmpNameSync } from 'tmp'
-import { glob } from 'glob'
-import path from 'node:path'
-import { ethers } from 'ethers'
-import { error, info, trace, warn } from './log.js'
-import { Context } from './context.js'
 import parser from '@solidity-parser/parser'
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import type {
-  ContractDefinition,
-  FunctionDefinition,
-  VariableDeclaration,
-  TypeName,
-  ElementaryTypeName,
   ArrayTypeName,
-  UserDefinedTypeName,
+  ContractDefinition,
+  ElementaryTypeName,
+  FunctionDefinition,
   NumberLiteral,
+  TypeName,
+  UserDefinedTypeName,
+  VariableDeclaration,
 } from '@solidity-parser/parser/dist/src/ast-types.d.ts'
+import { Fragment } from 'ethers'
+import { execaCommandSync } from 'execa'
+import { glob } from 'glob'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import { tmpNameSync } from 'tmp'
+import { Context } from './context.js'
+import { error, info, trace } from './log.js'
 
 interface CommandOptions {
   cwd?: string,
@@ -121,6 +120,7 @@ export interface FacetDefinition {
 interface ParserMeta {
   userDefinedTypes: string[],
 }
+
 
 
 export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {

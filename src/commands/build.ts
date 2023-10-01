@@ -3,6 +3,7 @@ import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFac
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
 import { error, info, trace } from '../shared/log.js'
+import { generateUnifiedAbi } from '../shared/chain.js'
 
 export const command = () =>
   createCommand('build', 'Build a project.')
@@ -115,6 +116,10 @@ cut[${facetNum}] = IDiamondCut.FacetCut({
       // run build
       info('Running build...')
       await $$`${ctx.config.commands.build}`
+
+      // generate abi.json
+      info('Generating abi.json...')
+      saveJson(`${ctx.generatedSolidityPath}/abi.json`, generateUnifiedAbi(ctx))
 
       // run post build hook
       if (ctx.config.hooks.postBuild) {

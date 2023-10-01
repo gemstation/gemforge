@@ -88,6 +88,35 @@ export const setupWallet = (walletConfig: WalletConfig) => {
   }
 }
 
+/**
+ * Generated unified ABI consisting of the diamond proxy interface + custom erros.
+ * 
+ * Note: this should only be run after the contracts have been compiled.
+ * 
+ * @param ctx 
+ * @returns 
+ */
+export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
+  const aPaths = getAllContractArtifactPaths(ctx)
+
+  const abi: Fragment[] = []
+
+  aPaths.forEach(({ jsonFilePath }) => {
+    try {
+      const j = loadJson(jsonFilePath) as any
+      if (j.abi) {
+        if (jsonFilePath.endsWith('/IDiamondProxy.json')) {
+          abi.push(...j.abi)
+        } else {
+          abi.push(...(j.abi as Fragment[]).filter(({ type }) => ['error', 'event'].includes(type)))
+        }
+      }
+    } catch (e) {}
+  })
+
+  return abi
+}
+
 export interface ContractArtifact {
   name: string,
   fullyQualifiedName: string,
@@ -98,24 +127,14 @@ export interface ContractArtifact {
 
 export const loadContractArtifact = (ctx: Context, name: string) => {
   trace(`Loading contract artifact: ${name} ...`)
-  
-  let jsonFilePath = ''
-  let fullyQualifiedName = ''
 
-  switch (ctx.config.artifacts.format) {
-    case 'foundry':
-      jsonFilePath = `${ctx.artifactsPath}/${name}.sol/${name}.json`
-      fullyQualifiedName = `${name}.sol:${name}`
-      break
-    case 'hardhat':
-      const files = glob.sync(`${ctx.artifactsPath}/**/*.json`) as string[]
-      const filePath = path.relative(ctx.artifactsPath, files.find(f => path.basename(f) === `${name}.json`)!)
-      jsonFilePath = `${ctx.artifactsPath}/${filePath}`
-      fullyQualifiedName = `${path.dirname(filePath)}:${name}`
-      break
-    default:
-      error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
+  const match = getAllContractArtifactPaths(ctx).find(f => f.jsonFilePath.endsWith(`/${name}.json`))
+
+  if (!match) {
+    error(`Failed to find contract artifact: ${name}`)
   }
+
+  const { jsonFilePath, fullyQualifiedName } = match!
 
   const json = loadJson(jsonFilePath) as any
 
@@ -394,4 +413,38 @@ const getLatestNonce = async (signer: Signer): Promise<number> => {
     await nonceMutex.unlock()
     return error(`Failed to get nonce: ${err.message}`)
   }
+}
+
+
+interface ContractArtifactPath {
+  jsonFilePath: string
+  fullyQualifiedName: string
+}
+
+const getAllContractArtifactPaths = (ctx: Context): ContractArtifactPath[] => {
+  const files = glob.sync(`${ctx.artifactsPath}/**/*.json`) as string[]
+
+  return files.map(f => {
+    const name = path.basename(f, '.json')
+
+    let jsonFilePath = f
+    let fullyQualifiedName = ''
+
+    switch (ctx.config.artifacts.format) {
+      case 'foundry':
+        fullyQualifiedName = `${name}.sol:${name}`
+        break
+      case 'hardhat':
+        const filePath = path.relative(ctx.artifactsPath, f)
+        fullyQualifiedName = `${path.dirname(filePath)}:${name}`
+        break
+      default:
+        error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
+    }
+
+    return {
+      jsonFilePath,
+      fullyQualifiedName,
+    }
+  })
 }
