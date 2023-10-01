@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/gemstation/gemforge/compare/v2.3.0...v2.4.0) (2023-10-01)
+
+
+### Features
+
+* generate abi.json - closes [#25](https://github.com/gemstation/gemforge/issues/25) ([6022386](https://github.com/gemstation/gemforge/commit/60223861a790a625a0887e71a5d62ae882d751ea))
+
 ## [2.3.0](https://github.com/gemstation/gemforge/compare/v2.2.0...v2.3.0) (2023-09-24)
 
 
