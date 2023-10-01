@@ -1,6 +1,7 @@
 import 'mocha'
 import path, { join } from "node:path"
 import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, removeFile, updateConfigFile, writeFile } from './utils.js'
+import { Fragment } from 'ethers'
 
 export const addBuildTestSteps = ({
   framework, 
@@ -66,6 +67,21 @@ export const addBuildTestSteps = ({
 function setInt1(uint i) external;`,
     })
   })
+
+  it("generates ABI json", async () => {
+    expect(cli('build', { cwd }).success).to.be.true
+
+    const filePath = path.join(cwd, `${contractSrcBasePath}/generated/abi.json`)
+
+    const json = loadJsonFile(filePath) as any
+
+    expect(json.find((f: any) => f.name === 'getInt1')).to.haveOwnProperty('type')
+    expect(json.find((f: any) => f.name === 'setInt1')).to.haveOwnProperty('type')
+    expect(json.find((f: any) => f.name === 'transferOwnership')).to.haveOwnProperty('type')
+    expect(json.find((f: any) => f.name === 'InitializationFunctionReverted')).to.haveOwnProperty('type')
+    expect(json.find((f: any) => f.name === 'OwnershipTransferred')).to.haveOwnProperty('type')
+  })
+    
 
   if (framework === 'foundry') {
     it("generates test helper", async () => {
