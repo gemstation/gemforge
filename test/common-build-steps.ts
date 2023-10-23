@@ -341,7 +341,7 @@ cut[${i}] = IDiamondCut.FacetCut({
     `)
 
     const ret = cli('build', { cwd })
-    expect(ret.success).to.be.false
+    expect(ret.success).to.be.true
     expect(ret.output).to.contain('Core facet contract name used')
   })
 

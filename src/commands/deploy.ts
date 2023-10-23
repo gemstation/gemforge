@@ -1,10 +1,10 @@
 import { Signer, ZeroAddress, ethers } from 'ethers'
-import { ContractArtifact, OnChainContract, clearDeploymentRecorder, deployContract, execContractMethod, getContractAt, getContractValue, getDeploymentRecorderData, loadContractArtifact, readDeploymentInfo, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
+import { OnChainContract, clearDeploymentRecorder, deployContract, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
 import { Context, getContext } from '../shared/context.js'
 import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
-import { $, FacetDefinition, loadJson } from '../shared/fs.js'
+import { $ } from '../shared/fs.js'
 import { error, info, trace, warn } from '../shared/log.js'
-import { createCommand, logSuccess } from './common.js'
+import { createCommand, loadExistingDeploymentAndLog, loadFacetArtifactsAndLog, logSuccess } from './common.js'
 
 export const command = () =>
   createCommand('deploy', 'Deploy the diamond to a target.')
@@ -69,27 +69,15 @@ export const command = () =>
         isNewDeployment = true
       } else {
         info(`Load existing deployment ...`)
+        const p = await loadExistingDeploymentAndLog({
+          ctx,
+          targetArg,
+          target,
+          signer
+        })
 
-        const existingTargetRecord = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target)
-        const existingProxy = (existingTargetRecord && existingTargetRecord.chainId == target.network.chainId) ? existingTargetRecord.contracts.find(r => r.name === 'DiamondProxy') : undefined
-        if (existingProxy) {
-          info(`   Existing deployment found at: ${existingProxy.onChain.address}`)
-          info(`Checking if existing deployment is still valid...`)
-          proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existingProxy.onChain.address)
-
-          try {
-            const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
-            if (!isDiamond) {
-              throw new Error(`supportsInterface() error`)
-            }
-
-            const facets = await getContractValue(proxyInterface, 'facets', [], true)
-            if (!facets) {
-              throw new Error(`facets() error`)
-            }
-          } catch (err: any) {
-            error(`Existing deployment is not a diamond: ${err.message}\n\nYou may want to run with --new to force a fresh deployment.`)
-          }
+        if (p) {
+          proxyInterface = p
         } else {
           info(`   No existing deployment found.`)
           if (args.dry) {
@@ -101,20 +89,7 @@ export const command = () =>
         }
       }
 
-      info('Loading user facet artifacts...')
-      const userFacets = loadJson(`${ctx.generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
-      const userFacetContractNames = Object.keys(userFacets)
-      info(`   ${userFacetContractNames.length} facets found.`)
-      const userFacetArtifacts = userFacetContractNames.reduce((m, name) => {
-        m[name] = loadContractArtifact(ctx, name)
-        return m
-      }, {} as Record<string, ContractArtifact>)
-
-      info('Loading core facet artifacts...')
-      const coreFacets = ctx.config.diamond.coreFacets.reduce((m, name) => {
-        m[name] = loadContractArtifact(ctx, name)
-        return m
-      }, {} as Record<string, ContractArtifact>)
+      const { userFacetArtifacts, coreFacets } = await loadFacetArtifactsAndLog(ctx)
 
       // reset existing deployment?
       if (!isNewDeployment && args.reset) {
