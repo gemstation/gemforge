@@ -16,7 +16,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { tmpNameSync } from 'tmp'
 import { Context } from './context.js'
-import { error, info, trace } from './log.js'
+import { error, info, trace, warn } from './log.js'
 
 interface CommandOptions {
   cwd?: string,
@@ -147,7 +147,7 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
       if (contractNames[contract.name]) {
         error(`Duplicate contract name found in ${file}: ${contract.name}`)
       } else if (ctx.config.diamond.coreFacets.includes(contract.name)) {
-        error(`Core facet contract name used in ${file}: ${contract.name}`)
+        warn(`Core facet contract name used in ${file}: ${contract.name}`)
       } else {
         contractNames[contract.name] = true
       }

@@ -1,3 +1,8 @@
+/**
+ * GemForge configuration file.
+ * 
+ * For detailed instructions please see the documentation at https://gemforge.xyz/configuration/
+ */
 module.exports = {
   // Configuration file version
   version: 2,
@@ -56,14 +61,15 @@ module.exports = {
   diamond: {
     // Whether to include public methods when generating the IDiamondProxy interface. Default is to only include external methods.
     publicMethods: false,
-    // Names of core facet contracts - these will not be modified/removed once deployed and are also reserved names.
-    // This default list is taken from the diamond-2-hardhat library.
+    // Names of core facet contracts - these will not be modified/removed once deployed.
+    // This default list is based on the diamond-2-hardhat library.
     // NOTE: WE RECOMMEND NOT CHANGING ANY OF THESE EXISTING NAMES UNLESS YOU KNOW WHAT YOU ARE DOING.
-    coreFacets: [
-      'OwnershipFacet',
-      'DiamondCutFacet',
-      'DiamondLoupeFacet',
-    ],
+    coreFacets: {
+      deployment: 'DiamondCutFacet',
+      querying: 'DiamondLoupeFacet',
+      ownership: 'OwnershipFacet',
+      extra: [],
+    }
   },
   // lifecycle hooks
   hooks: {

@@ -1,9 +1,9 @@
-import { ContractArtifact, OnChainContract, getContractAt, getContractValue, loadContractArtifact, readDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
+import { setupTarget, setupWallet } from '../shared/chain.js'
 import { getContext } from '../shared/context.js'
-import { FacetCutAction, resolveChainData, resolveUpgrade } from '../shared/diamond.js'
-import { FacetDefinition, loadJson, writeFile } from '../shared/fs.js'
+import { resolveChainData } from '../shared/diamond.js'
+import { writeFile } from '../shared/fs.js'
 import { error, info } from '../shared/log.js'
-import { createCommand, logSuccess } from './common.js'
+import { createCommand, loadExistingDeploymentAndLog, loadFacetArtifactsAndLog, logSuccess } from './common.js'
 
 export const command = () =>
   createCommand('query', 'Query a deployed Diamond.')
@@ -31,58 +31,23 @@ export const command = () =>
 
       const signer = wallet.connect(target.network.provider)
 
-      let proxyInterface: OnChainContract
-
       info(`Load existing deployment ...`)
-
-      const existingTargetRecord = readDeploymentInfo(ctx.deploymentInfoJsonPath, targetArg, target)
-      const existingProxy = (existingTargetRecord && existingTargetRecord.chainId == target.network.chainId) ? existingTargetRecord.contracts.find(r => r.name === 'DiamondProxy') : undefined
-      if (existingProxy) {
-        info(`   Existing deployment found at: ${existingProxy.onChain.address}`)
-        info(`Checking if existing deployment is still valid...`)
-        proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existingProxy.onChain.address)
-
-        try {
-          const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
-          if (!isDiamond) {
-            throw new Error(`supportsInterface() error`)
-          }
-
-          const facets = await getContractValue(proxyInterface, 'facets', [], true)
-          if (!facets) {
-            throw new Error(`facets() error`)
-          }
-        } catch (err: any) {
-          error(`Existing deployment is not a diamond: ${err.message}\n\nYou may want to do a fresh deployment first.`)
-        }
-      } else {
+      const proxyInterface = await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target })
+      if (!proxyInterface) {
         error(`No existing deployment found at target.`)
       }
 
-      info('Loading user facet artifacts...')
-      const userFacets = loadJson(`${ctx.generatedSupportPath}/facets.json`) as Record<string, FacetDefinition>
-      const userFacetContractNames = Object.keys(userFacets)
-      info(`   ${userFacetContractNames.length} facets found.`)
-      const userFacetArtifacts = userFacetContractNames.reduce((m, name) => {
-        m[name] = loadContractArtifact(ctx, name)
-        return m
-      }, {} as Record<string, ContractArtifact>)
-
-      info('Loading core facet artifacts...')
-      const coreFacets = ctx.config.diamond.coreFacets.reduce((m, name) => {
-        m[name] = loadContractArtifact(ctx, name)
-        return m
-      }, {} as Record<string, ContractArtifact>)
+      const { userFacetArtifacts, coreFacets } = await loadFacetArtifactsAndLog(ctx)
 
       info('Resolving on-chain selectors ...')
       const diff = await resolveChainData({
         userFacets: userFacetArtifacts,
         coreFacets,
-        diamondProxy: proxyInterface!,
+        diamondProxy: proxyInterface,
         signer
       })
 
-      let outputStr = `Diamond (${diff.proxyAddress})`
+      let outputStr = `Diamond (${diff.proxyAddress})\n\n`
 
       if (!args.json) {
         outputStr += `Unrecognized facets: ${diff.unrecognizedFacets}\nUnrecognized functions: ${diff.unrecognizedFunctions}\n\n`
