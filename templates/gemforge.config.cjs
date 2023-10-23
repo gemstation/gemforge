@@ -64,12 +64,11 @@ module.exports = {
     // Names of core facet contracts - these will not be modified/removed once deployed.
     // This default list is based on the diamond-2-hardhat library.
     // NOTE: WE RECOMMEND NOT CHANGING ANY OF THESE EXISTING NAMES UNLESS YOU KNOW WHAT YOU ARE DOING.
-    coreFacets: {
-      deployment: 'DiamondCutFacet',
-      querying: 'DiamondLoupeFacet',
-      ownership: 'OwnershipFacet',
-      extra: [],
-    }
+    coreFacets: [
+      'OwnershipFacet',
+      'DiamondCutFacet',
+      'DiamondLoupeFacet',
+    ],
   },
   // lifecycle hooks
   hooks: {
