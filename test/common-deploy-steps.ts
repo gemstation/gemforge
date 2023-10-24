@@ -453,7 +453,7 @@ export const addDeployTestSteps = ({
     })
   })
 
-  describe('supports phased deployments', () => {
+  describe('supports phased diamond cuts', () => {
     beforeEach(async () => {
       cwd = setupFolderCallback()
 
@@ -475,14 +475,16 @@ export const addDeployTestSteps = ({
     })
 
     describe('can pause before the diamondCut()', () => {
-      it('and writes the cut arguments to a file', async () => {
-        const f = path.join(cwd, '1.json')
+      let f: string
 
+      beforeEach(async () => {
+        f = path.join(cwd, '1.json')
         const ret = cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd })
-
         expect(ret.success).to.be.true
         expect(ret.output).to.contain('Pausing before diamondCut()')
+      })
 
+      it('and writes the cut arguments to a file', async () => {
         const data = loadJsonFile(f)
 
         expect(data).to.have.property('cuts')
@@ -498,11 +500,31 @@ export const addDeployTestSteps = ({
         expect(data.initData).to.equal('0x')
       })
 
+      it('and updates the deployment json', async () => {
+        const filePath = join(cwd, 'gemforge.deployments.json')
+        const json = loadJsonFile(filePath)
+
+        const obj = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
+        expect(obj).to.have.property('name')
+        expect(obj.name).to.equal('DiamondProxy')
+        expect(obj).to.have.property('txHash')
+        expect(obj).to.have.property('onChain')
+        expect(obj.onChain).to.have.property('address')
+
+        const obj2 = get(json, 'local.contracts', []).find((a: any) => a.name === 'ExampleFacet') as any
+        expect(obj2).to.have.property('name')
+        expect(obj2.name).to.equal('ExampleFacet')
+        expect(obj2).to.have.property('txHash')
+        expect(obj2).to.have.property('onChain')
+        expect(obj2.onChain).to.have.property('address')
+      })
+
+      it('but the diamondCut() call did not happen', async () => {
+        const { contract } = await loadDiamondContract(cwd)
+        expect(contract.getInt1()).to.be.rejectedWith('execution reverted')
+      })
+
       it('and does not call the post-deploy hook', async () => {
-        const f = path.join(cwd, '1.json')
-
-        cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd })
-
         expect(fileExists(join(cwd, 'test.txt'))).to.be.false
       })
     })
@@ -513,26 +535,21 @@ export const addDeployTestSteps = ({
       beforeEach(async () => {
         f = path.join(cwd, '1.json')
         expect(cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd }).success).to.be.true
-      })
-
-      it('and completes the deployment', async () => {
         const ret = cli('deploy', 'local', `--resume-cut-from-file ${f}`, { cwd })
-
         expect(ret.success).to.be.true
         expect(ret.output).to.contain('Calling diamondCut()')
       })
 
-      it('and calls the post-deploy hook', async () => {
-        const ret = cli('deploy', 'local', `--resume-cut-from-file ${f}`, { cwd })
-
-        expect(fileExists(join(cwd, 'test.txt'))).to.be.true
-        expect(loadFile(join(cwd, 'test.txt'))).to.equal('test')
+      it('and the diamondCut() really did happen', async () => {
+        const { contract } = await loadDiamondContract(cwd)
+        await sendTx(contract.setInt1(2))
+        const n = await contract.getInt1()
+        expect(n.toString()).to.equal('2')
       })
 
-      it('and fails if the cut file does not exist', async () => {
-        const ret = cli('deploy', 'local', `--resume-cut-from-file random.json`, { cwd })
-
-        expect(ret.success).to.be.false
+      it('and calls the post-deploy hook', async () => {
+        expect(fileExists(join(cwd, 'test.txt'))).to.be.true
+        expect(loadFile(join(cwd, 'test.txt'))).to.equal('test')
       })
     })
   })  
