@@ -1,8 +1,9 @@
 import get from "lodash.get"
 import 'mocha'
+import { ZeroAddress } from 'ethers'
 import { setTimeout } from "node:timers/promises"
-import { join } from "node:path"
-import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, sendTx, updateConfigFile, writeFile } from './utils.js'
+import path, { join } from "node:path"
+import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
 
 
 export const addDeployTestSteps = ({
@@ -451,4 +452,88 @@ export const addDeployTestSteps = ({
       expect(loadFile(join(cwd, 'test.data'))).to.equal('local/31337')
     })
   })
+
+  describe('supports phased deployments', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+
+      // setup post-deploy hook
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.hooks.postDeploy = join(cwd, 'postdeploy.sh')
+        return cfg
+      })
+
+      writeFile(join(cwd, 'postdeploy.sh'), `#!/usr/bin/env node
+        const fs = require('fs')
+        const path = require('path')
+        fs.writeFileSync(path.join(__dirname, 'test.txt'), 'test')
+      `, { executable: true })
+
+      removeFile(join(cwd, 'test.txt'))
+    })
+
+    describe('can pause before the diamondCut()', () => {
+      it('and writes the cut arguments to a file', async () => {
+        const f = path.join(cwd, '1.json')
+
+        const ret = cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd })
+
+        expect(ret.success).to.be.true
+        expect(ret.output).to.contain('Pausing before diamondCut()')
+
+        const data = loadJsonFile(f)
+
+        expect(data).to.have.property('cuts')
+        expect(data.cuts).to.have.length(1)
+        expect(data.cuts[0]).to.have.property('facetAddress')
+        expect(data.cuts[0]).to.have.property('action')
+        expect(data.cuts[0].action).to.equal(0)
+        expect(data.cuts[0]).to.have.property('functionSelectors')
+        expect(data.cuts[0].functionSelectors).to.have.length(2)
+
+        expect(data).to.have.property('initContractAddress')
+        expect(data.initContractAddress).to.equal(ZeroAddress)
+        expect(data.initData).to.equal('0x')
+      })
+
+      it('and does not call the post-deploy hook', async () => {
+        const f = path.join(cwd, '1.json')
+
+        cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd })
+
+        expect(fileExists(join(cwd, 'test.txt'))).to.be.false
+      })
+    })
+
+    describe('can resume a paused diamondCut()', () => {
+      let f: string
+
+      beforeEach(async () => {
+        f = path.join(cwd, '1.json')
+        expect(cli('deploy', 'local', `--pause-cut-to-file ${f}`, { cwd }).success).to.be.true
+      })
+
+      it('and completes the deployment', async () => {
+        const ret = cli('deploy', 'local', `--resume-cut-from-file ${f}`, { cwd })
+
+        expect(ret.success).to.be.true
+        expect(ret.output).to.contain('Calling diamondCut()')
+      })
+
+      it('and calls the post-deploy hook', async () => {
+        const ret = cli('deploy', 'local', `--resume-cut-from-file ${f}`, { cwd })
+
+        expect(fileExists(join(cwd, 'test.txt'))).to.be.true
+        expect(loadFile(join(cwd, 'test.txt'))).to.equal('test')
+      })
+
+      it('and fails if the cut file does not exist', async () => {
+        const ret = cli('deploy', 'local', `--resume-cut-from-file random.json`, { cwd })
+
+        expect(ret.success).to.be.false
+      })
+    })
+  })  
 }
