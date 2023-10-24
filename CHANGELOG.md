@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/gemstation/gemforge/compare/v2.4.0...v2.5.0) (2023-10-24)
+
+
+### Features
+
+* allow core facets to be overridden ([#26](https://github.com/gemstation/gemforge/issues/26)) ([5dcead1](https://github.com/gemstation/gemforge/commit/5dcead17e6385664313cf6d014f1e8e2619fe8ef))
+* pause and resume deployment cuts ([#27](https://github.com/gemstation/gemforge/issues/27)) ([d4c89ed](https://github.com/gemstation/gemforge/commit/d4c89ed00cc7f0ffc9a1363105673051a7e14a93))
+
+
+### Bug Fixes
+
+* error in gemforge.config.cjs template ([1441076](https://github.com/gemstation/gemforge/commit/14410768010ecd1c0a501845a969f352f4f9d526))
+
 ## [2.4.0](https://github.com/gemstation/gemforge/compare/v2.3.0...v2.4.0) (2023-10-01)
 
 
