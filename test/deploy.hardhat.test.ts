@@ -8,7 +8,7 @@ const setupFolder = () => {
   return cwd
 }
 
-describe.skip("Command: deploy() - Hardhat", () => {
+describe("Command: deploy() - Hardhat", () => {
   addDeployTestSteps({
     framework: 'hardhat',
     setupFolderCallback: setupFolder
