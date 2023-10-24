@@ -121,6 +121,10 @@ Now you can run the tests in the original terminal:
 > pnpm test
 ```
 
+**Troubleshooting tests**
+
+Note: If you get a `Error: [object Object]` error when running tests it's due to a Typescript syntax error in the test code somewhere.
+
 **Publishing**
 
 To publish a new release:

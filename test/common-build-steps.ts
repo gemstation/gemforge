@@ -1,7 +1,6 @@
 import 'mocha'
 import path, { join } from "node:path"
 import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, removeFile, updateConfigFile, writeFile } from './utils.js'
-import { Fragment } from 'ethers'
 
 export const addBuildTestSteps = ({
   framework, 

@@ -200,7 +200,6 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
 
   if (parserMeta.userDefinedTypes.length) {
     info(`Custom structs found in facet method signatures: ${parserMeta.userDefinedTypes.join(', ')}`)
-    info(`Please ensure your gemforge config is setup properly to handle this, see https://gemforge.xyz/advanced/custom-structs/.`)
   }
 
   // sort alphabetically

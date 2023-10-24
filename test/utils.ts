@@ -85,7 +85,9 @@ interface WriteFileOpts {
 }
 
 export const removeFile = (filePath:string) => {
-  fs.unlinkSync(filePath)
+  if (fileExists(filePath)) {
+    fs.unlinkSync(filePath)
+  }
 }
 
 export const writeFile = (filePath: string, contents: string, opts: WriteFileOpts = {}) => {
