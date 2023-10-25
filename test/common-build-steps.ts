@@ -93,16 +93,15 @@ function setInt1(uint i) external;`,
         __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
         __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
         __NUM_FACETS__: '1',
-        __CUTS__: `
+        __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](2);
 f[0] = IDiamondProxy.getInt1.selector;
 f[1] = IDiamondProxy.setInt1.selector;
-cut[0] = IDiamondCut.FacetCut({
-  facetAddress: address(new ExampleFacet()),
-  action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f
+fs[0] = FacetSelectors({
+  addr: address(new ExampleFacet()),
+  sels: f
 });
-`,          
+`,
       })
     })  
   }
@@ -211,22 +210,20 @@ function getData() external view returns (Data memory);`,
           __FACET_IMPORTS__: `import { Example2Facet } from "../facets/Example2Facet.sol";
 import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
           __NUM_FACETS__: '2',
-          __CUTS__: `
+          __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](1);
 f[0] = IDiamondProxy.setData.selector;
-cut[0] = IDiamondCut.FacetCut({
-  facetAddress: address(new Example2Facet()),
-  action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f
+fs[0] = FacetSelectors({
+  addr: address(new Example2Facet()),
+  sels: f
 });
 
 f = new bytes4[](2);
 f[0] = IDiamondProxy.getInts.selector;
 f[1] = IDiamondProxy.getData.selector;
-cut[1] = IDiamondCut.FacetCut({
-  facetAddress: address(new ExampleFacet()),
-  action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f
+fs[1] = FacetSelectors({
+  addr: address(new ExampleFacet()),
+  sels: f
 });
 `,          
         })
@@ -269,18 +266,17 @@ cut[1] = IDiamondCut.FacetCut({
         const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
 
         let expectedFacetImports = ''
-        let expectedCuts = ''
+        let expectedFacetSelectors = ''
         for (let i = 0; i < LARGE_NUM_FACETS; i++) {
           const name = getFacetName(i)
           const prefix = i ? `` : 'bytes4[] memory '
           expectedFacetImports += `${i ? "\n" : ''}import { ${name} } from "../facets/${name}.sol";`
-          expectedCuts += `
+          expectedFacetSelectors += `
 ${prefix}f = new bytes4[](1);
 f[0] = IDiamondProxy.getInts${i}.selector;
-cut[${i}] = IDiamondCut.FacetCut({
-  facetAddress: address(new ${name}()),
-  action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: f
+fs[${i}] = FacetSelectors({
+  addr: address(new ${name}()),
+  sels: f
 });
 `
         }
@@ -293,7 +289,7 @@ cut[${i}] = IDiamondCut.FacetCut({
           __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
           __FACET_IMPORTS__: expectedFacetImports,
           __NUM_FACETS__: `${LARGE_NUM_FACETS}`,
-          __CUTS__: expectedCuts,
+          __FACET_SELECTORS__: expectedFacetSelectors,
         })
       })    
     })
@@ -330,7 +326,7 @@ cut[${i}] = IDiamondCut.FacetCut({
     expect(ret.output).to.contain('Duplicate contract name found')
   })
 
-  it('complains if using core facet contract name', () => {
+  it('warns if using core facet contract name', () => {
     writeFile(join(cwd, `${contractSrcBasePath}/facets/DiamondCutFacet.sol`), `
       pragma solidity >=0.8.21;
       import "../libs/LibAppStorage.sol";
