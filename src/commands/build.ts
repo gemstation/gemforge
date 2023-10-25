@@ -66,7 +66,7 @@ export const command = () =>
       
       let numMethods = 0
       const importPaths: Record<string, string> = {}
-      let cutStr = ''
+      let facetSelectorsStr = ''
       
       facets.forEach((f, facetNum) => {
         numMethods += f.functions.length
@@ -83,13 +83,12 @@ export const command = () =>
           arrayDeclaration = `${varName} = new bytes4[](${f.functions.length});`;
         }
 
-        cutStr += `
+        facetSelectorsStr += `
 ${arrayDeclaration}
 ${f.functions.map((f, i) => `${varName}[${i}] = IDiamondProxy.${f.name}.selector;`).join('\n')}
-cut[${facetNum}] = IDiamondCut.FacetCut({
-  facetAddress: address(new ${f.contractName}()),
-  action: IDiamondCut.FacetCutAction.Add,
-  functionSelectors: ${varName}
+fs[${facetNum}] = FacetSelectors({
+  addr: address(new ${f.contractName}()),
+  sels: ${varName}
 });
 `
       })
@@ -100,7 +99,7 @@ cut[${facetNum}] = IDiamondCut.FacetCut({
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
         __FACET_IMPORTS__: Object.keys(importPaths).map(name => `import { ${name} } from "${importPaths[name]}";`).join('\n'),
         __NUM_FACETS__: `${facets.length}`,
-        __CUTS__: cutStr,
+        __FACET_SELECTORS__: facetSelectorsStr,
       })
 
       info('Creating folder for support output...')
