@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0](https://github.com/gemstation/gemforge/compare/v2.5.0...v2.6.0) (2023-10-25)
+
+
+### Features
+
+* LibDiamondHelper now replaces selectors that override core selectors ([#28](https://github.com/gemstation/gemforge/issues/28)) ([a412176](https://github.com/gemstation/gemforge/commit/a412176322a81b036afb5137d421bd9a80919861))
+
 ## [2.5.0](https://github.com/gemstation/gemforge/compare/v2.4.0...v2.5.0) (2023-10-24)
 
 
