@@ -82,7 +82,7 @@ __FACET_SELECTORS__
     }
   }
 
-  function cpArray(bytes4[] memory src, uint lenToCopy) private returns (bytes4[] memory ret) {
+  function cpArray(bytes4[] memory src, uint lenToCopy) private pure returns (bytes4[] memory ret) {
     ret = new bytes4[](lenToCopy);
     for (uint i = 0; i < lenToCopy; i++) {
       ret[i] = src[i];
