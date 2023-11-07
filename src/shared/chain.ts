@@ -1,15 +1,17 @@
-import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
-import { error, trace } from "./log.js";
-import { Provider } from "ethers";
-import { loadJson, saveJson } from "./fs.js";
-import { TransactionReceipt } from "ethers";
-import { Fragment } from "ethers";
-import { Context } from "./context.js";
-import get from "lodash.get";
 import { glob } from "glob";
 import path from "node:path";
+import get from "lodash.get";
+import { Provider } from "ethers";
+import { Fragment } from "ethers";
 import { Mutex } from "./mutex.js";
+import { Context } from "./context.js";
+import { error, trace } from "./log.js";
+import { TransactionReceipt } from "ethers";
+import { loadJson, saveJson } from "./fs.js";
+import { Contract, ethers, Signer, TransactionResponse } from "ethers";
+import { MnemonicWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
+import { ErrorFragment } from "ethers";
+import { EventFragment } from "ethers";
 
 
 interface Network {
@@ -100,6 +102,8 @@ export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
   const aPaths = getAllContractArtifactPaths(ctx)
 
   const abi: Fragment[] = []
+  const errors: Record<string, Fragment> = {}
+  const events: Record<string, Fragment> = {}
 
   aPaths.forEach(({ jsonFilePath }) => {
     try {
@@ -108,11 +112,22 @@ export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
         if (jsonFilePath.endsWith('/IDiamondProxy.json')) {
           abi.push(...j.abi)
         } else {
-          abi.push(...(j.abi as Fragment[]).filter(({ type }) => ['error', 'event'].includes(type)))
+          (j.abi as Fragment[]).forEach(f => {
+            switch (f.type) {
+              case 'error':
+                errors[(f as ErrorFragment).name] = f
+                break
+              case 'event':
+                events[(f as EventFragment).name] = f
+                break
+            }
+          })
         }
       }
     } catch (e) {}
   })
+
+  abi.push(...Object.values(events), ...Object.values(errors))
 
   return abi
 }
