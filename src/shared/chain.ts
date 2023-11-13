@@ -117,6 +117,12 @@ export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
             case 'event':
               events[(f as EventFragment).name] = f
               break
+            default: {
+              if (jsonFilePath.endsWith('/IDiamondProxy.json')) {
+                abi.push(f)
+              }
+            }
+              
           }
         })
       }
