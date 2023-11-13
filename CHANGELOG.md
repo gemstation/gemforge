@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.6.4](https://github.com/gemstation/gemforge/compare/v2.6.3...v2.6.4) (2023-11-13)
+
+
+### Bug Fixes
+
+* abi output was missing function names ([69241e0](https://github.com/gemstation/gemforge/commit/69241e0e9f7cf0d2f1e0fe0abfb53b4af4bb3970))
+
 ### [2.6.3](https://github.com/gemstation/gemforge/compare/v2.6.2...v2.6.3) (2023-11-13)
 
 
