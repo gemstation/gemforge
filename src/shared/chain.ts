@@ -109,20 +109,16 @@ export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
     try {
       const j = loadJson(jsonFilePath) as any
       if (j.abi) {
-        if (jsonFilePath.endsWith('/IDiamondProxy.json')) {
-          abi.push(...j.abi)
-        } else {
-          (j.abi as Fragment[]).forEach(f => {
-            switch (f.type) {
-              case 'error':
-                errors[(f as ErrorFragment).name] = f
-                break
-              case 'event':
-                events[(f as EventFragment).name] = f
-                break
-            }
-          })
-        }
+        (j.abi as Fragment[]).forEach(f => {
+          switch (f.type) {
+            case 'error':
+              errors[(f as ErrorFragment).name] = f
+              break
+            case 'event':
+              events[(f as EventFragment).name] = f
+              break
+          }
+        })
       }
     } catch (e) {}
   })

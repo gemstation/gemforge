@@ -9,7 +9,6 @@ import type {
   UserDefinedTypeName,
   VariableDeclaration,
 } from '@solidity-parser/parser/dist/src/ast-types.d.ts'
-import { Fragment } from 'ethers'
 import { execaCommandSync } from 'execa'
 import { glob } from 'glob'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
