@@ -19,12 +19,12 @@ export interface WalletMnemonicType {
   config: MnemonicWalletConfig
 }
 
-export interface WalletPrivateType {
+export interface WalletPrivateKeyType {
   type: 'private-key'
   config: PrivateKeyWalletConfig
 }
 
-export type WalletConfig = WalletMnemonicType | WalletPrivateType
+export type WalletConfig = WalletMnemonicType | WalletPrivateKeyType
 
 interface NetworkConfig {
   rpcUrl: string | Function,

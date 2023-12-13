@@ -9,7 +9,7 @@ import { error, trace } from "./log.js";
 import { TransactionReceipt } from "ethers";
 import { loadJson, saveJson } from "./fs.js";
 import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, PrivateKeyWalletConfig, NetworkConfig, TargetConfig, WalletConfig, WalletMnemonicType, WalletPrivateType } from "./config/index.js";
+import { MnemonicWalletConfig, PrivateKeyWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
 import { ErrorFragment, EventFragment } from "ethers";
 
 interface Network {
