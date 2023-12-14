@@ -9,10 +9,8 @@ import { error, trace } from "./log.js";
 import { TransactionReceipt } from "ethers";
 import { loadJson, saveJson } from "./fs.js";
 import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
-import { ErrorFragment } from "ethers";
-import { EventFragment } from "ethers";
-
+import { MnemonicWalletConfig, PrivateKeyWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
+import { ErrorFragment, EventFragment } from "ethers";
 
 interface Network {
   config: NetworkConfig,
@@ -58,7 +56,6 @@ export const setupTarget = async (ctx: Context, config: TargetConfig): Promise<T
   }
 }
 
-
 export const setupMnemonicWallet = (config: MnemonicWalletConfig): Signer => {
   let words: string = ''
 
@@ -79,14 +76,33 @@ export const setupMnemonicWallet = (config: MnemonicWalletConfig): Signer => {
   )
 }
 
+export const setupPrivateKeyWallet = (config: PrivateKeyWalletConfig): Signer => {
+  let key: string = ''
+
+  switch((typeof config.key)) {
+    case 'string':
+      key = config.key
+      break
+    case 'function':
+      key = config.key()
+      break
+  }
+
+  trace(`Setting up private key wallet with: ${key}`)
+
+  return new ethers.Wallet(key)
+}
+
 export const setupWallet = (walletConfig: WalletConfig) => {
   trace(`Setting up wallet of type: ${walletConfig.type}`)
 
   switch (walletConfig.type) {
     case 'mnemonic':
       return setupMnemonicWallet(walletConfig.config)
+    case 'private-key':
+      return setupPrivateKeyWallet(walletConfig.config)
     default:
-      error(`Unknown wallet type: ${walletConfig.type}`)
+      error(`Unknown wallet type: ${walletConfig}`)
   }
 }
 

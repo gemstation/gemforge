@@ -16,10 +16,23 @@ export interface MnemonicWalletConfig {
   index: number,
 }
 
-export type WalletConfig = {
-  type: 'mnemonic',
-  config: MnemonicWalletConfig,
+export interface PrivateKeyWalletConfig {
+  key: string | Function
 }
+
+export type ValidWalletType = 'mnemonic' | 'private-key'
+
+export interface WalletMnemonicType {
+  type: 'mnemonic'
+  config: MnemonicWalletConfig
+}
+
+export interface WalletPrivateKeyType {
+  type: 'private-key'
+  config: PrivateKeyWalletConfig
+}
+
+export type WalletConfig = WalletMnemonicType | WalletPrivateKeyType
 
 export interface NetworkConfig {
   rpcUrl: string | Function,
@@ -144,14 +157,19 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     throwError(`No value found`, 'wallets')
   }
   walletNames.forEach(name => {
-    ensure(config, `wallets.${name}.type`, (v: any) => ['mnemonic'].indexOf(v) >= 0, 'Invalid wallet type')
+    ensure(config, `wallets.${name}.type`, (v: any) => ['mnemonic', 'private-key'].indexOf(v) >= 0, 'Invalid wallet type')
 
     ensureIsSet(config, `wallets.${name}.config`)
 
-    const type = get(config, `wallets.${name}.type`)
+    const type = get(config, `wallets.${name}.type`) as ValidWalletType
     switch (type) {
       case 'mnemonic': {
         ensureIsType(config, `wallets.${name}.config.words`, ['string', 'function'])
+        ensureIsType(config, `wallets.${name}.config.index`, ['number'])
+        break
+      }
+      case 'private-key': {
+        ensureIsType(config, `wallets.${name}.config.key`, ['string', 'function'])
         break
       }
     }
