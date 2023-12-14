@@ -81,10 +81,10 @@ export const setupPrivateKeyWallet = (config: PrivateKeyWalletConfig): Signer =>
 
   switch((typeof config.key)) {
     case 'string':
-      key = config.key
+      key = config.key as string
       break
     case 'function':
-      key = config.key()
+      key = (config.key as Function)()
       break
   }
 

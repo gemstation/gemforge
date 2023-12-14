@@ -1,14 +1,15 @@
+import tmp from 'tmp'
+import fs from 'node:fs'
+import { glob } from "glob"
+import get from "lodash.get"
 import chai, { expect } from "chai"
+import { fileURLToPath } from 'node:url'
 import chaiAsPromised from 'chai-as-promised'
 import { spawn, spawnSync } from "node:child_process"
-import { fileURLToPath } from 'node:url'
-import fs from 'node:fs'
-import { dirname, resolve, join, basename, relative } from "node:path"
-import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
-import get from "lodash.get"
+import { dirname, resolve, join, basename, relative } from "node:path"
 import { Contract, Fragment, TransactionResponse, ethers } from "ethers"
-import { glob } from "glob"
+import { MnemonicWalletConfig, PrivateKeyWalletConfig } from "../src/shared/config/v1.js"
 
 chai.use(chaiAsPromised)
 
@@ -121,22 +122,41 @@ export const sendTx = async (txCall: Promise<TransactionResponse>) => {
   return await tx.wait()
 }
 
+const loadWalletFromCfg = (cfg: GemforgeConfig, network: string, wallet: string) => {
+  const provider = new ethers.JsonRpcProvider(cfg.networks[network].rpcUrl as string)
+
+  const type = cfg.wallets[wallet].type
+
+  switch (type) {
+    case 'mnemonic': {
+      const walletCfg = cfg.wallets[wallet].config as MnemonicWalletConfig
+      let words = walletCfg.words
+      if (typeof words === 'function') {
+        words = words()
+      }
+
+      const w = ethers.HDNodeWallet.fromMnemonic(
+        ethers.Mnemonic.fromPhrase(words as string),
+        `m/44'/60'/0'/0/${walletCfg.index}`
+      )
+
+      return w.connect(provider)
+    }
+    case 'private-key': {
+      const walletCfg = cfg.wallets[wallet].config as PrivateKeyWalletConfig
+      let key = walletCfg.key
+      if (typeof key === 'function') {
+        key = key()
+      }
+      const w = new ethers.Wallet(key as string)
+      return w.connect(provider)
+    }
+  }
+}
+
 export const loadWallet = async (cfgFilePath: string, network: string, wallet: string) => {
   const obj = (await import(cfgFilePath)).default as GemforgeConfig
-  
-  const provider = new ethers.JsonRpcProvider(obj.networks[network].rpcUrl as string)
-  
-  let words = obj.wallets[wallet].config.words
-  if (typeof words === 'function') {
-    words = words()
-  }
-  
-  const w = ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(words as string), 
-    `m/44'/60'/0'/0/${obj.wallets[wallet].config.index}`
-  )
-
-  return w.connect(provider)
+  return loadWalletFromCfg(obj, network, wallet)
 }
 
 export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): Promise<LoadedContract> => {
@@ -167,12 +187,7 @@ export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): 
     }
   }
 
-  const provider = new ethers.JsonRpcProvider(config.networks.local.rpcUrl as string)
-  const wallet = ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(config.wallets.wallet1.config.words as string),
-    `m/44'/60'/0'/0/${config.wallets.wallet1.config.index}`
-  ) 
-  const signer = wallet.connect(provider)
+  const signer = loadWalletFromCfg(config, 'local', 'wallet1')
 
   const factory = new ethers.ContractFactory(abiOverride || abi, bytecode, signer)
 

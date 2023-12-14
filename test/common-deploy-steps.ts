@@ -1,8 +1,8 @@
-import get from "lodash.get"
 import 'mocha'
+import get from "lodash.get"
 import { ZeroAddress } from 'ethers'
-import { setTimeout } from "node:timers/promises"
 import path, { join } from "node:path"
+import { setTimeout } from "node:timers/promises"
 import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
 
 
@@ -295,6 +295,32 @@ export const addDeployTestSteps = ({
 
       const jsonNew = loadFile(filePath)
       expect(jsonNew).to.equal(jsonOld)
+    })
+  })
+
+  describe('supports private key wallets', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.targets.local.wallet = 'wallet_key'
+        return cfg
+      })
+    })
+
+    it('and everything gets deployed', async () => {
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+
+      const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet_key')
+      const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
+
+      await setTimeout(2000) // to give time for balance to update
+      const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
+
+      expect(startingBal).to.not.equal(endingBal)
+      expect(fileExists(join(cwd, 'gemforge.deployments.json'))).to.be.true
     })
   })
 
