@@ -1,11 +1,12 @@
 import semver from 'semver'
 import get from 'lodash.get'
+import { warn } from '../log.js'
+import { loadJson } from '../fs.js'
+import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
 // @ts-ignore
 import spdxLicenseIds from 'spdx-license-ids' assert { type: "json" }
-import { loadJson } from '../fs.js'
 import { throwError, ensureIsSet, ensure, ensureArray, ensureBool, ensureIsType } from './common.js'
-import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
-import { warn } from '../log.js'
+import { ethers } from 'ethers'
 
 const { version } = loadJson(new URL('../../../package.json', import.meta.url)) as any
 
@@ -42,6 +43,7 @@ export interface TargetConfig {
   network: string,
   wallet: string,
   initArgs: any[],
+  create3Salt?: string,
 }
 
 export interface GemforgeConfig {
@@ -196,6 +198,25 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     ensure(config, `targets.${name}.network`, (v: any) => networkNames.indexOf(v) >= 0, 'Invalid network')
     ensure(config, `targets.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0, 'Invalid wallet')
     ensureArray(config, `targets.${name}.initArgs`)
+    ensureIsType(config, `targets.${name}.create3Salt`, ['undefined', 'string'])
+    ensure(
+      config,
+      `targets.${name}.create3Salt`,
+      (v: any) => {
+        if (typeof v === 'undefined') {
+          return true
+        } else if (typeof v === 'string') {
+          try {
+            ethers.keccak256(v)
+            return true
+          } catch (e) {
+            return false
+          }
+        }
+        return false
+      },
+      'Invalid CREATE3 salt'
+    )
   })
 }
 

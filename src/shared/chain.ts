@@ -1,16 +1,19 @@
 import { glob } from "glob";
 import path from "node:path";
 import get from "lodash.get";
+import { BigVal } from "bigval"
 import { Provider } from "ethers";
 import { Fragment } from "ethers";
 import { Mutex } from "./mutex.js";
+import { create } from "node:domain";
 import { Context } from "./context.js";
-import { error, trace } from "./log.js";
+import { error, info, trace } from "./log.js";
 import { TransactionReceipt } from "ethers";
 import { loadJson, saveJson } from "./fs.js";
+import { ErrorFragment, EventFragment } from "ethers";
 import { Contract, ethers, Signer, TransactionResponse } from "ethers";
 import { MnemonicWalletConfig, PrivateKeyWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
-import { ErrorFragment, EventFragment } from "ethers";
+import { FACTORY_ABI, FACTORY_BYTECODE, FACTORY_DEPLOYED_ADDRESS, FACTORY_DEPLOYER_ADDRESS, FACTORY_GAS_LIMIT, FACTORY_GAS_PRICE, FACTORY_NAME, FACTORY_SIGNED_RAW_TX } from "./create3.js";
 
 interface Network {
   config: NetworkConfig,
@@ -161,31 +164,44 @@ export interface ContractArtifact {
 export const loadContractArtifact = (ctx: Context, name: string) => {
   trace(`Loading contract artifact: ${name} ...`)
 
-  const match = getAllContractArtifactPaths(ctx).find(f => f.jsonFilePath.endsWith(`/${name}.json`))
+  switch (name) {
+    case FACTORY_NAME: {
+      return { 
+        name, 
+        fullyQualifiedName: name,
+        abi: FACTORY_ABI, 
+        bytecode: FACTORY_BYTECODE, 
+        deployedBytecode: FACTORY_BYTECODE
+      } as ContractArtifact
+    }
+    default: {
+      const match = getAllContractArtifactPaths(ctx).find(f => f.jsonFilePath.endsWith(`/${name}.json`))
 
-  if (!match) {
-    error(`Failed to find contract artifact: ${name}`)
+      if (!match) {
+        error(`Failed to find contract artifact: ${name}`)
+      }
+
+      const { jsonFilePath, fullyQualifiedName } = match!
+
+      const json = loadJson(jsonFilePath) as any
+
+      let abi: Fragment[] = json.abi
+      let bytecode: string
+      let deployedBytecode: string
+
+      switch (ctx.config.artifacts.format) {
+        case 'foundry':
+          bytecode = json.bytecode.object
+          deployedBytecode = json.deployedBytecode.object
+          break
+        case 'hardhat':
+          bytecode = json.bytecode
+          deployedBytecode = json.deployedBytecode
+      }
+
+      return { name, fullyQualifiedName, abi, bytecode, deployedBytecode } as ContractArtifact
+    }
   }
-
-  const { jsonFilePath, fullyQualifiedName } = match!
-
-  const json = loadJson(jsonFilePath) as any
-
-  let abi: Fragment[] = json.abi
-  let bytecode: string
-  let deployedBytecode: string
-
-  switch (ctx.config.artifacts.format) {
-    case 'foundry':
-      bytecode = json.bytecode.object
-      deployedBytecode = json.deployedBytecode.object
-      break
-    case 'hardhat':
-      bytecode = json.bytecode
-      deployedBytecode = json.deployedBytecode
-  }
-
-  return { name, fullyQualifiedName, abi, bytecode, deployedBytecode } as ContractArtifact
 }
 
 export interface OnChainContract {
@@ -378,6 +394,100 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
    }
 }
 
+/**
+ * Deploy a contract using CREATE3.
+ * @param ctx 
+ * @param name 
+ * @param signer 
+ * @param args 
+ * @returns 
+ */
+export const deployContract3 = async (
+  ctx: Context,
+  name: string,
+  signer: Signer,
+  create3Salt: string = '',
+  ...args: any[]
+): Promise<OnChainContract> => {
+  try {
+    trace(`Deploying CREATE3 factory ...`)
+    const code = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
+
+    if (code && code != '0x') {
+      trace(`   Factory already deployed at ${FACTORY_DEPLOYED_ADDRESS}`)
+    } else {
+      trace(`   Checking balance of factory deployer (${FACTORY_DEPLOYER_ADDRESS}) ...`)
+      const balance = BigVal.from(await signer.provider!.getBalance(FACTORY_DEPLOYER_ADDRESS))
+      trace(`   Balance: ${balance.toCoinScale().toFixed(2)} ETH`)
+      const requiredBalance = BigVal.from(FACTORY_GAS_PRICE).mul(FACTORY_GAS_LIMIT)
+      trace(`   Required balance: ${requiredBalance.toCoinScale().toFixed(2)} ETH`)
+      if (balance.lt(requiredBalance)) {
+        const moreNeeded = requiredBalance.sub(balance)
+        trace(`   Insufficient balance, sending ${moreNeeded.toCoinScale().toFixed(2)} ETH to factory deployer ...`)
+        const tx = await signer.sendTransaction({
+          to: FACTORY_DEPLOYER_ADDRESS,
+          value: moreNeeded.toString(),
+        })
+        await tx.wait()
+        trace(`   ...done`)
+      } else {
+        trace(`   Sufficient balance.`)
+      }
+      trace(`   Deploying factory ...`)
+      const tx = await signer.provider!.broadcastTransaction(FACTORY_SIGNED_RAW_TX)
+      await tx.wait()
+      const confirmCode = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
+      if (!confirmCode || confirmCode === '0x') {
+        return error(`Failed to deploy CREATE3 factory`)
+      }
+      trace(`   ...done`)
+    }
+
+    // get deploy transaction
+    trace(`Calculating deploy transaction data for ${name} ...`)
+    const _nameArtifact = loadContractArtifact(ctx, name)
+    const _nameFactory = new ethers.ContractFactory(_nameArtifact.abi, _nameArtifact.bytecode, signer)
+    const { data: deployData } = await _nameFactory.getDeployTransaction(...args)
+    trace(`Done (deploy data = ${ethers.getBytes(deployData).length} bytes)`)
+
+    trace(`Deploying ${name} ...`)
+
+    trace(`   CREATE3 salt: ${create}`)
+
+    const sender = await signer.getAddress()
+    const factory = await getContractAt(ctx, FACTORY_NAME, signer, FACTORY_DEPLOYED_ADDRESS)
+    // @ts-ignore
+    const address = await factory.contract.getDeployed(sender, create3Salt)
+    info(`   Will be deployed at: ${address}`)
+
+    // check that address is empty
+    const existingCode = await signer.provider!.getCode(address)
+    if (existingCode && existingCode != '0x') {
+      return error(
+        `Address already in use: ${address}. You may need to update the CREATE3 salt in your Gemforge target configuration (see https://gemforge.xyz/configuration/targets/).`
+      )
+    }
+
+    const receipt = await execContractMethod(factory, 'deploy', [create3Salt, deployData])
+
+    trace(`   ...done`)
+
+    deploymentRecorder.push({
+      name,
+      fullyQualifiedName: _nameArtifact.fullyQualifiedName,
+      sender: await signer.getAddress(),
+      txHash: receipt.hash,
+      onChain: {
+        address,
+        constructorArgs: args,
+      },
+    })
+
+    return getContractAt(ctx, name, signer, address)
+  } catch (err: any) {
+    return error(`Failed to deploy ${name}: ${err.message}}`)
+  }
+}
 
 export const getContractValue = async (contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<any> => {  
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
