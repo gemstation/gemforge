@@ -26,13 +26,13 @@ module.exports = {
       // file patterns to include in facet parsing
       facets: [
         // include all .sol files in the facets directory ending "Facet"
-        '__FACETS_SRC__'
+        '__FACETS_SRC__',
       ],
     },
     // folders for gemforge-generated files
     generated: {
       // output folder for generated .sol files
-      solidity: '__GENERATED_SOL__', 
+      solidity: '__GENERATED_SOL__',
       // output folder for support scripts and files
       support: '.gemforge',
       // deployments JSON file
@@ -42,7 +42,7 @@ module.exports = {
     lib: {
       // diamond library
       diamond: 'lib/diamond-2-hardhat',
-    }
+    },
   },
   // artifacts configuration
   artifacts: {
@@ -64,11 +64,7 @@ module.exports = {
     // Names of core facet contracts - these will not be modified/removed once deployed.
     // This default list is based on the diamond-2-hardhat library.
     // NOTE: WE RECOMMEND NOT CHANGING ANY OF THESE EXISTING NAMES UNLESS YOU KNOW WHAT YOU ARE DOING.
-    coreFacets: [
-      'OwnershipFacet',
-      'DiamondCutFacet',
-      'DiamondLoupeFacet',
-    ],
+    coreFacets: ['OwnershipFacet', 'DiamondCutFacet', 'DiamondLoupeFacet'],
   },
   // lifecycle hooks
   hooks: {
@@ -93,7 +89,7 @@ module.exports = {
         words: 'test test test test test test test test test test test junk',
         // 0-based index of the account to use
         index: 0,
-      }
+      },
     },
     wallet2: {
       // Wallet type - mnemonic
@@ -118,7 +114,7 @@ module.exports = {
     sepolia: {
       // RPC endpoint URL
       rpcUrl: () => process.env.SEPOLIA_RPC_URL,
-    }
+    },
   },
   // Targets to deploy
   targets: {
@@ -137,6 +133,6 @@ module.exports = {
       wallet: 'wallet2',
       // Initialization function arguments
       initArgs: [],
-    }
-  }
+    },
+  },
 }

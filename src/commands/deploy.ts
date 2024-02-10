@@ -1,10 +1,10 @@
 import { Signer, ZeroAddress, ethers } from 'ethers'
-import { OnChainContract, clearDeploymentRecorder, deployContract, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
-import { Context, getContext } from '../shared/context.js'
-import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
 import { $, loadJson, saveJson } from '../shared/fs.js'
+import { Context, getContext } from '../shared/context.js'
 import { error, info, trace, warn } from '../shared/log.js'
 import { createCommand, loadExistingDeploymentAndLog, loadFacetArtifactsAndLog, logSuccess } from './common.js'
+import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
+import { OnChainContract, Target, clearDeploymentRecorder, deployContract, deployContract3, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
 
 export const command = () =>
   createCommand('deploy', 'Deploy/upgrade a diamond.')
@@ -66,7 +66,7 @@ export const command = () =>
         if (args.dry) {
           warn(`Dry run requested. Skipping new deployment...`)
         } else {
-          proxyInterface = await deployNewDiamond(ctx, signer)
+          proxyInterface = await deployNewDiamond(ctx, signer, target)
         }
         isNewDeployment = true
       } else {
@@ -85,7 +85,7 @@ export const command = () =>
           if (args.dry) {
             warn(`Dry run requested. Skipping deployment...`)
           } else {
-            proxyInterface = await deployNewDiamond(ctx, signer)
+            proxyInterface = await deployNewDiamond(ctx, signer, target)
           }
           isNewDeployment = true
         }
@@ -236,9 +236,12 @@ export const command = () =>
   }
 
   
-  const deployNewDiamond = async (ctx: Context, signer: Signer) => {
+  const deployNewDiamond = async (ctx: Context, signer: Signer, target: Target) => {
     info(`Deploying diamond...`)
-    const diamond = await deployContract(ctx, 'DiamondProxy', signer, await signer.getAddress())
+    const { create3Salt } = target.config
+    const salt32bytes = ethers.keccak256(create3Salt || ethers.hexlify(ethers.randomBytes(32)))
+    info(`   CREATE3 salt: ${salt32bytes}`)
+    const diamond = await deployContract3(ctx, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
     info(`   DiamondProxy deployed at: ${diamond.address}`)
     return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
   }

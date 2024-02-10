@@ -1,6 +1,6 @@
 import 'mocha'
 import get from "lodash.get"
-import { ZeroAddress } from 'ethers'
+import { ZeroAddress, ethers } from 'ethers'
 import path, { join } from "node:path"
 import { setTimeout } from "node:timers/promises"
 import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
@@ -579,4 +579,48 @@ export const addDeployTestSteps = ({
       })
     })
   })  
+
+  describe('supports custom CREATE3 salt', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+
+      // setup post-deploy hook
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.targets.local.create3Salt = ethers.hexlify(ethers.randomBytes(32))
+        return cfg
+      })
+    })
+
+    it('and updates the deployment json', async () => {
+      expect(cli('deploy', 'local', '-n', { cwd }).success).to.be.true
+
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const json = loadJsonFile(filePath)
+
+      const obj = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
+      expect(obj).to.have.property('name')
+      expect(obj.name).to.equal('DiamondProxy')
+      expect(obj).to.have.property('txHash')
+      expect(obj).to.have.property('onChain')
+      expect(obj.onChain).to.have.property('address')
+    })
+
+    it('and cannot do a fresh deploy with same salt on same network', async () => {
+      expect(cli('deploy', 'local', '-n', { cwd }).success).to.be.true
+
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const json = loadJsonFile(filePath)
+      const obj = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
+      const { address } = obj.onChain
+
+      const ret = cli('deploy', 'local', '-n', { cwd })
+
+      expect(ret.success).to.be.false
+      expect(ret.output).to.contain(`Address already in use: ${address}`)
+    })
+  })  
+
+
 }
