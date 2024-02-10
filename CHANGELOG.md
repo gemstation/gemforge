@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.0](https://github.com/gemstation/gemforge/compare/v2.6.5...v2.7.0) (2024-02-10)
+
+
+### Features
+
+* CREATE3 functionality for predictable addresses ([#32](https://github.com/gemstation/gemforge/issues/32)) ([9ec6902](https://github.com/gemstation/gemforge/commit/9ec6902fe2b633d9a347f1674a56d87ec1fb8364))
+
 ### [2.6.5](https://github.com/gemstation/gemforge/compare/v2.6.4...v2.6.5) (2023-12-14)
 
 ### [2.6.4](https://github.com/gemstation/gemforge/compare/v2.6.3...v2.6.4) (2023-11-13)
