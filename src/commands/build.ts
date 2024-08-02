@@ -85,7 +85,7 @@ export const command = () =>
 
         facetSelectorsStr += `
 ${arrayDeclaration}
-${f.functions.map((f, i) => `${varName}[${i}] = IDiamondProxy.${f.name}.selector;`).join('\n')}
+${f.functions.map((f, i) => `${varName}[${i}] = bytes4(keccak256(bytes('${f.signaturePacked}')));`).join('\n')}
 fs[${facetNum}] = FacetSelectors({
   addr: address(new ${f.contractName}()),
   sels: ${varName}

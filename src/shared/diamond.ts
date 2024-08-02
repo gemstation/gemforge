@@ -10,14 +10,12 @@ interface FunctionSelector {
 const getSelectors = (artifact: ContractArtifact): FunctionSelector[] => {
   const selectors: FunctionSelector[] = []
 
-  const names = artifact.abi.filter(f => f.type === 'function').map(f => (f as FunctionFragment).name)
-
   const iface = new Interface(artifact.abi)
 
-  names.forEach(fName => {
+  iface.forEachFunction((f: FunctionFragment) => {
     selectors.push({
-      name: fName,
-      selector: iface.getFunction(fName)!.selector,
+      name: f.format("sighash"),
+      selector: f.selector,
     })
   })
 
