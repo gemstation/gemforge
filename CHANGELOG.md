@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.7.1-0 (2024-08-11)
+
+
+### Features
+
+* --clean deploy to reset a diamond to a fresh start - [#15](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/15) ([4823f6e](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/4823f6eb7c3a31bd3a64fa1a6d354072f9f79f8d))
+* allow core facets to be overridden ([#26](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/26)) ([5dcead1](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/5dcead17e6385664313cf6d014f1e8e2619fe8ef))
+* basic facet cut done ([af552d0](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/af552d03f03de093aab81321d4fe91cee0da25d5))
+* basic init command working ([cc27102](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/cc2710261f36effcbe76b2dee386a402b0cbaceb))
+* better error reporting if existing diamond is invalid ([6d31b10](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/6d31b10f561b94ff74ade96a1bdc948bf79402ca))
+* better logging control ([efa115f](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/efa115f1a275d805129deedb12847ee08e8a245f))
+* configurable deployment info file, more deployment info saved ([3c2ae58](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/3c2ae5897a741a4e926ae85ecd2958aa187b977a))
+* core facets with reserved names ([131316b](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/131316b0b0cc2568ab64627f4b8c5185d50629f0))
+* CREATE3 functionality for predictable addresses ([#32](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/32)) ([9ec6902](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/9ec6902fe2b633d9a347f1674a56d87ec1fb8364))
+* customize SPDX license id in output ([4722d4b](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/4722d4b6ed8424ff64c59d7637eb29461c3f34fc))
+* deploy to sepolia, securely ([257ad61](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/257ad61c1bfc208c8327dcae285b4f800a4fe4be))
+* deployment targets, upgrade from v1 config - [#16](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/16) ([cc12a63](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/cc12a63429d2100ddc807367e93fcb64fc3042d9))
+* dry run deployments - closes [#22](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/22) ([#23](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/23)) ([bc9ce38](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/bc9ce3847132eb48e34bdbe497ae390e4e0afced))
+* generate abi.json - closes [#25](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/25) ([6022386](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/60223861a790a625a0887e71a5d62ae882d751ea))
+* hardhat support [#3](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/3) ([46262fd](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/46262fddc84b61c114ba6fa78a1682825fbda2cd))
+* initialization call ([e309c14](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/e309c145e2b9dd9ce5b46557fd8e4202a56b4ebe))
+* LibDiamondHelper now replaces selectors that override core selectors ([#28](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/28)) ([a412176](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/a412176322a81b036afb5137d421bd9a80919861))
+* more updates and docs ([ba79347](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/ba7934774897641ba06c062cd245921be39f99f9))
+* output warning if custom structs detected ([9229994](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/92299945ff825c9f1c8af7d1c67ee8cd084a225d))
+* pause and resume deployment cuts ([#27](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/27)) ([d4c89ed](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/d4c89ed00cc7f0ffc9a1363105673051a7e14a93))
+* query() command ([#24](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/24)) ([efd2dae](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/efd2dae9a7c89b87dc9cb777f7c4b6dfef01e015)), closes [#12](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/12) [#12](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/12)
+* scaffold command checks for python existence, fixes [#19](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/19) ([28c5ee2](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/28c5ee220ec2844bb3fb880144a51b86381d990c))
+* selector removal - [#8](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/8) ([33224fd](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/33224fd0915ce45c83960064b2d23056a258d78d))
+* structs key for when generating proxy interface ([541adc5](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/541adc5d16041f28160af2dc2123203952b74d96))
+* write deployed addresses JSON file ([e66de2e](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/e66de2e8162e7a9ab48e24dce9e06029d3893525))
+
+
+### Bug Fixes
+
+* abi output was missing function names ([69241e0](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/69241e0e9f7cf0d2f1e0fe0abfb53b4af4bb3970))
+* argv differences in local vs global mode ([9094efe](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/9094efe3e2f68e458d96cdf39ecee75d5fb3d676))
+* avoid race conditions when fetching nonce ([77d5707](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/77d5707623b237eeb01f9b09aed2fa8483e3d533))
+* bin call to node executable ([b1a9b1e](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/b1a9b1ea23337f94547fc39283b37df62b7ff1f5))
+* demo project git repo paths should use https ([daf3158](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/daf3158683653f9891e279439a1eea53b4036b2a))
+* ensure abi.json has no duplicate named fragment ([dba5b88](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/dba5b88e62186ec890f9824ce350563c36539d44))
+* ensure all events are unique in the generated abi ([bb4b7ed](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/bb4b7ed9404fd7fa3bfc4881aa905dc2fc561b19))
+* error in gemforge.config.cjs template ([1441076](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/14410768010ecd1c0a501845a969f352f4f9d526))
+* import path resolution bug ([a1a5c04](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/a1a5c049781fa76f114fe2169f027527cbaf9a0f))
+* logo display in readme on npmjs page ([2ecb457](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/2ecb4575d25b9ad2ce5265b8beb42ae550f3187a))
+* parallel facet deployment sometimes failing ([4335b05](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/4335b0530e9ddfb9111681c58fa5245696cfe452))
+* remove redundant dep ([3cfc700](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/3cfc700db9e95757eb17d4598f9b5c93b3d42dba))
+* rename public methods to external when publicMethods is true ([ea4e3f1](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/ea4e3f11973015fe7ee04e0d6fe37067160dfa22))
+* stack too deep in LibDiamondHelper ([#21](https://github.com-pixotchi/pixotchi-tech/gemforge/issues/21)) ([277ffd7](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/277ffd78906c8523287955e8be55156792a8c5e1))
+* typescript config ([c593a21](https://github.com-pixotchi/pixotchi-tech/gemforge/commit/c593a2141bdeea6f7ac6df43b180f54c635da7d9))
+
 ## [2.7.0](https://github.com/gemstation/gemforge/compare/v2.6.5...v2.7.0) (2024-02-10)
 
 
