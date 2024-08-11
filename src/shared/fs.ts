@@ -161,7 +161,15 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
           node => node.visibility === 'external' || (ctx.config.diamond.publicMethods && node.visibility === 'public')
         )
 
-      // export declare type TypeName = ElementaryTypeName | UserDefinedTypeName | ArrayTypeName;
+      // Rename public methods to external if publicMethods is true
+      if (ctx.config.diamond.publicMethods) {
+        functionDefinitions.forEach(node => {
+          if (node.visibility === 'public') {
+            node.visibility = 'external'
+            trace(`Renamed public method to external: ${contract.name}.${node.name}`)
+          }
+        })
+      }
 
       const functions = functionDefinitions.map(node => {
         let signature = `function ${node.name}(${getParamString(node.parameters, parserMeta)}) ${node.visibility}${
