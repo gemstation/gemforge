@@ -113,13 +113,18 @@ export interface FacetDefinition {
     name: string,
     signature: string,
     signaturePacked: string,
+    userDefinedTypesInParams: string[],
   }[],
 }
 
 interface ParserMeta {
-  userDefinedTypes: string[],
+  userDefinedTypesInReturnValues: string[],
+  userDefinedTypesInParams: string[],
 }
 
+interface FunctionParsingContext {
+  userDefinedTypes: Set<string>
+}
 
 
 export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
@@ -130,7 +135,10 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   const ret: FacetDefinition[] = []
   const contractNames: Record<string, boolean> = {}
   const functionSigs: Record<string, boolean> = {}
-  const parserMeta: ParserMeta = { userDefinedTypes: [] }
+  const parserMeta: ParserMeta = { 
+    userDefinedTypesInParams: [],
+    userDefinedTypesInReturnValues: [], 
+  }
 
   // load user facets
   const facetFiles = glob.sync(ctx.config.paths.src.facets, { cwd: ctx.folder })
@@ -161,23 +169,32 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
           node => node.visibility === 'external' || (ctx.config.diamond.publicMethods && node.visibility === 'public')
         )
 
-      // export declare type TypeName = ElementaryTypeName | UserDefinedTypeName | ArrayTypeName;
-
       const functions = functionDefinitions.map(node => {
-        let signature = `function ${node.name}(${getParamString(node.parameters, parserMeta)}) ${node.visibility}${
+        const fnParamParsingContext: FunctionParsingContext = {
+          userDefinedTypes: new Set<string>()
+        }
+        const fnReturnParsingContext: FunctionParsingContext = {
+          userDefinedTypes: new Set<string>()
+        }
+
+        let signature = `function ${node.name}(${getParamString(node.parameters, fnParamParsingContext)}) ${node.visibility}${
           node.stateMutability ? ` ${node.stateMutability}` : ''
         }`
 
         if (node.returnParameters?.length) {
-          signature += ` returns (${getParamString(node.returnParameters, parserMeta)})`
+          signature += ` returns (${getParamString(node.returnParameters, fnReturnParsingContext)})`
         }
 
-        let signaturePacked = `${node.name}(${getPackedParamString(node.parameters, parserMeta)})`
+        let signaturePacked = `${node.name}(${getPackedParamString(node.parameters, fnParamParsingContext)})`
+
+        parserMeta.userDefinedTypesInParams.push(...fnParamParsingContext.userDefinedTypes)
+        parserMeta.userDefinedTypesInReturnValues.push(...fnReturnParsingContext.userDefinedTypes)
 
         const r = {
           name: node.name!,
           signature,
           signaturePacked,
+          userDefinedTypesInParams: Array.from(fnParamParsingContext.userDefinedTypes)
         }
 
         if (functionSigs[r.signaturePacked]) {
@@ -197,8 +214,11 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
     })
   })
 
-  if (parserMeta.userDefinedTypes.length) {
-    info(`Custom structs found in facet method signatures: ${parserMeta.userDefinedTypes.join(', ')}`)
+  if (parserMeta.userDefinedTypesInParams.length) {
+    info(`Facet method params have custom structs: ${parserMeta.userDefinedTypesInParams.join(', ')}`)
+  }
+  if (parserMeta.userDefinedTypesInReturnValues.length) {
+    info(`Facet method return values have custom structs: ${parserMeta.userDefinedTypesInReturnValues.join(', ')}`)
   }
 
   // sort alphabetically
@@ -209,13 +229,13 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
 
 
 
-const getParamString = (params: VariableDeclaration[], meta: ParserMeta): string => {
+const getParamString = (params: VariableDeclaration[], ctx: FunctionParsingContext): string => {
   const p: string[] = []
 
   params.map(param => {
     const name = param.name ? ` ${param.name}` : ''
     const storage = param.storageLocation ? ` ${param.storageLocation}`: ''
-    const typeNameString = _getTypeNameString(param.typeName!, meta)
+    const typeNameString = _getTypeNameString(param.typeName!, ctx)
     p.push(`${typeNameString}${storage}${name}`)
   })
 
@@ -223,11 +243,11 @@ const getParamString = (params: VariableDeclaration[], meta: ParserMeta): string
 }
 
 
-const getPackedParamString = (params: VariableDeclaration[], meta: ParserMeta): string => {
+const getPackedParamString = (params: VariableDeclaration[], ctx: FunctionParsingContext): string => {
   const p: string[] = []
 
   params.map(param => {
-    const typeNameString = _getTypeNameString(param.typeName!, meta)
+    const typeNameString = _getTypeNameString(param.typeName!, ctx)
     p.push(`${typeNameString}`)
   })
 
@@ -235,7 +255,7 @@ const getPackedParamString = (params: VariableDeclaration[], meta: ParserMeta): 
 }
 
 
-const _getTypeNameString = (typeName: TypeName, meta: ParserMeta): string => {
+const _getTypeNameString = (typeName: TypeName, ctx: FunctionParsingContext): string => {
   switch (typeName.type) {
     case 'ElementaryTypeName': {
       const t = typeName as ElementaryTypeName
@@ -243,12 +263,12 @@ const _getTypeNameString = (typeName: TypeName, meta: ParserMeta): string => {
     }
     case 'UserDefinedTypeName': {
       const t = typeName as UserDefinedTypeName
-      meta.userDefinedTypes.push(t.namePath)
+      ctx.userDefinedTypes.add(t.namePath)
       return t.namePath
     }
     case 'ArrayTypeName': {
       const t = typeName as ArrayTypeName
-      const innerType = _getTypeNameString(t.baseTypeName as TypeName, meta)
+      const innerType = _getTypeNameString(t.baseTypeName as TypeName, ctx)
       const lenStr = t.length ? `[${(t.length as NumberLiteral).number}]` : '[]'
       return `${innerType}${lenStr}`
     }
