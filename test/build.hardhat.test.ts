@@ -20,8 +20,10 @@ describe("Command: build() - Hardhat", () => {
     expect(json).to.have.property('abi')
   })
 
-  addBuildTestSteps({
-    framework: 'hardhat',
-    setupFolderCallback: setupFolder
+  describe('steps' , () => {
+    addBuildTestSteps({
+      framework: 'hardhat',
+      setupFolderCallback: setupFolder
+    })
   })
 })

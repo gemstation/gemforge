@@ -30,12 +30,14 @@ export const addBuildTestSteps = ({
           {
             "name": "getInt1",
             "signature": "function getInt1() external view returns (uint)",
-            "signaturePacked": "getInt1()"
+            "signaturePacked": "getInt1()",
+            "userDefinedTypesInParams": []
           },
           {
             "name": "setInt1",
             "signature": "function setInt1(uint i) external",
-            "signaturePacked": "setInt1(uint)"
+            "signaturePacked": "setInt1(uint)",
+            "userDefinedTypesInParams": []
           }
         ]
       }
@@ -95,8 +97,8 @@ function setInt1(uint i) external;`,
         __NUM_FACETS__: '1',
         __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](2);
-f[0] = IDiamondProxy.getInt1.selector;
-f[1] = IDiamondProxy.setInt1.selector;
+f[0] = bytes4(keccak256(bytes('getInt1()')));
+f[1] = bytes4(keccak256(bytes('setInt1(uint)')));
 fs[0] = FacetSelectors({
   addr: address(new ExampleFacet()),
   sels: f
@@ -160,12 +162,14 @@ fs[0] = FacetSelectors({
             {
               "name": "getInts",
               "signature": "function getInts() external view returns (uint a, uint b)",
-              "signaturePacked": "getInts()"
+              "signaturePacked": "getInts()",
+              "userDefinedTypesInParams": []
             },
             {
               "name": "getData",
               "signature": "function getData() external view returns (Data memory)",
-              "signaturePacked": "getData()"
+              "signaturePacked": "getData()",
+              "userDefinedTypesInParams": []
             }
           ]
         },
@@ -176,7 +180,8 @@ fs[0] = FacetSelectors({
             {
               "name": "setData",
               "signature": "function setData(Data calldata d) external",
-              "signaturePacked": "setData(Data)"
+              "signaturePacked": "setData(Data)",
+              "userDefinedTypesInParams": ["Data"]
             }
           ]
         }
@@ -219,8 +224,8 @@ fs[0] = FacetSelectors({
 });
 
 f = new bytes4[](2);
-f[0] = IDiamondProxy.getInts.selector;
-f[1] = IDiamondProxy.getData.selector;
+f[0] = bytes4(keccak256(bytes('getInts()')));
+f[1] = bytes4(keccak256(bytes('getData()')));
 fs[1] = FacetSelectors({
   addr: address(new ExampleFacet()),
   sels: f
@@ -273,7 +278,7 @@ fs[1] = FacetSelectors({
           expectedFacetImports += `${i ? "\n" : ''}import { ${name} } from "../facets/${name}.sol";`
           expectedFacetSelectors += `
 ${prefix}f = new bytes4[](1);
-f[0] = IDiamondProxy.getInts${i}.selector;
+f[0] = bytes4(keccak256(bytes('getInts${i}()')));
 fs[${i}] = FacetSelectors({
   addr: address(new ${name}()),
   sels: f

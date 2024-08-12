@@ -2,7 +2,7 @@ import { getContext } from '../shared/context.js'
 import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFacetsAndFunctions, saveJson, writeFile, writeTemplate } from '../shared/fs.js'
 import path from 'node:path'
 import { createCommand, logSuccess } from './common.js'
-import { error, info, trace } from '../shared/log.js'
+import { error, info, trace, warn } from '../shared/log.js'
 import { generateUnifiedAbi } from '../shared/chain.js'
 
 export const command = () =>
@@ -68,6 +68,8 @@ export const command = () =>
       const importPaths: Record<string, string> = {}
       let facetSelectorsStr = ''
       
+      let hasCustomStructs: string[] = []
+
       facets.forEach((f, facetNum) => {
         numMethods += f.functions.length
 
@@ -85,13 +87,25 @@ export const command = () =>
 
         facetSelectorsStr += `
 ${arrayDeclaration}
-${f.functions.map((f, i) => `${varName}[${i}] = IDiamondProxy.${f.name}.selector;`).join('\n')}
+${f.functions.map((fn, i) => {
+  if (fn.userDefinedTypesInParams.length) {
+    hasCustomStructs.push(fn.name)
+    return `${varName}[${i}] = IDiamondProxy.${fn.name}.selector;`
+  } else {
+    return `${varName}[${i}] = bytes4(keccak256(bytes('${fn.signaturePacked}')));`
+  }
+}).join('\n')}
 fs[${facetNum}] = FacetSelectors({
   addr: address(new ${f.contractName}()),
   sels: ${varName}
 });
 `
       })
+
+      if (hasCustomStructs.length) {
+        warn(`Custom structs found in facet method params. Polymorphism won't be supported for these methods: ${hasCustomStructs.join(', ')}`)
+        warn(`See - https://github.com/gemstation/gemforge/pull/40#issuecomment-2284272273`)
+      }
       
       writeTemplate('LibDiamondHelper.sol', `${ctx.generatedSolidityPath}/LibDiamondHelper.sol`, {
         __SOLC_SPDX__: ctx.config.solc.license,
