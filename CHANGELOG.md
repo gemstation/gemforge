@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.8.0](https://github.com/gemstation/gemforge/compare/v2.7.0...v2.8.0) (2024-08-12)
+
+
+### Features
+
+* functional polymorphism support (builds on [#40](https://github.com/gemstation/gemforge/issues/40)) ([#42](https://github.com/gemstation/gemforge/issues/42)) ([e38c03e](https://github.com/gemstation/gemforge/commit/e38c03e1efea6f525ce55a0acf7a4c3869c5108b))
+
 ## [2.7.0](https://github.com/gemstation/gemforge/compare/v2.6.5...v2.7.0) (2024-02-10)
 
 
