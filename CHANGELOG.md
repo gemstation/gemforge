@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/gemstation/gemforge/compare/v2.8.0...v2.9.0) (2024-08-13)
+
+
+### Features
+
+* looser diamond checking ([#37](https://github.com/gemstation/gemforge/issues/37)) + custom proxy templates ([#38](https://github.com/gemstation/gemforge/issues/38)) ([1925673](https://github.com/gemstation/gemforge/commit/1925673a38a9adf4466b092270cc8f20225139dc))
+
 ## [2.8.0](https://github.com/gemstation/gemforge/compare/v2.7.0...v2.8.0) (2024-08-12)
 
 
