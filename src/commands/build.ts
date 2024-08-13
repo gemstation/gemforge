@@ -38,7 +38,7 @@ export const command = () =>
         __SOLC_SPDX__: ctx.config.solc.license,
         __SOLC_VERSION__: ctx.config.solc.version,
         __LIB_DIAMOND_PATH__: ctx.config.paths.lib.diamond,
-      })
+      }, ctx.config.generator.proxy?.template)
       
       info('Generating IDiamondProxy.sol...')
       let customImportsStr = ''
@@ -103,8 +103,7 @@ fs[${facetNum}] = FacetSelectors({
       })
 
       if (hasCustomStructs.length) {
-        warn(`Custom structs found in facet method params. Polymorphism won't be supported for these methods: ${hasCustomStructs.join(', ')}`)
-        warn(`See - https://github.com/gemstation/gemforge/pull/40#issuecomment-2284272273`)
+        warn(`Custom structs found in facet method params. Polymorphism won't be supported for these methods: ${hasCustomStructs.join(', ')}\n\nSee - https://github.com/gemstation/gemforge/pull/40#issuecomment-2284272273`)
       }
       
       writeTemplate('LibDiamondHelper.sol', `${ctx.generatedSolidityPath}/LibDiamondHelper.sol`, {

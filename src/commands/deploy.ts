@@ -75,7 +75,7 @@ export const command = () =>
           ctx,
           targetArg,
           target,
-          signer
+          signer,
         })
 
         if (p) {

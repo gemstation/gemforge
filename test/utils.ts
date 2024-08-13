@@ -36,7 +36,6 @@ export const cli = (...gemforgeArgs: any[]) => {
     opts = gemforgeArgs.pop()
   }
   
-
   opts = {
     verbose: !!opts.verbose,
     cwd: opts.cwd || createTmpFolder(),
@@ -46,6 +45,10 @@ export const cli = (...gemforgeArgs: any[]) => {
     '--no-warnings',
     resolve(__dirname, "../build/gemforge.js"),
   ].concat(gemforgeArgs)
+
+  if (opts.verbose) {
+    args.push('--verbose')
+  }
 
   const output = exec(process.argv[0], args, opts)
 
@@ -64,8 +67,8 @@ export const createTmpFolderFromFolder = (srcFolderPath: string) => {
   return join(cwd, basename(srcFolderPath))
 }
 
-export const getTestDataFolderPath = (testTemplateFolderName: string) => {
-  return resolve(__dirname, `./data/${testTemplateFolderName}`)
+export const getTestDataFolderPath = (folderPath: string) => {
+  return resolve(__dirname, `./data/${folderPath}`)
 }
 
 export const loadJsonFile = (filePath: string) => {
@@ -105,8 +108,12 @@ export const updateConfigFile = async (cfgFilePath: string, cb: (src: GemforgeCo
 }
 
 export const assertFileMatchesTemplate = (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
+  assertFileMatchesCustomTemplate(jsFilePath, resolve(__dirname, `../templates/${templateName}`), replacements)
+}
+
+export const assertFileMatchesCustomTemplate = (jsFilePath: string, templatePath: string, replacements: Record<string, string>) => {
   const actual = fs.readFileSync(jsFilePath, 'utf8')
-  const tmpl = fs.readFileSync(resolve(__dirname, `../templates/${templateName}`), 'utf8')
+  const tmpl = fs.readFileSync(templatePath, 'utf8')
   // @ts-ignore
   const expected = Object.entries(replacements).reduce((acc, [key, value]) => acc.replaceAll(key, value), tmpl)
   expect(actual).to.deep.equal(expected)

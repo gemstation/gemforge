@@ -489,12 +489,12 @@ export const deployContract3 = async (
   }
 }
 
-export const getContractValue = async (contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<any> => {  
+export const getContractValue = async <T = any>(contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<T> => {  
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
     trace(`Calling ${label} ...`)
-    return (await contract.contract[method](...args)) as any
+    return (await contract.contract[method](...args)) as T
   } catch (err: any) {
     const errorMessage = `Failed to call ${label}: ${err.message}`
     if (dontExitOnError) {

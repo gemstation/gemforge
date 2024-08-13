@@ -3,7 +3,7 @@ import get from "lodash.get"
 import { ZeroAddress, ethers } from 'ethers'
 import path, { join } from "node:path"
 import { setTimeout } from "node:timers/promises"
-import { GemforgeConfig, cli, expect, fileExists, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, cli, expect, fileExists, getTestDataFolderPath, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
 
 
 export const addDeployTestSteps = ({
@@ -622,5 +622,60 @@ export const addDeployTestSteps = ({
     })
   })  
 
+  describe('can handle if supportsInterface() method is missing in live deployment', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
 
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.generator.proxy = {
+          template: getTestDataFolderPath(`test-templates/DiamondProxy-noSupportsInterface.sol`)
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      expect(cli('deploy', 'local', '-n', { cwd, verbose: false }).success).to.be.true
+    })
+
+    it('and can handle an upgrade', async () => {
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract ExampleFacet {
+          // keep method same
+          function getInt1() external view returns (uint) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            return s.data.i1;
+          }
+
+          // change method behaviour
+          function setInt1(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i + 1;
+          }
+
+          // add new method
+          function setInt1New(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i + 2;
+          }
+        }
+      `)
+
+      // build and re-deploy
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+      expect(ret.output).to.contain('Unable to call supportsInterface')
+
+      const { contract } = await loadDiamondContract(cwd)
+
+      await sendTx(contract.setInt1(2))
+      let n = await contract.getInt1()
+      expect(n.toString()).to.equal('3') // 2 + 1
+      await sendTx(contract.setInt1New(2))
+      n = await contract.getInt1()
+      expect(n.toString()).to.equal('4') // 2 + 2
+    })
+  })
 }

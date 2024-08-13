@@ -26,7 +26,7 @@ const getSelectors = (artifact: ContractArtifact): FunctionSelector[] => {
 const getLiveFunctions = async (diamondProxy: OnChainContract): Promise<Record<string, string>> => {
   // get what's on-chain
   trace('Resolving methods on-chain ...')
-  const facets = await getContractValue(diamondProxy, 'facets', [])
+  const facets = await getContractValue<any[]>(diamondProxy, 'facets', [])
   const liveFunctions: Record<string, string> = {}
   facets.forEach((v: any) => {
     v[1].forEach((f: string) => {
