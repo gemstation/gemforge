@@ -8,7 +8,7 @@ const setupFolder = () => {
   return cwd
 }
 
-describe.skip("Command: query() - Hardhat", () => {
+describe("Command: query() - Hardhat", () => {
   addQueryTestSteps({
     framework: 'hardhat',
     setupFolderCallback: setupFolder

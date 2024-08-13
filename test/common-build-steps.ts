@@ -85,17 +85,18 @@ function setInt1(uint i) external;`,
     
 
   if (framework === 'foundry') {
-    it("generates test helper", async () => {
-      expect(cli('build', { cwd }).success).to.be.true
+    describe('test helper', async () => {
+      it("gets generated", async () => {
+        expect(cli('build', { cwd }).success).to.be.true
 
-      const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
-      assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
-        __SOLC_SPDX__: 'MIT',
-        __SOLC_VERSION__: '0.8.21',
-        __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
-        __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
-        __NUM_FACETS__: '1',
-        __FACET_SELECTORS__: `
+        const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
+        assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
+          __SOLC_SPDX__: 'MIT',
+          __SOLC_VERSION__: '0.8.21',
+          __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+          __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
+          __NUM_FACETS__: '1',
+          __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](2);
 f[0] = bytes4(keccak256(bytes('getInt1()')));
 f[1] = bytes4(keccak256(bytes('setInt1(uint)')));
@@ -104,8 +105,68 @@ fs[0] = FacetSelectors({
   sels: f
 });
 `,
+        })
+      })  
+
+      describe('with polymorphic methods', async () => {
+        beforeEach(async () => {
+          await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+            cfg.generator.proxyInterface.imports = [
+              `${contractSrcBasePath}/shared/Structs.sol`
+            ]
+            return cfg
+          })
+        })
+
+        it("cannot be generated if custom structs are used in two poly methods", async () => {
+          writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+            pragma solidity >=0.8.21;
+            import "../shared/Structs.sol";
+            contract ExampleFacet {
+              function poly1(uint i) external {}
+              function poly1(Data calldata d) external {}
+            }
+          `)
+
+          const ret = cli('build', { cwd })
+          expect(ret.success).to.be.false
+          expect(ret.output).to.contain('Custom structs found in facet method params')
+          expect(ret.output).to.contain('Member "poly1" not unique')
+        })  
+
+        it("cannot be generated if custom structs are used in two poly methods", async () => {
+          writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+            pragma solidity >=0.8.21;
+            contract ExampleFacet {
+              function poly1(uint i) external {}
+              function poly1(address a) external {}
+            }
+          `)
+
+          const ret = cli('build', { cwd })
+          expect(ret.success).to.be.true
+          expect(ret.output).to.not.contain('Custom structs found in facet method params')
+
+          const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
+          assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
+            __SOLC_SPDX__: 'MIT',
+            __SOLC_VERSION__: '0.8.21',
+            __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+            __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
+            __NUM_FACETS__: '1',
+            __FACET_SELECTORS__: `
+bytes4[] memory f = new bytes4[](2);
+f[0] = bytes4(keccak256(bytes('poly1(uint)')));
+f[1] = bytes4(keccak256(bytes('poly1(address)')));
+fs[0] = FacetSelectors({
+  addr: address(new ExampleFacet()),
+  sels: f
+});
+`,
+          })
+        })  
       })
-    })  
+    })
   }
 
   describe('with multiple facets and methods with custom structs', () => {

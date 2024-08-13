@@ -6,7 +6,7 @@ const setupFolder = () => {
   return createTmpFolderFromFolder(getTestDataFolderPath('foundry-project'))
 }
 
-describe.only("Command: query() - Foundry", () => {
+describe("Command: query() - Foundry", () => {
   addQueryTestSteps({
     framework: 'foundry',
     setupFolderCallback: setupFolder

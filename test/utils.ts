@@ -48,7 +48,7 @@ export const cli = (...gemforgeArgs: any[]) => {
   ].concat(gemforgeArgs)
 
   const output = exec(process.argv[0], args, opts)
-  
+
   return { 
     cwd: opts.cwd!,
     output: output.stdout?.toString() + output.stderr?.toString(), 
