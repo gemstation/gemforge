@@ -70,6 +70,9 @@ export interface GemforgeConfig {
     }
   },
   generator: {
+    proxy?: {
+      template: string,
+    },
     proxyInterface: {
       imports: string[],
     },
@@ -134,6 +137,9 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
 
   // generator
   ensureArray(config, 'generator.proxyInterface.imports')
+  if (get(config, 'generator.proxy')) {
+    ensureIsType(config, 'generator.proxy.template', ['string'])
+  }
 
   // diamond
   ensureBool(config, 'diamond.publicMethods')

@@ -85,8 +85,18 @@ export const fileExists = (file: string) => {
   return existsSync(file)
 }
 
-export const writeTemplate = (file: string, dst: string, replacements: Record<string, string> = {}) => {
-  let str = readFileSync(new URL(`../../templates/${file}`, import.meta.url), 'utf-8')
+export const writeTemplate = (file: string, dst: string, replacements: Record<string, string> = {}, customTemplatePath?: string) => {
+  let templatePath
+  if (customTemplatePath) {
+    templatePath = customTemplatePath
+    trace(`   Using custom template: ${customTemplatePath}`)
+  } else {
+    templatePath = new URL(`../../templates/${file}`, import.meta.url)
+    trace(`   Using default template: ${templatePath}`)
+  }
+  
+  let str = readFileSync(templatePath!, 'utf-8')
+
   Object.keys(replacements).forEach(key => {
     str = str.replaceAll(key, replacements[key])
   })
@@ -215,10 +225,10 @@ export const getUserFacetsAndFunctions = (ctx: Context): FacetDefinition[] => {
   })
 
   if (parserMeta.userDefinedTypesInParams.length) {
-    info(`Facet method params have custom structs: ${parserMeta.userDefinedTypesInParams.join(', ')}`)
+    trace(`Facet method params have custom structs: ${parserMeta.userDefinedTypesInParams.join(', ')}`)
   }
   if (parserMeta.userDefinedTypesInReturnValues.length) {
-    info(`Facet method return values have custom structs: ${parserMeta.userDefinedTypesInReturnValues.join(', ')}`)
+    trace(`Facet method return values have custom structs: ${parserMeta.userDefinedTypesInReturnValues.join(', ')}`)
   }
 
   // sort alphabetically

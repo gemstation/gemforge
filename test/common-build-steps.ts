@@ -1,6 +1,6 @@
 import 'mocha'
 import path, { join } from "node:path"
-import { GemforgeConfig, assertFileMatchesTemplate, cli, expect, loadFile, loadJsonFile, removeFile, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, assertFileMatchesCustomTemplate, assertFileMatchesTemplate, cli, expect, getTestDataFolderPath, loadFile, loadJsonFile, removeFile, updateConfigFile, writeFile } from './utils.js'
 
 export const addBuildTestSteps = ({
   framework, 
@@ -469,6 +469,30 @@ fs[${i}] = FacetSelectors({
 
       expect(ret.success).to.be.true
       expect(loadFile(join(cwd, '.gemforge/facets.json'))).to.equal('test')
+    })
+  })
+
+  describe('supports custom proxy templates', async () => {
+    const customTemplatePath = getTestDataFolderPath(`test-templates/DiamondProxy-custom.sol`)
+
+    beforeEach(async () => {
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.generator.proxy = {
+          template: customTemplatePath
+        }
+        return cfg
+      })
+    })
+  
+    it("generates proxy contract", async () => {
+      expect(cli('build', { cwd }).success).to.be.true
+
+      const filePath = path.join(cwd, `${contractSrcBasePath}/generated/DiamondProxy.sol`)
+      assertFileMatchesCustomTemplate(filePath, customTemplatePath, {
+        __SOLC_SPDX__: 'MIT',
+        __SOLC_VERSION__: '0.8.21',
+        __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+      })
     })
   })
 }

@@ -3,7 +3,7 @@ import { Signer } from 'ethers'
 import { ContractArtifact, Target, getContractAt, getContractValue, loadContractArtifact, readDeploymentInfo } from '../shared/chain.js'
 import { Context } from '../shared/context.js'
 import { FacetDefinition, loadJson } from '../shared/fs.js'
-import { error, info } from '../shared/log.js'
+import { error, info, trace, warn } from '../shared/log.js'
 
 export interface CreateCommandOptions {
   skipConfigOption?: boolean
@@ -43,21 +43,32 @@ export const loadExistingDeploymentAndLog = async ({ ctx, signer, targetArg, tar
     info(`Checking if existing deployment is still valid...`)
     const proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, existingProxy.onChain.address)
 
+    let supportsInterface = false
+    let facets: any[] = []
+
     try {
-      const isDiamond = await getContractValue(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
-      if (!isDiamond) {
-        throw new Error(`supportsInterface() error`)
+      supportsInterface = await getContractValue<boolean>(proxyInterface, 'supportsInterface', ['0x01ffc9a7'], true)
+      if (!supportsInterface) {
+        warn(`  Does not support Diamond interface`)
       }
-
-      const facets = await getContractValue(proxyInterface, 'facets', [], true)
-      if (!facets) {
-        throw new Error(`facets() error`)
-      }
-
-      return proxyInterface
     } catch (err: any) {
-      error(`Existing deployment is not a diamond: ${err.message}\n\nYou may want to run with --new to force a fresh deployment.`)
+      warn(`  Unable to call supportsInterface(): ${err.message}`)
     }
+
+    try {
+      facets = await getContractValue<any[]>(proxyInterface, 'facets', [], true)
+      if (!facets.length) {
+        warn(`  No facets found`)
+      }
+    } catch (err: any) {
+      warn(`  Unable to call facets(): ${err.message}`)
+    }
+
+    if (!supportsInterface && !facets.length) {
+      error(`Existing deployment is not a diamond.\n\nYou may want to run with --new to force a fresh deployment.`)
+    }
+
+    return proxyInterface
   }
 } 
 

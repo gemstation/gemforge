@@ -1,6 +1,6 @@
 import 'mocha'
 import { join } from "node:path"
-import { cli, expect, loadFile, loadJsonFile, writeFile } from './utils.js'
+import { cli, expect, GemforgeConfig, getTestDataFolderPath, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
 
 const loadContractAddresses = (cwd: string) => {
   const deployedContracts = loadJsonFile(join(cwd, 'gemforge.deployments.json')).local.contracts
@@ -166,6 +166,33 @@ export const addQueryTestSteps = ({
       expect(out.facets[a.ExampleFacet]).to.have.property('functions')
       expect(out.facets[a.ExampleFacet].functions.find((f: any) => f.selector === '0xe1bb9b63')).to.have.property('unrecognized', true)
       expect(out.facets[a.ExampleFacet].functions.find((f: any) => f.selector === '0x4d2c097d')).to.have.property('unrecognized', true)
+    })
+  })
+
+  describe('can handle if supportsInterface() method is missing in live deployment', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.generator.proxy = {
+          template: getTestDataFolderPath(`test-templates/DiamondProxy-noSupportsInterface.sol`)
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
+    })
+
+    it('outputs text', async () => {
+      const outFilePath = join(cwd, 'query-output')
+      const ret = cli('query', 'local', '--output', outFilePath, { cwd })
+      expect(ret.success).to.be.true
+
+      const out = loadFile(outFilePath)
+
+      expect(out).to.contain(`fn: facets() (0x7a0ed627)`)
+      expect(out).to.not.contain(`fn: supportsInterface(bytes4) (0x01ffc9a7)`)
     })
   })
 }
