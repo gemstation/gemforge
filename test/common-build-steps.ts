@@ -264,6 +264,46 @@ function getData() external view returns (Data memory);`,
       })
     })
 
+    describe('if public methods are configured to be included', () => {
+      beforeEach(async () => {  
+        removeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`))
+
+        writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+          pragma solidity >=0.8.21;
+          import "../libs/LibAppStorage.sol";
+          contract ExampleFacet {
+            function getInt() external view returns (uint) {
+              return 1;
+            }
+            function getIntPublic() public view returns (uint) {
+              return 2;
+            }
+          }
+        `)
+
+        await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+          cfg.diamond.publicMethods = true
+          return cfg
+        })
+      })  
+
+      it("generates proxy interface and renames public methods to external", async () => {
+        const ret = cli('build', { cwd })
+        expect(ret.success).to.be.true
+
+        const filePath = path.join(cwd, `${contractSrcBasePath}/generated/IDiamondProxy.sol`)
+        assertFileMatchesTemplate(filePath, 'IDiamondProxy.sol', {
+          __SOLC_SPDX__: 'MIT',
+          __SOLC_VERSION__: '0.8.21',
+          __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+          __CUSTOM_IMPORTS__: `import "../shared/Structs.sol";\n`,
+          __METHODS__: `function setData(Data calldata d) external;
+function getInt() external view returns (uint);
+function getIntPublic() external view returns (uint);`,
+        })
+      })
+    })
+
     if (framework === 'foundry') {
       it("generates test helper", async () => {
         expect(cli('build', { cwd }).success).to.be.true
