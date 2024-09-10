@@ -58,7 +58,7 @@ export const command = () =>
         __CUSTOM_IMPORTS__: customImportsStr,
         __METHODS__: facets
           .reduce((m, f) => m.concat(f.functions), [] as any[])
-          .map(f => `${f.signature};`)
+          .map(f => `${f.signature};`.replace(" public", " external"))
           .join('\n')
       })
 
