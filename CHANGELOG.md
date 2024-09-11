@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.9.1](https://github.com/gemstation/gemforge/compare/v2.9.0...v2.9.1) (2024-09-11)
+
+
+### Bug Fixes
+
+* ensure public methods are named to external in IDiamondProxy  ([#46](https://github.com/gemstation/gemforge/issues/46)) ([7ce5704](https://github.com/gemstation/gemforge/commit/7ce5704353968f69ef71b1b0d29490b7424a2015)), closes [#41](https://github.com/gemstation/gemforge/issues/41)
+
 ## [2.9.0](https://github.com/gemstation/gemforge/compare/v2.8.0...v2.9.0) (2024-08-13)
 
 
