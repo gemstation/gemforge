@@ -1,12 +1,12 @@
-import semver from 'semver'
+import { ethers } from 'ethers'
 import get from 'lodash.get'
-import { warn } from '../log.js'
-import { loadJson } from '../fs.js'
-import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
+import semver from 'semver'
 // @ts-ignore
 import spdxLicenseIds from 'spdx-license-ids' assert { type: "json" }
-import { throwError, ensureIsSet, ensure, ensureArray, ensureBool, ensureIsType } from './common.js'
-import { ethers } from 'ethers'
+import { loadJson } from '../fs.js'
+import { warn } from '../log.js'
+import { ensure, ensureArray, ensureBool, ensureIsSet, ensureIsType, throwError } from './common.js'
+import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
 
 const { version } = loadJson(new URL('../../../package.json', import.meta.url)) as any
 

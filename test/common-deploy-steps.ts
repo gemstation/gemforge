@@ -1,8 +1,8 @@
 import 'mocha'
-import get from "lodash.get"
-import { ZeroAddress, ethers } from 'ethers'
 import path, { join } from "node:path"
 import { setTimeout } from "node:timers/promises"
+import { ZeroAddress, ethers, keccak256 } from 'ethers'
+import get from "lodash.get"
 import { GemforgeConfig, cli, expect, fileExists, getTestDataFolderPath, loadDiamondContract, loadFile, loadJsonFile, loadWallet, removeFile, sendTx, updateConfigFile, writeFile } from './utils.js'
 
 
@@ -588,13 +588,14 @@ export const addDeployTestSteps = ({
 
       // setup post-deploy hook
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.targets.local.create3Salt = ethers.hexlify(ethers.randomBytes(32))
+        cfg.targets.local.create3Salt = ethers.keccak256(ethers.hexlify(ethers.randomBytes(32)))
         return cfg
       })
     })
 
     it('and updates the deployment json', async () => {
-      expect(cli('deploy', 'local', '-n', { cwd }).success).to.be.true
+      const ret = cli('deploy', 'local', '-n', { cwd })
+      expect(ret.success).to.be.true
 
       const filePath = join(cwd, 'gemforge.deployments.json')
       const json = loadJsonFile(filePath)
