@@ -7,12 +7,12 @@ import "../libs/LibAppStorage.sol";
  * This is a simple facet example which exports a single function.
  */
 contract ExampleFacet {
-  function getInt1() external view returns (uint) {
+  function getInt1() external view returns (uint256) {
     AppStorage storage s = LibAppStorage.diamondStorage();
     return s.data.i1;
   }
 
-  function setInt1(uint i) external {
+  function setInt1(uint256 i) external {
     AppStorage storage s = LibAppStorage.diamondStorage();
     s.data.i1 = i;
   }

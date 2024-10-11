@@ -29,14 +29,14 @@ export const addBuildTestSteps = ({
         "functions": [
           {
             "name": "getInt1",
-            "signature": "function getInt1() external view returns (uint)",
+            "signature": "function getInt1() external view returns (uint256)",
             "signaturePacked": "getInt1()",
             "userDefinedTypesInParams": []
           },
           {
             "name": "setInt1",
-            "signature": "function setInt1(uint i) external",
-            "signaturePacked": "setInt1(uint)",
+            "signature": "function setInt1(uint256 i) external",
+            "signaturePacked": "setInt1(uint256)",
             "userDefinedTypesInParams": []
           }
         ]
@@ -64,8 +64,8 @@ export const addBuildTestSteps = ({
       __SOLC_VERSION__: '0.8.21',
       __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
       __CUSTOM_IMPORTS__: '',
-      __METHODS__: `function getInt1() external view returns (uint);
-function setInt1(uint i) external;`,
+      __METHODS__: `function getInt1() external view returns (uint256);
+function setInt1(uint256 i) external;`,
     })
   })
 
@@ -83,6 +83,55 @@ function setInt1(uint i) external;`,
     expect(json.find((f: any) => f.name === 'OwnershipTransferred')).to.haveOwnProperty('type')
   })
     
+  describe('and uses canonical types', async () => {
+    beforeEach(async () => {
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        contract ExampleFacet {
+          function testTypes(int a, uint b) external pure returns (int, uint) {
+            return (a + 1, b + 1);
+          }
+        }
+      `)
+    })
+
+    it("generates proxy interface with canonical types", async () => {
+      expect(cli('build', { cwd }).success).to.be.true
+
+      const filePath = path.join(cwd, `${contractSrcBasePath}/generated/IDiamondProxy.sol`)
+      assertFileMatchesTemplate(filePath, 'IDiamondProxy.sol', {
+        __SOLC_SPDX__: 'MIT',
+        __SOLC_VERSION__: '0.8.21',
+        __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+        __CUSTOM_IMPORTS__: '',
+        __METHODS__: `function testTypes(int256 a, uint256 b) external pure returns (int256, uint256);`,
+      })
+    })
+
+    if (framework === 'foundry') {
+      it("generates test helper with canonical types", async () => {
+        expect(cli('build', { cwd }).success).to.be.true
+  
+        const filePath = path.join(cwd, 'src/generated/LibDiamondHelper.sol')
+        assertFileMatchesTemplate(filePath, 'LibDiamondHelper.sol', {
+          __SOLC_SPDX__: 'MIT',
+          __SOLC_VERSION__: '0.8.21',
+          __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
+          __FACET_IMPORTS__: `import { ExampleFacet } from "../facets/ExampleFacet.sol";`,
+          __NUM_FACETS__: '1',
+          __FACET_SELECTORS__: `
+bytes4[] memory f = new bytes4[](1);
+f[0] = bytes4(keccak256(bytes('testTypes(int256,uint256)')));
+fs[0] = FacetSelectors({
+  addr: address(new ExampleFacet()),
+  sels: f
+});
+`,
+        })
+      })
+    }
+  })
+
 
   if (framework === 'foundry') {
     describe('test helper', async () => {
@@ -99,7 +148,7 @@ function setInt1(uint i) external;`,
           __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](2);
 f[0] = bytes4(keccak256(bytes('getInt1()')));
-f[1] = bytes4(keccak256(bytes('setInt1(uint)')));
+f[1] = bytes4(keccak256(bytes('setInt1(uint256)')));
 fs[0] = FacetSelectors({
   addr: address(new ExampleFacet()),
   sels: f
@@ -123,7 +172,7 @@ fs[0] = FacetSelectors({
             pragma solidity >=0.8.21;
             import "../shared/Structs.sol";
             contract ExampleFacet {
-              function poly1(uint i) external {}
+              function poly1(uint256 i) external {}
               function poly1(Data calldata d) external {}
             }
           `)
@@ -138,7 +187,7 @@ fs[0] = FacetSelectors({
           writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
             pragma solidity >=0.8.21;
             contract ExampleFacet {
-              function poly1(uint i) external {}
+              function poly1(uint256 i) external {}
               function poly1(address a) external {}
             }
           `)
@@ -156,7 +205,7 @@ fs[0] = FacetSelectors({
             __NUM_FACETS__: '1',
             __FACET_SELECTORS__: `
 bytes4[] memory f = new bytes4[](2);
-f[0] = bytes4(keccak256(bytes('poly1(uint)')));
+f[0] = bytes4(keccak256(bytes('poly1(uint256)')));
 f[1] = bytes4(keccak256(bytes('poly1(address)')));
 fs[0] = FacetSelectors({
   addr: address(new ExampleFacet()),
@@ -175,7 +224,7 @@ fs[0] = FacetSelectors({
         pragma solidity >=0.8.21;
         import "../libs/LibAppStorage.sol";
         contract ExampleFacet {
-          function getInts() external view returns (uint a, uint b) {
+          function getInts() external view returns (uint256 a, uint256 b) {
             AppStorage storage s = LibAppStorage.diamondStorage();
             a = s.data.i1;
             b = s.data.i2;
@@ -222,7 +271,7 @@ fs[0] = FacetSelectors({
           "functions": [
             {
               "name": "getInts",
-              "signature": "function getInts() external view returns (uint a, uint b)",
+              "signature": "function getInts() external view returns (uint256 a, uint256 b)",
               "signaturePacked": "getInts()",
               "userDefinedTypesInParams": []
             },
@@ -259,7 +308,7 @@ fs[0] = FacetSelectors({
         __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
         __CUSTOM_IMPORTS__: `import "../shared/Structs.sol";\n`,
         __METHODS__: `function setData(Data calldata d) external;
-function getInts() external view returns (uint a, uint b);
+function getInts() external view returns (uint256 a, uint256 b);
 function getData() external view returns (Data memory);`,
       })
     })
@@ -272,10 +321,10 @@ function getData() external view returns (Data memory);`,
           pragma solidity >=0.8.21;
           import "../libs/LibAppStorage.sol";
           contract ExampleFacet {
-            function getInt() external view returns (uint) {
+            function getInt() external view returns (uint256) {
               return 1;
             }
-            function getIntPublic() public view returns (uint) {
+            function getIntPublic() public view returns (uint256) {
               return 2;
             }
           }
@@ -298,8 +347,8 @@ function getData() external view returns (Data memory);`,
           __LIB_DIAMOND_PATH__: 'lib/diamond-2-hardhat',
           __CUSTOM_IMPORTS__: `import "../shared/Structs.sol";\n`,
           __METHODS__: `function setData(Data calldata d) external;
-function getInt() external view returns (uint);
-function getIntPublic() external view returns (uint);`,
+function getInt() external view returns (uint256);
+function getIntPublic() external view returns (uint256);`,
         })
       })
     })
@@ -356,7 +405,7 @@ fs[1] = FacetSelectors({
             pragma solidity >=0.8.21;
             import "../libs/LibAppStorage.sol";
             contract ${name} {
-              function getInts${i}() external view returns (uint a, uint b) {
+              function getInts${i}() external view returns (uint256 a, uint256 b) {
                 AppStorage storage s = LibAppStorage.diamondStorage();
                 a = s.data.i1;
                 b = s.data.i2;

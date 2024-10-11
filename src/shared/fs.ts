@@ -1,3 +1,5 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import parser from '@solidity-parser/parser'
 import type {
   ArrayTypeName,
@@ -11,8 +13,6 @@ import type {
 } from '@solidity-parser/parser/dist/src/ast-types.d.ts'
 import { execaCommandSync } from 'execa'
 import { glob } from 'glob'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import path from 'node:path'
 import { tmpNameSync } from 'tmp'
 import { Context } from './context.js'
 import { error, info, trace, warn } from './log.js'
@@ -277,6 +277,8 @@ const _getTypeNameString = (typeName: TypeName, ctx: FunctionParsingContext): st
   switch (typeName.type) {
     case 'ElementaryTypeName': {
       const t = typeName as ElementaryTypeName
+      if (t.name === 'uint') return 'uint256'
+      if (t.name === 'int') return 'int256'
       return t.name
     }
     case 'UserDefinedTypeName': {

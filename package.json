@@ -22,7 +22,10 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install && npx husky add .husky/commit-msg 'npx commitlint --edit $1'",
-    "prettify": "prettier --write .",
+    "format": "biome format",
+    "format:write": "biome format --write",
+    "lint": "biome lint",
+    "lint:write": "biome lint --write",
     "dev": "tsc -b -w tsconfig.json",
     "build": "rm -fr build/* && tsc -p tsconfig.json",
     "test": "mocha",
@@ -32,6 +35,7 @@
     "release": "standard-version && git push --follow-tags origin master && npm publish"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.8.3",
     "@commitlint/cli": "^17.2.0",
     "@commitlint/config-conventional": "^17.2.0",
     "@types/chai": "^4.3.6",
@@ -47,8 +51,6 @@
     "hardhat": "^2.17.3",
     "husky": "^8.0.2",
     "mocha": "^10.2.0",
-    "prettier": "^2.8.8",
-    "prettier-plugin-sort-imports-desc": "^1.0.0",
     "standard-version": "^9.5.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
