@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.10.0](https://github.com/gemstation/gemforge/compare/v2.9.2...v2.10.0) (2024-10-11)
+
+
+### Features
+
+* use canonical form of primitive types during codegen ([1b65b3a](https://github.com/gemstation/gemforge/commit/1b65b3a12d565a1c4c33397bf03f76478cc01580))
+
 ### [2.9.2](https://github.com/gemstation/gemforge/compare/v2.9.1...v2.9.2) (2024-10-08)
 
 ### [2.9.1](https://github.com/gemstation/gemforge/compare/v2.9.0...v2.9.1) (2024-09-11)
