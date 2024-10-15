@@ -679,4 +679,60 @@ export const addDeployTestSteps = ({
       expect(n.toString()).to.equal('4') // 2 + 2
     })
   })
+
+  describe('can handle custom upgrade initialization', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+    })    
+
+    it('needs both custom upgrade initialization contract and method', async () => {
+      let ret = cli('deploy', 'local', '--upgrade-init-contract Init2', { cwd, verbose: false })
+      expect(ret.success).to.be.false
+      expect(ret.output).to.contain('No upgrade initialization method specified.')
+
+      ret = cli('deploy', 'local', '--upgrade-init-method init', { cwd, verbose: false })
+      expect(ret.success).to.be.false
+      expect(ret.output).to.contain('No upgrade initialization contract specified.')
+    })
+
+    describe('on a fresh deployment', () => {
+      beforeEach(async () => {
+        // add a boolean to the Data struct
+        writeFile(join(cwd, `${contractSrcBasePath}/shared/Structs.sol`), `
+          pragma solidity >=0.8.21;
+          struct Data {
+            uint i1;
+            uint i2;
+            address a1;
+            address a2;
+            bool init2Executed;
+          }
+        `)
+
+        writeFile(join(cwd, `${contractSrcBasePath}/shared/Init2.sol`), `
+          pragma solidity >=0.8.21;
+          import "../libs/LibAppStorage.sol";
+          contract Init2 {
+            function init() external {
+              AppStorage storage s = LibAppStorage.diamondStorage();
+              if (s.data.init2Executed) {
+                revert("Init2 already executed");
+              }
+              s.data.init2Executed = true;
+            }
+          }
+        `)
+              
+        expect(cli('build', { cwd, verbose: false }).success).to.be.true
+        expect(cli('deploy', 'local', '-n', { cwd, verbose: false }).success).to.be.true      
+      })
+
+      it('and can execute a custom upgrade initialization method', async () => {
+        expect(cli('deploy', 'local', '--upgrade-init-contract Init2', '--upgrade-init-method init', { cwd, verbose: false }).success).to.be.true
+        const ret = cli('deploy', 'local', '--upgrade-init-contract Init2', '--upgrade-init-method init', { cwd, verbose: false })
+        expect(ret.success).to.be.false
+        expect(ret.output).to.contain('Init2 already executed')
+      })
+    })
+  })
 }

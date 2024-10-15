@@ -56,6 +56,20 @@ export const command = () =>
         }
       }
 
+      let hasCustomUpgradeInit: boolean = false
+
+      if (args.upgradeInitContract || args.upgradeInitMethod) {
+        if (!args.upgradeInitContract) {
+          error(`No upgrade initialization contract specified.`)
+        }
+
+        if (!args.upgradeInitMethod) {
+          error(`No upgrade initialization method specified.`)
+        }
+
+        hasCustomUpgradeInit = true
+      }
+
       let proxyInterface: OnChainContract
 
       let isNewDeployment = false
@@ -143,7 +157,7 @@ export const command = () =>
         info(`   ${changes.facetsToDeploy.length} facets need to be deployed.`)
         info(`   ${changes.namedCuts.length} facet cuts need to be applied (Add = ${numAdds}, Replace = ${numReplacements}, Remove = ${numRemovals}).`)
 
-        if (changes.namedCuts.length === 0) {
+        if (changes.namedCuts.length === 0 && !hasCustomUpgradeInit) {
           info('No changes need to be applied.')
         } else {
           const facetContracts: Record<string, OnChainContract> = {}
@@ -184,15 +198,7 @@ export const command = () =>
               initContractAddress = address
               initData = data
             }
-          } else if (args.upgradeInitContract || args.upgradeInitMethod) {
-            if (!args.upgradeInitContract) {
-              error(`No upgrade initialization contract specified.`)
-            }
-
-            if (!args.upgradeInitMethod) {
-              error(`No upgrade initialization method specified.`)
-            }
-
+          } else if (hasCustomUpgradeInit) {
             if (args.dry) {
               warn(`Dry run requested. Skipping custom upgrade initialization...`)
             } else {
@@ -202,7 +208,7 @@ export const command = () =>
                 args.upgradeInitContract,
                 args.upgradeInitMethod,
                 target.config.initArgs,
-                "upgrade initialization"
+                "custom upgrade initialization"
               )
               initContractAddress = address
               initData = data              
