@@ -12,6 +12,8 @@ export const command = () =>
     .option('-d, --dry', 'do a dry run without actually deploying anything')
     .option('-n, --new', 'do a fresh deployment with a new contract address, overwriting any existing one')
     .option('-r, --reset', 'remove all non-core facet selectors from an existing deployment and start afresh')
+    .option('--upgrade-init-contract <contract>', 'deploy a custom initialization contract to run during an upgrade')
+    .option('--upgrade-init-method <method>', 'method to call on the custom initialization contract during the upgrade')
     .option('--pause-cut-to-file <file>', 'pause before the diamondCut() method is called and the write the cut info to a file')
     .option('--resume-cut-from-file <file>', 'resume a diamondCut() method call using the cut info in the given file')
     .action(async (targetArg, args) => {
@@ -171,25 +173,39 @@ export const command = () =>
             if (args.dry) {
               warn(`Dry run requested. Skipping initialization...`)
             } else {
-              info(`Deploying initialization contract: ${initContract} ...`)
-              const init = await deployContract(ctx, initContract, signer)
-              initContractAddress = init.address
-              info(`   Initialization contract deployed at: ${initContractAddress}`)
+              const { address, data } = await deployAndEncodeInitData(
+                ctx,
+                signer,
+                initContract,
+                initFunction,
+                target.config.initArgs,
+                "initialization"
+              )
+              initContractAddress = address
+              initData = data
+            }
+          } else if (args.upgradeInitContract || args.upgradeInitMethod) {
+            if (!args.upgradeInitContract) {
+              error(`No upgrade initialization contract specified.`)
+            }
 
-              const initSelector = init.contract.interface.getFunction(initFunction)
-              if (!initSelector) {
-                error(`Initialization contract ${initContract} does not have an ${initFunction}() function.`)
-              }
+            if (!args.upgradeInitMethod) {
+              error(`No upgrade initialization method specified.`)
+            }
 
-              // encode init args with function signature to get the init data
-              info(`Encoding initialization call data...`)
-              try {
-                trace(`   Encoding initialization call data: [${target.config.initArgs.join(", ")}]`)
-                initData = init.contract.interface.encodeFunctionData(initSelector!, target.config.initArgs)            
-                trace(`   Encoded initialization call data: ${initData}`)
-              } catch (err: any) {
-                error(`Error encoding initialization call data: ${err.message}\n\nCheck your initArgs in the target config.`)
-              }
+            if (args.dry) {
+              warn(`Dry run requested. Skipping custom upgrade initialization...`)
+            } else {
+              const { address, data } = await deployAndEncodeInitData(
+                ctx,
+                signer,
+                args.upgradeInitContract,
+                args.upgradeInitMethod,
+                target.config.initArgs,
+                "upgrade initialization"
+              )
+              initContractAddress = address
+              initData = data              
             }
           }
         
@@ -244,4 +260,35 @@ export const command = () =>
     const diamond = await deployContract3(ctx, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
     info(`   DiamondProxy deployed at: ${diamond.address}`)
     return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
+  }
+
+  const deployAndEncodeInitData = async (
+    ctx: Context,
+    signer: Signer,
+    contractName: string,
+    methodName: string,
+    initArgs: any[],
+    logPrefix: string
+  ): Promise<{ address: string; data: string }> => {
+    info(`Deploying ${logPrefix} contract: ${contractName} ...`)
+    const contract = await deployContract(ctx, contractName, signer)
+    const address = contract.address
+    info(`   ${logPrefix} contract deployed at: ${address}`)
+
+    const methodSelector = contract.contract.interface.getFunction(methodName)
+    if (!methodSelector) {
+      error(`${logPrefix} contract ${contractName} does not have a ${methodName}() function.`)
+    }
+
+    info(`Encoding ${logPrefix} call data...`)
+    let data: string
+    try {
+      trace(`   Encoding ${logPrefix} call data: [${initArgs.join(", ")}]`)
+      data = contract.contract.interface.encodeFunctionData(methodSelector!, initArgs)
+      trace(`   Encoded ${logPrefix} call data: ${data}`)
+    } catch (err: any) {
+      error(`Error encoding ${logPrefix} call data: ${err.message}\n\nCheck your initArgs.`)
+    }
+
+    return { address, data: data! }
   }
