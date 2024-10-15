@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.12.0](https://github.com/gemstation/gemforge/compare/v2.10.0...v2.12.0) (2024-10-15)
+
+
+### Features
+
+* custom upgrade initializations ([#47](https://github.com/gemstation/gemforge/issues/47)) ([2598e40](https://github.com/gemstation/gemforge/commit/2598e40671615781e7d4b78fb88c27f64572bb25)), closes [#34](https://github.com/gemstation/gemforge/issues/34)
+
 ## [2.11.0](https://github.com/gemstation/gemforge/compare/v2.10.0...v2.11.0) (2024-10-15)
 
 
