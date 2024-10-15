@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.12.1](https://github.com/gemstation/gemforge/compare/v2.12.0...v2.12.1) (2024-10-15)
+
+
+### Bug Fixes
+
+* bug in custom upgrade initialization sig generation ([220d82a](https://github.com/gemstation/gemforge/commit/220d82a6be9f2782341fa20c3a9cd4402ee2e970))
+
 ## [2.12.0](https://github.com/gemstation/gemforge/compare/v2.10.0...v2.12.0) (2024-10-15)
 
 
