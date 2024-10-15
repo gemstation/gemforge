@@ -207,7 +207,7 @@ export const command = () =>
                 signer,
                 args.upgradeInitContract,
                 args.upgradeInitMethod,
-                target.config.initArgs,
+                [],
                 "custom upgrade initialization"
               )
               initContractAddress = address
