@@ -12,13 +12,15 @@ const { version } = loadJson(new URL('../../../package.json', import.meta.url)) 
 
 export const gemforgeVersion = version
 
+type StringOrFunction = string | (() => string)
+
 export interface MnemonicWalletConfig {
-  words: string | Function,
+  words: StringOrFunction,
   index: number,
 }
 
 export interface PrivateKeyWalletConfig {
-  key: string | Function
+  key: StringOrFunction,
 }
 
 export type ValidWalletType = 'mnemonic' | 'private-key'
@@ -36,7 +38,16 @@ export interface WalletPrivateKeyType {
 export type WalletConfig = WalletMnemonicType | WalletPrivateKeyType
 
 export interface NetworkConfig {
-  rpcUrl: string | Function,
+  rpcUrl: StringOrFunction,
+  contractVerification?: {
+    foundry?: {
+      apiUrl: StringOrFunction,
+      apiKey: StringOrFunction,
+    },
+    hardhat?: {
+      networkId: string,
+    }
+  },
 }
 
 export interface TargetConfig {
@@ -191,6 +202,14 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
   }
   networkNames.forEach(name => {
     ensureIsType(config, `networks.${name}.rpcUrl`, ['string', 'function'])
+    if (config.networks[name].contractVerification) {
+      if (config.artifacts.format === 'foundry') {
+        ensureIsType(config, `networks.${name}.contractVerification.foundry.apiKey`, ['string', 'function'], { suffix: 'Foundry format requires an explorer API key' })
+        ensureIsType(config, `networks.${name}.contractVerification.foundry.apiUrl`, ['string', 'function'], { suffix: 'Foundry format requires an explorer API URL' })
+      } else {
+        ensureIsType(config, `networks.${name}.contractVerification.hardhat.networkId`, ['string'], { suffix: 'Hardhat format requires a network ID' })
+      }
+    }
   })
 
   // targets
@@ -215,7 +234,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
           try {
             ethers.keccak256(v)
             return true
-          } catch (e) {
+          } catch (_e) {
             return false
           }
         }

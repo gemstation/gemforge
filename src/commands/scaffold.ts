@@ -1,7 +1,7 @@
 import semver from 'semver'
-import { error, info } from '../shared/log.js'
 import { getContext } from '../shared/context.js'
-import { $, ensureFolderExistsAndIsEmpty, fileExists, writeTemplate } from '../shared/fs.js'
+import { $, ensureFolderExistsAndIsEmpty } from '../shared/fs.js'
+import { error, info } from '../shared/log.js'
 import { createCommand, logSuccess } from './common.js'
 
 const HARDHAT_GIT_REPO = 'https://github.com/gemstation/contracts-hardhat.git'
@@ -24,7 +24,7 @@ export const command = () =>
       info('Checking for Python...')
       try {
         await $({ quiet: true })`python --version`
-      } catch (err) {
+      } catch (_err) {
         try {
           await $({ quiet: true })`python3 --version`
         } catch (err2) {
