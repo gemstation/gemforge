@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.13.0](https://github.com/gemstation/gemforge/compare/v2.12.1...v2.13.0) (2024-10-20)
+
+
+### Features
+
+* contract source code verification now integrated into gemforge deploy process ([#48](https://github.com/gemstation/gemforge/issues/48)) ([6d3099f](https://github.com/gemstation/gemforge/commit/6d3099ff545dc7986877cfe2220056642fdce8f7))
+
 ### [2.12.1](https://github.com/gemstation/gemforge/compare/v2.12.0...v2.12.1) (2024-10-15)
 
 
