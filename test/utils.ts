@@ -1,14 +1,14 @@
-import tmp from 'tmp'
+import { spawn, spawnSync } from "node:child_process"
 import fs from 'node:fs'
+import { basename, dirname, join, relative, resolve } from "node:path"
+import { fileURLToPath } from 'node:url'
+import chai, { expect } from "chai"
+import chaiAsPromised from 'chai-as-promised'
+import { Contract, Fragment, TransactionResponse, ethers } from "ethers"
 import { glob } from "glob"
 import get from "lodash.get"
-import chai, { expect } from "chai"
-import { fileURLToPath } from 'node:url'
-import chaiAsPromised from 'chai-as-promised'
-import { spawn, spawnSync } from "node:child_process"
+import tmp from 'tmp'
 import type { GemforgeConfig } from '../src/shared/config/index.js'
-import { dirname, resolve, join, basename, relative } from "node:path"
-import { Contract, Fragment, TransactionResponse, ethers } from "ethers"
 import { MnemonicWalletConfig, PrivateKeyWalletConfig } from "../src/shared/config/v1.js"
 
 chai.use(chaiAsPromised)
@@ -25,8 +25,8 @@ interface ExecOptions {
   verbose?: boolean
 }
 
-export const exec = (cmd: string, args: any[], opts: ExecOptions = {}) => {
-  return spawnSync(cmd, args, { stdio: opts.verbose ? 'inherit' : "pipe", shell: true, cwd: opts.cwd || process.cwd() })
+export const exec = (cmd: string, args?: any[], opts?: ExecOptions) => {
+  return spawnSync(cmd, args || [], { stdio: opts?.verbose ? 'inherit' : "pipe", shell: true, cwd: opts?.cwd || process.cwd() })
 }
 
 export const cli = (...gemforgeArgs: any[]) => {
@@ -107,6 +107,12 @@ export const updateConfigFile = async (cfgFilePath: string, cb: (src: GemforgeCo
   writeFile(cfgFilePath, `module.exports = ${JSON.stringify(final, null, 2)}`)
 }
 
+export const updateFile = async (filePath: string, cb: (src: string) => string) => {
+  const src = loadFile(filePath)
+  const final = cb(src)
+  writeFile(filePath, final)
+}
+
 export const assertFileMatchesTemplate = (jsFilePath: string, templateName: string, replacements: Record<string, string>) => {
   assertFileMatchesCustomTemplate(jsFilePath, resolve(__dirname, `../templates/${templateName}`), replacements)
 }
@@ -166,13 +172,16 @@ export const loadWallet = async (cfgFilePath: string, network: string, wallet: s
   return loadWalletFromCfg(obj, network, wallet)
 }
 
-export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): Promise<LoadedContract> => {
+export const loadDiamondContract = async (cwd: string, abiOverride?: string[], addressOverride?: string): Promise<LoadedContract> => {
   const cfgFilePath = join(cwd, 'gemforge.config.cjs')
   const config = (await import(cfgFilePath)).default as GemforgeConfig
 
-  const filePath = join(cwd, 'gemforge.deployments.json')
-  const json = loadJsonFile(filePath)
-  const address = get(json, `local.contracts`, []).find((a: any) => a.name === 'DiamondProxy')!.onChain.address
+  let address = addressOverride
+  if (!address) {
+    const filePath = join(cwd, 'gemforge.deployments.json')
+    const json = loadJsonFile(filePath)
+    address = get(json, `local.contracts`, []).find((a: any) => a.name === 'DiamondProxy')!.onChain.address
+  }
 
   let abi: Fragment[]
   let bytecode: string
@@ -199,7 +208,7 @@ export const loadDiamondContract = async (cwd: string, abiOverride?: string[]): 
   const factory = new ethers.ContractFactory(abiOverride || abi, bytecode, signer)
 
   return {
-    contract: factory.attach(address) as Contract,
+    contract: factory.attach(address!) as Contract,
     walletAddress: await signer.getAddress(),
   }
 }

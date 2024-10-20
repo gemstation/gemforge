@@ -10,7 +10,8 @@
   "javascript": {
     "formatter": {
       "semicolons": "asNeeded"
-    }
+    },
+    "globals": ["describe", "it", "before", "after", "beforeEach", "afterEach"]
   },
   "linter": {
     "enabled": true,

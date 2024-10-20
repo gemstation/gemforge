@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { disableLogging, enableVerboseLogging, error, info, trace } from './log.js'
 import { GemforgeConfig, sanitizeConfig } from './config/index.js'
+import { disableLogging, enableVerboseLogging, error, info } from './log.js'
 
 export interface Context {
   config: GemforgeConfig

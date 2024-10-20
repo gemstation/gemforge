@@ -1,19 +1,19 @@
-import { glob } from "glob";
+import { create } from "node:domain";
 import path from "node:path";
-import get from "lodash.get";
 import { BigVal } from "bigval"
 import { Provider } from "ethers";
 import { Fragment } from "ethers";
-import { Mutex } from "./mutex.js";
-import { create } from "node:domain";
-import { Context } from "./context.js";
-import { error, info, trace } from "./log.js";
 import { TransactionReceipt } from "ethers";
-import { loadJson, saveJson } from "./fs.js";
 import { ErrorFragment, EventFragment } from "ethers";
-import { Contract, ethers, Signer, TransactionResponse } from "ethers";
-import { MnemonicWalletConfig, PrivateKeyWalletConfig, NetworkConfig, TargetConfig, WalletConfig } from "./config/index.js";
+import { Contract, Signer, TransactionResponse, ethers } from "ethers";
+import { glob } from "glob";
+import get from "lodash.get";
+import { MnemonicWalletConfig, NetworkConfig, PrivateKeyWalletConfig, TargetConfig, WalletConfig } from "./config/index.js";
+import { Context } from "./context.js";
 import { FACTORY_ABI, FACTORY_BYTECODE, FACTORY_DEPLOYED_ADDRESS, FACTORY_DEPLOYER_ADDRESS, FACTORY_GAS_LIMIT, FACTORY_GAS_PRICE, FACTORY_NAME, FACTORY_SIGNED_RAW_TX } from "./create3.js";
+import { $, loadJson, saveJson } from "./fs.js";
+import { error, info, trace } from "./log.js";
+import { Mutex } from "./mutex.js";
 
 interface Network {
   config: NetworkConfig,
@@ -362,7 +362,7 @@ export const getDeploymentRecorderData = () => {
   return deploymentRecorder.concat([])
 }
 
-export const deployContract = async (ctx: Context, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
+export const deployContract = async (ctx: Context, target: Target, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
   try {
     const artifact = loadContractArtifact(ctx, name)
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
@@ -372,6 +372,8 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
     })
     const contract = await tx.waitForDeployment() as Contract
     const address = await contract.getAddress()
+
+    await verifyContract(ctx, target, artifact, address, args)
 
     deploymentRecorder.push({
       name,
@@ -396,14 +398,10 @@ export const deployContract = async (ctx: Context, name: string, signer: Signer,
 
 /**
  * Deploy a contract using CREATE3.
- * @param ctx 
- * @param name 
- * @param signer 
- * @param args 
- * @returns 
  */
 export const deployContract3 = async (
   ctx: Context,
+  target: Target,
   name: string,
   signer: Signer,
   create3Salt: string = '',
@@ -472,6 +470,8 @@ export const deployContract3 = async (
 
     trace(`   ...done`)
 
+    await verifyContract(ctx, target, _nameArtifact, address, args)
+
     deploymentRecorder.push({
       name,
       fullyQualifiedName: _nameArtifact.fullyQualifiedName,
@@ -486,6 +486,55 @@ export const deployContract3 = async (
     return getContractAt(ctx, name, signer, address)
   } catch (err: any) {
     return error(`Failed to deploy ${name}: ${err.message}}`)
+  }
+}
+
+export const verifyContract = async (ctx: Context, target: Target, artifact: ContractArtifact, address: string, constructorArgs: any[]) => {
+  if (ctx.config.networks[target.config.network].contractVerification) {
+    const verification = ctx.config.networks[target.config.network].contractVerification!
+
+    const $$ = $({
+      cwd: ctx.folder,
+      quiet: true,
+    })
+
+    trace(`      Verifying contract ${artifact.name} deployed at ${address} ...`)
+
+    if (ctx.config.artifacts.format === 'foundry') {
+      let { apiUrl, apiKey } = verification.foundry!
+      apiUrl = typeof apiUrl === 'function' ? await apiUrl() : apiUrl
+      apiKey = typeof apiKey === 'function' ? await apiKey() : apiKey
+  
+      let argStr = '0x'
+
+      if (constructorArgs.length) {
+        argStr = (await $$`cast abi-encode constructor(address) ${constructorArgs.join(' ')}`).stdout
+      }
+  
+      trace(`      Verifying ${artifact.name} at ${address} with args ${argStr}`)
+  
+      await $$`forge verify-contract ${address} ${artifact.name} --constructor-args ${argStr} --verifier-url ${apiUrl} --etherscan-api-key ${apiKey} --watch`
+    } else {
+      const { networkId } = verification.hardhat!
+
+      let argStr = "";
+
+      if (constructorArgs.length) {
+        argStr = constructorArgs.join(", ")
+      }
+  
+      trace(`      Verifying ${artifact.name} at ${address} with args ${argStr}`)
+  
+      if (argStr) {
+        await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address} ${argStr}`
+      } else {
+        await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address}`
+      }      
+    }
+
+    trace(`      ...verified!`)
+  } else {
+    trace(`      Contract verification is disabled for network ${target.config.network}, so skipping verification.`)
   }
 }
 
@@ -574,13 +623,15 @@ const getAllContractArtifactPaths = (ctx: Context): ContractArtifactPath[] => {
     let fullyQualifiedName = ''
 
     switch (ctx.config.artifacts.format) {
-      case 'foundry':
+      case 'foundry': {
         fullyQualifiedName = `${name}.sol:${name}`
         break
-      case 'hardhat':
+      }
+      case 'hardhat': {
         const filePath = path.relative(ctx.artifactsPath, f)
         fullyQualifiedName = `${path.dirname(filePath)}:${name}`
         break
+      }
       default:
         error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
     }

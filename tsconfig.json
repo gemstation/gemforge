@@ -12,7 +12,7 @@
 		"declaration": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"incremental": true,
+		"incremental": true
 	},
 	"include": ["src/**/*"],
 	"exclude": ["build", "node_modules"]

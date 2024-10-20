@@ -169,7 +169,7 @@ export const command = () =>
               info('Deploying facets...')
               for (const name of changes.facetsToDeploy) {
                 info(`   Deploying ${name} ...`)
-                const contract = await deployContract(ctx, name, signer)
+                const contract = await deployContract(ctx, target, name, signer)
                 facetContracts[name] = contract
                 info(`   Deployed ${name} at: ${await contract.address}`)
               }
@@ -189,6 +189,7 @@ export const command = () =>
             } else {
               const { address, data } = await deployAndEncodeInitData(
                 ctx,
+                target,
                 signer,
                 initContract,
                 initFunction,
@@ -204,6 +205,7 @@ export const command = () =>
             } else {
               const { address, data } = await deployAndEncodeInitData(
                 ctx,
+                target,
                 signer,
                 args.upgradeInitContract,
                 args.upgradeInitMethod,
@@ -261,15 +263,22 @@ export const command = () =>
   const deployNewDiamond = async (ctx: Context, signer: Signer, target: Target) => {
     info(`Deploying diamond...`)
     const { create3Salt } = target.config
-    const salt32bytes = create3Salt || ethers.keccak256(ethers.hexlify(ethers.randomBytes(32)))
-    info(`   CREATE3 salt: ${salt32bytes}`)
-    const diamond = await deployContract3(ctx, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
-    info(`   DiamondProxy deployed at: ${diamond.address}`)
+    let salt32bytes = create3Salt
+    if (!salt32bytes) {
+      salt32bytes = ethers.keccak256(ethers.hexlify(ethers.randomBytes(32)))
+      info(`   CREATE3 salt (randomized): ${salt32bytes}`)
+    } else {
+      info(`   CREATE3 salt (specified): ${salt32bytes}`)
+    }
+    const diamond = await deployContract3(ctx, target, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
+    info(`   ...deployed at: ${diamond.address}`)
     return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
   }
 
+  
   const deployAndEncodeInitData = async (
     ctx: Context,
+    target: Target,
     signer: Signer,
     contractName: string,
     methodName: string,
@@ -277,9 +286,9 @@ export const command = () =>
     logPrefix: string
   ): Promise<{ address: string; data: string }> => {
     info(`Deploying ${logPrefix} contract: ${contractName} ...`)
-    const contract = await deployContract(ctx, contractName, signer)
+    const contract = await deployContract(ctx, target, contractName, signer)
     const address = contract.address
-    info(`   ${logPrefix} contract deployed at: ${address}`)
+    info(`   ...deployed at: ${address}`)
 
     const methodSelector = contract.contract.interface.getFunction(methodName)
     if (!methodSelector) {
