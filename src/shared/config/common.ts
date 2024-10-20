@@ -3,7 +3,7 @@ import get from 'lodash.get'
 type ErrorMsgOptions = { suffix: string }
 
 export const throwError = (msg: string, key: string, val?: any, errorMsgOptions: ErrorMsgOptions = { suffix: '' }) => {
-  throw new Error(`${msg}${errorMsgOptions.suffix ? `: ${errorMsgOptions.suffix}` : ''}${typeof val !== 'undefined' ? ` for [${key}]: ${val}` : ''}`)
+  throw new Error(`${msg}${errorMsgOptions.suffix ? `: ${errorMsgOptions.suffix}` : ''} for [${key}]: ${val}`)
 }
 
 export const ensure = (config: object, key: string, isValid: (v: any) => boolean, msg: string = 'Invalid value', errorMsgOptions?: ErrorMsgOptions) => {
