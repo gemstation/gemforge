@@ -140,3 +140,7 @@ Issues and PRs are welcome. Please read the [contributing guidelines](CONTRIBUTI
 ## License
 
 MIT - see [LICENSE.md](LICENSE.md)
+
+## Sponsors
+
+[![Nayms](assets/nayms.svg)](https://nayms.io)
