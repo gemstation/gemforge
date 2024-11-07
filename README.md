@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="256" height="256" src="https://raw.githubusercontent.com/gemstation/gemforge/master/assets/logo.png">
+  <img width="256" height="256" src="https://raw.githubusercontent.com/gemstation/gemforge/master/assets/logo.png" />
 </p>
 
 # Gemforge
@@ -8,6 +8,14 @@
 [![NPM module](https://badge.fury.io/js/gemforge.svg)](https://badge.fury.io/js/gemforge)
 
 > Command-line tool for building, deploying and upgrading Diamond Standard contracts on EVM chains.
+
+**A big thank you to our sponsors:**
+
+<div style="display: flex; flex-direction: column; justify-items: center; text-align: center">
+	<a href="https://nayms.com" target="_blank" style="display:block; margin: auto">
+	  <img width="512" height="100" src="https://raw.githubusercontent.com/gemstation/gemforge/master/assets/nayms.svg"/>
+	</a>
+</div>
 
 ## Why
 
@@ -141,6 +149,3 @@ Issues and PRs are welcome. Please read the [contributing guidelines](CONTRIBUTI
 
 MIT - see [LICENSE.md](LICENSE.md)
 
-## Sponsors
-
-[![Nayms](assets/nayms.svg)](https://nayms.io)
