@@ -29,7 +29,7 @@ export const command = () =>
 
       info(`Load existing deployment ...`)
       const ret = await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target })
-      if (!ret) {
+      if (!ret?.proxyInterface) {
         error(`No existing deployment found at target.`)
       }
 

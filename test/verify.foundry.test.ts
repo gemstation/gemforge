@@ -1,13 +1,13 @@
 import 'mocha'
-import { addQueryTestSteps } from './common-query-steps.js'
+import { addVerifyTestSteps } from './common-verify-steps.js'
 import { createTmpFolderFromFolder, getTestDataFolderPath } from './utils.js'
 
 const setupFolder = () => {
   return createTmpFolderFromFolder(getTestDataFolderPath('foundry-project'))
 }
 
-describe.only("Command: query() - Foundry", () => {
-  addQueryTestSteps({
+describe("Command: verify() - Foundry", () => {
+  addVerifyTestSteps({
     framework: 'foundry',
     setupFolderCallback: setupFolder
   })

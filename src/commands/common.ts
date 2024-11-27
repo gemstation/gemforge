@@ -3,7 +3,7 @@ import { Signer } from 'ethers'
 import { ContractArtifact, Target, getContractAt, getContractValue, loadContractArtifact, readDeploymentInfo } from '../shared/chain.js'
 import { Context } from '../shared/context.js'
 import { FacetDefinition, loadJson } from '../shared/fs.js'
-import { error, info, trace, warn } from '../shared/log.js'
+import { error, info, warn } from '../shared/log.js'
 
 export interface CreateCommandOptions {
   skipConfigOption?: boolean

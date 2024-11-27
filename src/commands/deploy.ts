@@ -87,15 +87,15 @@ export const command = () =>
         isNewDeployment = true
       } else {
         info(`Load existing deployment ...`)
-        const { proxyInterface: p } = (await loadExistingDeploymentAndLog({
+        const ret = await loadExistingDeploymentAndLog({
           ctx,
           targetArg,
           target,
           signer,
-        }))!
+        })
 
-        if (p) {
-          proxyInterface = p
+        if (ret?.proxyInterface) {
+          proxyInterface = ret.proxyInterface
         } else {
           info(`   No existing deployment found.`)
           if (args.dry) {

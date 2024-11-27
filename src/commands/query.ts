@@ -32,8 +32,8 @@ export const command = () =>
       const signer = wallet.connect(target.network.provider)
 
       info(`Load existing deployment ...`)
-      const { proxyInterface } = (await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target }))!
-      if (!proxyInterface) {
+      const ret = await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target })
+      if (!ret?.proxyInterface) {
         error(`No existing deployment found at target.`)
       }
 
@@ -43,7 +43,7 @@ export const command = () =>
       const diff = await resolveChainData({
         userFacets: userFacetArtifacts,
         coreFacets,
-        diamondProxy: proxyInterface,
+        diamondProxy: ret!.proxyInterface,
         signer
       })
 
