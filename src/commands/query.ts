@@ -32,7 +32,7 @@ export const command = () =>
       const signer = wallet.connect(target.network.provider)
 
       info(`Load existing deployment ...`)
-      const proxyInterface = await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target })
+      const { proxyInterface } = (await loadExistingDeploymentAndLog({ ctx, signer, targetArg, target }))!
       if (!proxyInterface) {
         error(`No existing deployment found at target.`)
       }
@@ -59,6 +59,8 @@ export const command = () =>
             outputStr += `  fn: ${fn.name || '<unknown>'} (${fn.selector})\n`
           })
         })
+
+        outputStr += `\n\nUnrecognized facets: ${diff.unrecognizedFacets}\nUnrecognized functions: ${diff.unrecognizedFunctions}\n\n`
       } else {
         outputStr = JSON.stringify(diff, null, 2)
       }

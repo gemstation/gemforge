@@ -65,10 +65,10 @@ export const loadExistingDeploymentAndLog = async ({ ctx, signer, targetArg, tar
     }
 
     if (!supportsInterface && !facets.length) {
-      error(`Existing deployment is not a diamond.\n\nYou may want to run with --new to force a fresh deployment.`)
+      error(`Existing deployment is not a diamond.\n\nYou may want to re-deploy with --new to force a fresh deployment.`)
     }
 
-    return proxyInterface
+    return { proxyInterface, deployedContracts: existingTargetRecord!.contracts }
   }
 } 
 

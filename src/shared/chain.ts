@@ -373,8 +373,6 @@ export const deployContract = async (ctx: Context, target: Target, name: string,
     const contract = await tx.waitForDeployment() as Contract
     const address = await contract.getAddress()
 
-    await verifyContract(ctx, target, artifact, address, args)
-
     deploymentRecorder.push({
       name,
       fullyQualifiedName: artifact.fullyQualifiedName,
@@ -470,8 +468,6 @@ export const deployContract3 = async (
 
     trace(`   ...done`)
 
-    await verifyContract(ctx, target, _nameArtifact, address, args)
-
     deploymentRecorder.push({
       name,
       fullyQualifiedName: _nameArtifact.fullyQualifiedName,
@@ -500,6 +496,8 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
 
     trace(`      Verifying contract ${artifact.name} deployed at ${address} ...`)
 
+    let output = ''
+
     if (ctx.config.artifacts.format === 'foundry') {
       let { apiUrl, apiKey } = verification.foundry!
       apiUrl = typeof apiUrl === 'function' ? await apiUrl() : apiUrl
@@ -513,7 +511,7 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
   
       trace(`      Verifying ${artifact.name} at ${address} with args ${argStr}`)
   
-      await $$`forge verify-contract ${address} ${artifact.name} --constructor-args ${argStr} --verifier-url ${apiUrl} --etherscan-api-key ${apiKey} --watch`
+      output = (await $$`forge verify-contract ${address} ${artifact.name} --constructor-args ${argStr} --verifier-url ${apiUrl} --etherscan-api-key ${apiKey} --watch`).stdout
     } else {
       const { networkId } = verification.hardhat!
 
@@ -526,11 +524,13 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
       trace(`      Verifying ${artifact.name} at ${address} with args ${argStr}`)
   
       if (argStr) {
-        await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address} ${argStr}`
+        output = (await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address} ${argStr}`).stdout
       } else {
-        await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address}`
+        output = (await $$`npx hardhat verify --network ${networkId} --contract ${artifact.fullyQualifiedName} ${address}`).stdout
       }      
     }
+
+    console.log(output)
 
     trace(`      ...verified!`)
   } else {
