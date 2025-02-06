@@ -50,11 +50,16 @@ export interface NetworkConfig {
   },
 }
 
+export interface TargetUpgradeConfig {
+  manualCut: boolean,
+}
+
 export interface TargetConfig {
   network: string,
   wallet: string,
   initArgs: any[],
   create3Salt?: string,
+  upgrades?: TargetUpgradeConfig,
 }
 
 export interface GemforgeConfig {
@@ -242,6 +247,10 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
       },
       'Invalid CREATE3 salt'
     )
+    ensureIsType(config, `targets.${name}.upgrades`, ['undefined', 'object'])
+    if (config.targets[name].upgrades) {
+      ensureIsType(config, `targets.${name}.upgrades.manualCut`, ['boolean'])
+    }
   })
 }
 

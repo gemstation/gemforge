@@ -735,5 +735,139 @@ export const addDeployTestSteps = ({
       })
     })
   })
+
+  describe('can handle upgrade only output tx params without sending tx', () => {
+    beforeEach(async () => {
+      cwd = setupFolderCallback()
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
+
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract ExampleFacet {
+          // keep method same
+          function getInt1() external view returns (uint) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            return s.data.i1;
+          }
+
+          // change method behaviour
+          function setInt1(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i + 1;
+          }
+
+          // add new method
+          function setInt1New(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i + 2;
+          }
+
+          // get whehter init2 was executed
+          function getInit2Executed() external view returns (bool) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            return s.data.init2Executed;
+          }
+        }
+      `)
+
+      writeFile(join(cwd, `${contractSrcBasePath}/shared/Structs.sol`), `
+        pragma solidity >=0.8.21;
+        struct Data {
+          uint i1;
+          uint i2;
+          address a1;
+          address a2;
+          bool init2Executed;
+        }
+      `)
+
+      writeFile(join(cwd, `${contractSrcBasePath}/shared/Init2.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract Init2 {
+          function init() external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            if (s.data.init2Executed) {
+              revert("Init2 already executed");
+            }
+            s.data.init2Executed = true;
+          }
+        }
+      `)
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.targets.local.upgrades = {
+          manualCut: true
+        }
+        return cfg
+      })
+    })
+
+    it('and will output the tx params', async () => {      
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const json = loadJsonFile(filePath)
+      const proxyAddress = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
+      const exampleFacet = get(json, 'local.contracts', []).find((a: any) => a.name === 'ExampleFacet') as any
+      const facetAddressInTxData = exampleFacet.onChain.address.substring(2).toLowerCase() // skip the 0x part and lowercase
+
+      expect(ret.output).to.contain('Outputting upgrade tx params so that you can do the upgrade manually...')
+      expect(ret.output).to.contain(`Diamond: ${proxyAddress.onChain.address}`)
+
+      expect(ret.output).to.contain(`Tx data:`)
+      const txData = ret.output.match(/Tx data: (.+)/)![1]
+      expect(txData).to.contain(facetAddressInTxData)
+    })
+
+    it('and did not execute the upgrade', async () => {
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
+
+      const { contract } = await loadDiamondContract(cwd)
+      expect(contract.setInt1New()).to.be.rejectedWith('execution reverted')
+    })
+
+    it('and can execute a custom upgrade initialization method', async () => {
+      const ret = cli('deploy', 'local', '--upgrade-init-contract Init2', '--upgrade-init-method init', { cwd, verbose: false })
+
+      expect(ret.success).to.be.true
+      // console.log(ret.output)
+
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const json = loadJsonFile(filePath)
+      const proxyAddress = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
+      const exampleFacet = get(json, 'local.contracts', []).find((a: any) => a.name === 'ExampleFacet') as any
+      const facetAddressForTxData = exampleFacet.onChain.address.substring(2).toLowerCase() // skip the 0x part and lowercase
+      const init2 = get(json, 'local.contracts', []).find((a: any) => a.name === 'Init2') as any
+      const init2AddressForTxData = init2.onChain.address.substring(2).toLowerCase() // skip the 0x part and lowercase
+
+      expect(ret.output).to.contain(`Tx data:`)
+      const txData = ret.output.match(/Tx data: (.+)/)![1]
+
+      expect(txData).to.contain(facetAddressForTxData)
+      expect(txData).to.contain(init2AddressForTxData)
+
+      // execute the tx
+      const { signer } = await loadDiamondContract(cwd)
+      await sendTx(signer.sendTransaction({
+        to: proxyAddress.onChain.address,
+        data: txData
+      }))
+
+      const { contract } = await loadDiamondContract(cwd)
+      await contract.setInt1New(100)
+      const n = await contract.getInt1()
+      expect(n.toString()).to.equal('102')
+
+      const init2Executed = await contract.getInit2Executed()
+      expect(init2Executed).to.be.true
+    })
+
+  })
 }
 

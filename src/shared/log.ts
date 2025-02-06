@@ -11,6 +11,10 @@ export const trace = (message: string) => {
     console.log(chalk.gray(prefixLogMsg(message)))
   }
 }
+export const notice = (message: string) => {
+  if (disabled) return
+  console.log(chalk.cyanBright(prefixLogMsg(message)))
+}
 export const info = (message: string) => {
   if (disabled) return
   console.log(chalk.cyan(prefixLogMsg(message)))

@@ -3,7 +3,7 @@ import { OnChainContract, Target, clearDeploymentRecorder, deployContract, deplo
 import { Context, getContext } from '../shared/context.js'
 import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
 import { $, loadJson, saveJson } from '../shared/fs.js'
-import { error, info, trace, warn } from '../shared/log.js'
+import { error, info, notice, trace, warn } from '../shared/log.js'
 import { createCommand, loadExistingDeploymentAndLog, loadFacetArtifactsAndLog, logSuccess } from './common.js'
 
 export const command = () =>
@@ -229,7 +229,15 @@ export const command = () =>
             })
             skipPostDeployHook = true
           } else {
-            await callDiamondCut(proxyInterface!, cuts, initContractAddress, initData)
+            if (t.upgrades?.manualCut) {
+              notice('Outputting upgrade tx params so that you can do the upgrade manually...\n\n')
+              notice(`================================================================================\n`)
+              notice(`Diamond: ${proxyInterface!.address}\n`)
+              notice(`Tx data: ${proxyInterface!.contract.interface.encodeFunctionData('diamondCut', [cuts, initContractAddress, initData])}\n`)
+              notice(`================================================================================\n\n`)
+            } else {
+              await callDiamondCut(proxyInterface!, cuts, initContractAddress, initData)
+            }
           }
         }
       }
