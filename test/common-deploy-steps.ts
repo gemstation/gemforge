@@ -739,6 +739,14 @@ export const addDeployTestSteps = ({
   describe('can handle upgrade only output tx params without sending tx', () => {
     beforeEach(async () => {
       cwd = setupFolderCallback()
+      
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.targets.local.upgrades = {
+          manualCut: true
+        }
+        return cfg
+      })
+
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
       expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
 
@@ -798,13 +806,6 @@ export const addDeployTestSteps = ({
       `)
 
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-
-      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.targets.local.upgrades = {
-          manualCut: true
-        }
-        return cfg
-      })
     })
 
     it('and will output the tx params', async () => {      

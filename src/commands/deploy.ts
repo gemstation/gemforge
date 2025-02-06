@@ -229,12 +229,12 @@ export const command = () =>
             })
             skipPostDeployHook = true
           } else {
-            if (t.upgrades?.manualCut) {
-              notice('Outputting upgrade tx params so that you can do the upgrade manually...\n\n')
+            if (!isNewDeployment && t.upgrades?.manualCut) {
+              notice('Outputting upgrade tx params so that you can do the upgrade manually...\n')
               notice(`================================================================================\n`)
               notice(`Diamond: ${proxyInterface!.address}\n`)
               notice(`Tx data: ${proxyInterface!.contract.interface.encodeFunctionData('diamondCut', [cuts, initContractAddress, initData])}\n`)
-              notice(`================================================================================\n\n`)
+              notice(`================================================================================\n`)
             } else {
               await callDiamondCut(proxyInterface!, cuts, initContractAddress, initData)
             }
