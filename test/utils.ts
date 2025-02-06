@@ -4,7 +4,7 @@ import { basename, dirname, join, relative, resolve } from "node:path"
 import { fileURLToPath } from 'node:url'
 import chai, { expect } from "chai"
 import chaiAsPromised from 'chai-as-promised'
-import { Contract, Fragment, TransactionResponse, ethers } from "ethers"
+import { Contract, Fragment, Signer, TransactionResponse, ethers } from "ethers"
 import { glob } from "glob"
 import get from "lodash.get"
 import tmp from 'tmp'
@@ -127,6 +127,7 @@ export const assertFileMatchesCustomTemplate = (jsFilePath: string, templatePath
 
 export interface LoadedContract {
   contract: Contract,
+  signer: Signer,
   walletAddress: string,
 }
 
@@ -209,6 +210,7 @@ export const loadDiamondContract = async (cwd: string, abiOverride?: string[], a
 
   return {
     contract: factory.attach(address!) as Contract,
+    signer,
     walletAddress: await signer.getAddress(),
   }
 }
