@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.15.0](https://github.com/gemstation/gemforge/compare/v2.14.0...v2.15.0) (2025-02-06)
+
+
+### Features
+
+* manual diamondcut calls for upgrades ([#50](https://github.com/gemstation/gemforge/issues/50)) ([81f8b41](https://github.com/gemstation/gemforge/commit/81f8b416750dc11c1d78878818a786a63beac2e2))
+
 ## [2.14.0](https://github.com/gemstation/gemforge/compare/v2.13.1...v2.14.0) (2024-11-27)
 
 
