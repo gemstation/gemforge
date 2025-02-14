@@ -32,6 +32,16 @@ module.exports = {
   diamond: {
     publicMethods: false,
     coreFacets: ['OwnershipFacet', 'DiamondCutFacet', 'DiamondLoupeFacet'],
+    protectedMethods: [
+      '0x8da5cb5b', // OwnershipFacet.owner()
+      '0xf2fde38b', // OwnershipFacet.transferOwnership()
+      '0x1f931c1c', // DiamondCutFacet.diamondCut()
+      '0x7a0ed627', // DiamondLoupeFacet.facets()
+      '0xcdffacc6', // DiamondLoupeFacet.facetAddress()
+      '0x52ef6b2c', // DiamondLoupeFacet.facetAddresses()
+      '0xadfca15e', // DiamondLoupeFacet.facetFunctionSelectors()
+      '0x01ffc9a7', // DiamondLoupeFacet.supportsInterface()
+    ],
   },
   hooks: {
     preBuild: '',

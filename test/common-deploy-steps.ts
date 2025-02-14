@@ -109,10 +109,7 @@ export const addDeployTestSteps = ({
         import "../libs/LibAppStorage.sol";
         contract ExampleFacet {
           // existing method to be removed
-          // function getInt1() external view returns (uint) {
-            // AppStorage storage s = LibAppStorage.diamondStorage();
-            // return s.data.i1 + 1;
-          // }
+          // function getInt1() external view returns (uint) {}
 
           function setInt1(uint i) external {
             AppStorage storage s = LibAppStorage.diamondStorage();
@@ -130,8 +127,43 @@ export const addDeployTestSteps = ({
         'function getInt1() external view returns (uint)' // this one shouldn't!
       ])
       
-      expect(sendTx(contract.setInt1(2))).to.be.fulfilled
+      await sendTx(contract.setInt1(2))
       expect(contract.getInt1()).to.be.rejectedWith('execution reverted')
+    })
+
+    it('and can prevent removals of protected methods', async () => {
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract ExampleFacet {
+          // existing method to be removed
+          // function getInt1() external view returns (uint) {}
+
+          function setInt1(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i;
+          }
+        }
+      `)
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.diamond.protectedMethods = cfg.diamond.protectedMethods!.concat('0xe1bb9b63' /* getInt() */)
+        return cfg
+      })
+
+      // build and re-deploy
+      expect(cli('build', { cwd }).success).to.be.true
+      const ret = cli('deploy', 'local', '-v', { cwd })
+      expect(ret.success).to.be.true
+
+      const { contract } = await loadDiamondContract(cwd, [
+        'function setInt1(uint i) external', // this one should exist
+        'function getInt1() external view returns (uint)' // this one should still exist despite being removed from the facet source code
+      ])
+      
+      await sendTx(contract.setInt1(2))
+      const n = await contract.getInt1()
+      expect(n.toString()).to.equal('2')
     })
 
     it('and can handle movement of functions from one facet to another', async () => {
