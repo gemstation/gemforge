@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.16.0](https://github.com/gemstation/gemforge/compare/v2.15.0...v2.16.0) (2025-02-14)
+
+
+### Features
+
+* add protected methods list to prevent removal of core methods ([c626156](https://github.com/gemstation/gemforge/commit/c6261568300230d83a2169c73c68d88f2c08fcae))
+
 ## [2.15.0](https://github.com/gemstation/gemforge/compare/v2.14.0...v2.15.0) (2025-02-06)
 
 
