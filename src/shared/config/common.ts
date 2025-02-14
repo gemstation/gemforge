@@ -28,12 +28,19 @@ export const ensureIsType = (config: object, key: string, types: string[], error
   }
 }
 
-export const ensureArray = (config: object, key: string, minLen = 0, errorMsgOptions?: ErrorMsgOptions) => {
+export const ensureArray = (config: object, key: string, minLen = 0, itemType: string = 'string', errorMsgOptions?: ErrorMsgOptions) => {
   const val = get(config, key)
   if (!Array.isArray(val)) {
     throwError(`Invalid array`, key, val, errorMsgOptions)
   } else if (val.length < minLen) {
     throwError(`Invalid array length (must be ${minLen})`, key, val, errorMsgOptions)
+  } else {
+    val.forEach(item => {
+      const type = typeof item
+      if (type !== itemType && itemType !== 'any') {
+        throwError(`Invalid array item type (must be ${itemType})`, key, item, errorMsgOptions)
+      }
+    })
   }
 }
 

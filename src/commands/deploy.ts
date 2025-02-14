@@ -116,6 +116,7 @@ export const command = () =>
         const cleanCut = await resolveClean({
           coreFacets,
           diamondProxy: proxyInterface!,
+          protectedMethods: ctx.config.diamond.protectedMethods,
           signer
         })
         info(`   ${cleanCut.functionSelectors.length} selectors to remove.`)
@@ -149,7 +150,8 @@ export const command = () =>
           userFacets: userFacetArtifacts,
           coreFacets,
           diamondProxy: proxyInterface!,
-          signer
+          signer,
+          protectedMethods: ctx.config.diamond.protectedMethods,
         })
         const numAdds = changes.namedCuts.filter(c => c.action === FacetCutAction.Add).length
         const numReplacements = changes.namedCuts.filter(c => c.action === FacetCutAction.Replace).length

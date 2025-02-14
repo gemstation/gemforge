@@ -100,6 +100,7 @@ export interface GemforgeConfig {
       function: string,
     },
     coreFacets: string[],
+    protectedMethods?: string[],
   },
   hooks: {
     preBuild: string,
@@ -145,14 +146,14 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
 
   // paths
   ensureIsSet(config, 'paths.artifacts')
-  ensureArray(config, 'paths.src.facets', 1)
+  ensureArray(config, 'paths.src.facets', 1, 'string')
   ensureIsSet(config, 'paths.generated.solidity')
   ensureIsSet(config, 'paths.generated.support')
   ensure(config, 'paths.generated.deployments', (v: any) => typeof v === 'string' && v.endsWith('.json'), 'Invalid deployments JSON file')
   ensureIsSet(config, 'paths.lib.diamond')
 
   // generator
-  ensureArray(config, 'generator.proxyInterface.imports')
+  ensureArray(config, 'generator.proxyInterface.imports', 0, 'string')
   if (get(config, 'generator.proxy')) {
     ensureIsType(config, 'generator.proxy.template', ['string'])
   }
@@ -163,7 +164,10 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     ensureIsType(config, 'diamond.init.contract', ['string'])
     ensureIsType(config, 'diamond.init.function', ['string'])
   }
-  ensureArray(config, 'diamond.coreFacets')
+  ensureArray(config, 'diamond.coreFacets', 0, 'string')
+  if (get(config, 'diamond.protectedMethods')) {
+    ensureArray(config, 'diamond.protectedMethods', 0, 'string')
+  }
 
   // artifacts
   ensure(config, 'artifacts.format', (v: any) => ['foundry', 'hardhat'].indexOf(v) >= 0, 'Invalid artifacts format')
@@ -227,7 +231,7 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     ensureIsType(config, `targets.${name}.network`, ['string'])
     ensure(config, `targets.${name}.network`, (v: any) => networkNames.indexOf(v) >= 0, 'Invalid network')
     ensure(config, `targets.${name}.wallet`, (v: any) => walletNames.indexOf(v) >= 0, 'Invalid wallet')
-    ensureArray(config, `targets.${name}.initArgs`)
+    ensureArray(config, `targets.${name}.initArgs`, 0, 'any')
     ensureIsType(config, `targets.${name}.create3Salt`, ['undefined', 'string'])
     ensure(
       config,

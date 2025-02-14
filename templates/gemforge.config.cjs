@@ -65,6 +65,19 @@ module.exports = {
     // This default list is based on the diamond-2-hardhat library.
     // NOTE: WE RECOMMEND NOT CHANGING ANY OF THESE EXISTING NAMES UNLESS YOU KNOW WHAT YOU ARE DOING.
     coreFacets: ['OwnershipFacet', 'DiamondCutFacet', 'DiamondLoupeFacet'],
+    // Function selectors that should NEVER be removed from the diamond.
+    // The default list is all the external methods of the default list of core facets defined above.
+    // NOTE: This is an array of function selectors, not method names.
+    protectedMethods: [
+      '0x8da5cb5b', // OwnershipFacet.owner()
+      '0xf2fde38b', // OwnershipFacet.transferOwnership()
+      '0x1f931c1c', // DiamondCutFacet.diamondCut()
+      '0x7a0ed627', // DiamondLoupeFacet.facets()
+      '0xcdffacc6', // DiamondLoupeFacet.facetAddress()
+      '0x52ef6b2c', // DiamondLoupeFacet.facetAddresses()
+      '0xadfca15e', // DiamondLoupeFacet.facetFunctionSelectors()
+      '0x01ffc9a7', // DiamondLoupeFacet.supportsInterface()
+    ],
   },
   // lifecycle hooks
   hooks: {

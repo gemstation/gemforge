@@ -1,5 +1,5 @@
-import { Signer, FunctionFragment, Interface, ZeroAddress } from "ethers"
-import { ContractArtifact, OnChainContract, getContractAtUsingArtifact, BytecodeFetcher, getContractValue } from "./chain.js"
+import { FunctionFragment, Interface, Signer, ZeroAddress } from "ethers"
+import { BytecodeFetcher, ContractArtifact, OnChainContract, getContractValue } from "./chain.js"
 import { trace } from "./log.js"
 
 interface FunctionSelector {
@@ -59,8 +59,9 @@ export const resolveClean = async (params: {
   coreFacets: Record<string, ContractArtifact>,
   diamondProxy?: OnChainContract,
   signer: Signer,
+  protectedMethods?: string[],
 }): Promise<FacetCut> => {
-  const { coreFacets, diamondProxy, signer } = params
+  const { coreFacets, diamondProxy, signer, protectedMethods } = params
 
   const cut: FacetCut = {
     action: FacetCutAction.Remove,
@@ -79,8 +80,12 @@ export const resolveClean = async (params: {
     })
 
     if (!matchesCore) {
-      trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
-      cut.functionSelectors.push(f)
+      if (protectedMethods && protectedMethods.indexOf(f) >= 0) {
+        trace(`[Will not remove] method [${f}] pointing to facet ${liveFunctions[f]} (PROTECTED)`)
+      } else {
+        trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
+        cut.functionSelectors.push(f)
+      }
     }
   }
 
@@ -98,8 +103,9 @@ export const resolveUpgrade = async (params: {
   coreFacets: Record<string, ContractArtifact>,
   diamondProxy?: OnChainContract,
   signer: Signer,
+  protectedMethods?: string[],
 }): Promise<Upgrade> => {
-  const { userFacets, coreFacets, diamondProxy, signer } = params
+  const { userFacets, coreFacets, diamondProxy, signer, protectedMethods } = params
 
   // get what's on-chain
   const liveFunctions = diamondProxy ? await getLiveFunctions(diamondProxy) : {}
@@ -158,9 +164,13 @@ export const resolveUpgrade = async (params: {
         return artifact.deployedBytecode == liveBytecode
       })
       if (!matchesCore) {
-        trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
-        todo.remove[ZeroAddress] = todo.remove[liveFunctions[f]] || []
-        todo.remove[ZeroAddress].push(f)
+        if (protectedMethods && protectedMethods.indexOf(f) >= 0) {
+          trace(`[Will not remove] method [${f}] pointing to facet ${liveFunctions[f]} (PROTECTED)`)
+        } else {
+          trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
+          todo.remove[ZeroAddress] = todo.remove[liveFunctions[f]] || []
+          todo.remove[ZeroAddress].push(f)
+        }
       }
     }
   }
