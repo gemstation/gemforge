@@ -498,13 +498,13 @@ fs[${i}] = FacetSelectors({
   describe('calls a pre-build hook first', async () => {
     beforeEach(async () => {
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.hooks.preBuild = join(cwd, 'prebuild.sh')
+        cfg.hooks.preBuild = join(cwd, 'prebuild.cjs')
         return cfg
       })
     })
 
-    it.only('and fails if the hook fails', async () => {
-      writeFile(join(cwd, 'prebuild.sh'), `#!/usr/bin/env node
+    it('and fails if the hook fails', async () => {
+      writeFile(join(cwd, 'prebuild.cjs'), `#!/usr/bin/env node
         throw new Error('test');
       `, { executable: true })
 
@@ -516,7 +516,7 @@ fs[${i}] = FacetSelectors({
     })
 
     it('and passes if the hook passes', async () => {
-      writeFile(join(cwd, 'prebuild.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'prebuild.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, '.gemforge/facets.json'), 'test')
@@ -532,13 +532,13 @@ fs[${i}] = FacetSelectors({
   describe('calls a post-build hook last', async () => {
     beforeEach(async () => {
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.hooks.postBuild = join(cwd, 'postbuild.sh')
+        cfg.hooks.postBuild = join(cwd, 'postbuild.cjs')
         return cfg
       })
     })
 
     it('and fails if the hook fails', async () => {
-      writeFile(join(cwd, 'postbuild.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postbuild.cjs'), `#!/usr/bin/env node
         throw new Error('test');
       `, { executable: true })
 
@@ -549,7 +549,7 @@ fs[${i}] = FacetSelectors({
     })
 
     it('and passes if the hook passes', async () => {
-      writeFile(join(cwd, 'postbuild.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postbuild.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, '.gemforge/facets.json'), 'test')

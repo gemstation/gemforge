@@ -416,7 +416,7 @@ export const addDeployTestSteps = ({
       cwd = setupFolderCallback()
 
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.hooks.preDeploy = join(cwd, 'predeploy.sh')
+        cfg.hooks.preDeploy = join(cwd, 'predeploy.cjs')
         return cfg
       })
 
@@ -424,7 +424,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and fails if the hook fails', async () => {
-      writeFile(join(cwd, 'predeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'predeploy.cjs'), `#!/usr/bin/env node
         throw new Error('test');
       `, { executable: true })
 
@@ -435,7 +435,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and passes if the hook passes', async () => {
-      writeFile(join(cwd, 'predeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'predeploy.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, 'gemforge.deployments.json'), 'test')
@@ -448,7 +448,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and sets env vars for the hook', async () => {
-      writeFile(join(cwd, 'predeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'predeploy.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, 'test.data'), process.env.GEMFORGE_DEPLOY_TARGET + '/' + process.env.GEMFORGE_DEPLOY_CHAIN_ID)
@@ -466,7 +466,7 @@ export const addDeployTestSteps = ({
       cwd = setupFolderCallback()
 
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.hooks.postDeploy = join(cwd, 'postdeploy.sh')
+        cfg.hooks.postDeploy = join(cwd, 'postdeploy.cjs')
         return cfg
       })
 
@@ -474,7 +474,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and fails if the hook fails', async () => {
-      writeFile(join(cwd, 'postdeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postdeploy.cjs'), `#!/usr/bin/env node
         throw new Error('test');
       `, { executable: true })
 
@@ -485,7 +485,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and passes if the hook passes', async () => {
-      writeFile(join(cwd, 'postdeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postdeploy.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, 'gemforge.deployments.json'), 'test')
@@ -498,7 +498,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and sets env vars for the hook', async () => {
-      writeFile(join(cwd, 'postdeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postdeploy.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, 'test.data'), process.env.GEMFORGE_DEPLOY_TARGET + '/' + process.env.GEMFORGE_DEPLOY_CHAIN_ID)
@@ -519,11 +519,11 @@ export const addDeployTestSteps = ({
 
       // setup post-deploy hook
       await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
-        cfg.hooks.postDeploy = join(cwd, 'postdeploy.sh')
+        cfg.hooks.postDeploy = join(cwd, 'postdeploy.cjs')
         return cfg
       })
 
-      writeFile(join(cwd, 'postdeploy.sh'), `#!/usr/bin/env node
+      writeFile(join(cwd, 'postdeploy.cjs'), `#!/usr/bin/env node
         const fs = require('fs')
         const path = require('path')
         fs.writeFileSync(path.join(__dirname, 'test.txt'), 'test')
