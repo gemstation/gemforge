@@ -17,7 +17,7 @@ export const addBuildTestSteps = ({
     cwd = setupFolderCallback()
   })
 
-  it.only('generates JSON with facet info', async () => {
+  it('generates JSON with facet info', async () => {
     const ret = cli('build', { cwd })
     console.log('build output:', ret.output)
     expect(ret.success).to.be.true
