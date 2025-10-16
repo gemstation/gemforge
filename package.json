@@ -30,7 +30,7 @@
     "build": "rm -fr build/* && tsc -p tsconfig.json",
     "test": "mocha",
     "run-foundry-testnet": "anvil --port 58545",
-    "run-hardhat-testnet": "hardhat node --port 58546",
+    "run-hardhat-testnet": "hardhat node --port 58546 --config hardhat.config.cjs",
     "prepublishOnly": "npm run build",
     "release": "standard-version && git push --follow-tags origin master && npm publish"
   },
