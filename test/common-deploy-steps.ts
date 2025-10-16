@@ -20,15 +20,11 @@ export const addDeployTestSteps = ({
   describe('deploys the project', () => {
     beforeEach(() => {
       cwd = setupFolderCallback()
-      const a = cli('build', { cwd, verbose: false })
-      console.log('build output:', a.output)
-      expect(a.success).to.be.true
-      const b = cli('deploy', 'local', { cwd, verbose: false })
-      console.log('deploy output:', b.output)
-      expect(b.success).to.be.true
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
     })
 
-    it.only('and updates the deployment json', async () => {
+    it('and updates the deployment json', async () => {
       const filePath = join(cwd, 'gemforge.deployments.json')
       const json = loadJsonFile(filePath)
 
