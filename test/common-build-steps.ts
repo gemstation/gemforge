@@ -18,7 +18,9 @@ export const addBuildTestSteps = ({
   })
 
   it.only('generates JSON with facet info', async () => {
-    expect(cli('build', { cwd }).success).to.be.true
+    const ret = cli('build', { cwd })
+    console.log('build output:', ret.output)
+    expect(ret.success).to.be.true
 
     const filePath = path.join(cwd, '.gemforge/facets.json')
     const json = loadJsonFile(filePath)
