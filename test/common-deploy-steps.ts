@@ -88,12 +88,17 @@ export const addDeployTestSteps = ({
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
       expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
 
-      const { contract } = await loadDiamondContract(cwd)
+      const { contract, signer } = await loadDiamondContract(cwd)
 
-      await sendTx(contract.setInt1(2))
+      const nonce = await signer.getNonce()
+      await sendTx(contract.setInt1(2, {
+        nonce
+      }))
       let n = await contract.getInt1()
       expect(n.toString()).to.equal('3') // 2 + 1
-      await sendTx(contract.setInt1New(2))
+      await sendTx(contract.setInt1New(2, {
+        nonce: nonce + 1
+      }))
       n = await contract.getInt1()
       expect(n.toString()).to.equal('4') // 2 + 2
 
@@ -701,12 +706,17 @@ export const addDeployTestSteps = ({
       expect(ret.success).to.be.true
       expect(ret.output).to.contain('Unable to call supportsInterface')
 
-      const { contract } = await loadDiamondContract(cwd)
+      const { contract, signer } = await loadDiamondContract(cwd)
 
-      await sendTx(contract.setInt1(2))
+      const nonce = await signer.getNonce()
+      await sendTx(contract.setInt1(2, {
+        nonce: nonce
+      }))
       let n = await contract.getInt1()
       expect(n.toString()).to.equal('3') // 2 + 1
-      await sendTx(contract.setInt1New(2))
+      await sendTx(contract.setInt1New(2, {
+        nonce: nonce + 1
+      }))
       n = await contract.getInt1()
       expect(n.toString()).to.equal('4') // 2 + 2
     })

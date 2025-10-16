@@ -362,6 +362,10 @@ export const getDeploymentRecorderData = () => {
   return deploymentRecorder.concat([])
 }
 
+export const clearNonceCache = () => {
+  Object.keys(latestNonce).forEach(key => delete latestNonce[key])
+}
+
 export const deployContract = async (ctx: Context, target: Target, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
   try {
     const artifact = loadContractArtifact(ctx, name)

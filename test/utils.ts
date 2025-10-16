@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from "node:child_process"
+import { spawnSync } from "node:child_process"
 import fs from 'node:fs'
 import { basename, dirname, join, relative, resolve } from "node:path"
 import { fileURLToPath } from 'node:url'
@@ -19,6 +19,12 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 tmp.setGracefulCleanup()
+
+export interface LoadedContract {
+  contract: Contract,
+  signer: Signer,
+  walletAddress: string,
+}
 
 interface ExecOptions {
   cwd?: string
@@ -125,15 +131,11 @@ export const assertFileMatchesCustomTemplate = (jsFilePath: string, templatePath
   expect(actual).to.deep.equal(expected)
 }
 
-export interface LoadedContract {
-  contract: Contract,
-  signer: Signer,
-  walletAddress: string,
-}
 
 export const sendTx = async (txCall: Promise<TransactionResponse>) => {
   const tx = await txCall
-  return await tx.wait()
+  const receipt = await tx.wait()
+  return receipt
 }
 
 const loadWalletFromCfg = (cfg: GemforgeConfig, network: string, wallet: string) => {
@@ -141,36 +143,42 @@ const loadWalletFromCfg = (cfg: GemforgeConfig, network: string, wallet: string)
 
   const type = cfg.wallets[wallet].type
 
-  switch (type) {
-    case 'mnemonic': {
-      const walletCfg = cfg.wallets[wallet].config as MnemonicWalletConfig
-      let words = walletCfg.words
-      if (typeof words === 'function') {
-        words = words()
+  const w = (() => {
+    switch (type) {
+      case 'mnemonic': {
+        const walletCfg = cfg.wallets[wallet].config as MnemonicWalletConfig
+        let words = walletCfg.words
+        if (typeof words === 'function') {
+          words = words()
+        }
+  
+        const w = ethers.HDNodeWallet.fromMnemonic(
+          ethers.Mnemonic.fromPhrase(words as string),
+          `m/44'/60'/0'/0/${walletCfg.index}`
+        )
+  
+        return w
       }
+      case 'private-key': {
+        const walletCfg = cfg.wallets[wallet].config as PrivateKeyWalletConfig
+        let key = walletCfg.key
+        if (typeof key === 'function') {
+          key = key()
+        }
 
-      const w = ethers.HDNodeWallet.fromMnemonic(
-        ethers.Mnemonic.fromPhrase(words as string),
-        `m/44'/60'/0'/0/${walletCfg.index}`
-      )
+        const w = new ethers.Wallet(key as string)
 
-      return w.connect(provider)
-    }
-    case 'private-key': {
-      const walletCfg = cfg.wallets[wallet].config as PrivateKeyWalletConfig
-      let key = walletCfg.key
-      if (typeof key === 'function') {
-        key = key()
+        return w
       }
-      const w = new ethers.Wallet(key as string)
-      return w.connect(provider)
     }
-  }
+  })()
+
+  return w.connect(provider)
 }
 
 export const loadWallet = async (cfgFilePath: string, network: string, wallet: string) => {
   const obj = (await import(cfgFilePath)).default as GemforgeConfig
-  return loadWalletFromCfg(obj, network, wallet)
+  return  loadWalletFromCfg(obj, network, wallet)
 }
 
 export const loadDiamondContract = async (cwd: string, abiOverride?: string[], addressOverride?: string): Promise<LoadedContract> => {

@@ -511,7 +511,6 @@ fs[${i}] = FacetSelectors({
       const ret = cli('build', { cwd })
 
       expect(ret.success).to.be.false
-      console.log(ret.output)
       expect(ret.output).to.contain('Error: test')
     })
 

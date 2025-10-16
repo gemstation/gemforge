@@ -1,5 +1,5 @@
 import { Signer, ZeroAddress, ethers } from 'ethers'
-import { OnChainContract, Target, clearDeploymentRecorder, deployContract, deployContract3, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
+import { OnChainContract, Target, clearDeploymentRecorder, clearNonceCache, deployContract, deployContract3, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
 import { Context, getContext } from '../shared/context.js'
 import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
 import { $, loadJson, saveJson } from '../shared/fs.js'
@@ -76,6 +76,7 @@ export const command = () =>
 
       // reset deploment records
       clearDeploymentRecorder()
+      clearNonceCache()
 
       if (args.new) {
         info('New deployment requested. Skipping any existing deployment...')
