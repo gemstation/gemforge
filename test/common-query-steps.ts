@@ -1,6 +1,6 @@
 import 'mocha'
 import { join } from "node:path"
-import { cli, expect, GemforgeConfig, getTestDataFolderPath, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
+import { GemforgeConfig, cli, expect, getTestDataFolderPath, loadFile, loadJsonFile, updateConfigFile, writeFile } from './utils.js'
 
 const loadContractAddresses = (cwd: string) => {
   const deployedContracts = loadJsonFile(join(cwd, 'gemforge.deployments.json')).local.contracts
@@ -12,7 +12,6 @@ const loadContractAddresses = (cwd: string) => {
 
 
 export const addQueryTestSteps = ({
-  framework, 
   setupFolderCallback
 } : {
   framework: 'foundry' | 'hardhat',

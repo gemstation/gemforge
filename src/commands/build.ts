@@ -1,9 +1,9 @@
-import { getContext } from '../shared/context.js'
-import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFacetsAndFunctions, saveJson, writeFile, writeTemplate } from '../shared/fs.js'
 import path from 'node:path'
-import { createCommand, logSuccess } from './common.js'
-import { error, info, trace, warn } from '../shared/log.js'
 import { generateUnifiedAbi } from '../shared/chain.js'
+import { getContext } from '../shared/context.js'
+import { $, FacetDefinition, ensureGeneratedFolderExists, fileExists, getUserFacetsAndFunctions, saveJson, writeTemplate } from '../shared/fs.js'
+import { error, info, trace, warn } from '../shared/log.js'
+import { createCommand, logSuccess } from './common.js'
 
 export const command = () =>
   createCommand('build', 'Build a project.')
@@ -64,15 +64,12 @@ export const command = () =>
 
       info('Generating LibDiamondHelper.sol ...')
       
-      let numMethods = 0
       const importPaths: Record<string, string> = {}
       let facetSelectorsStr = ''
       
       let hasCustomStructs: string[] = []
 
       facets.forEach((f, facetNum) => {
-        numMethods += f.functions.length
-
         if (!importPaths[f.contractName]) {
           const relativeImportPath = path.relative(ctx.generatedSolidityPath, f.file)
           importPaths[f.contractName] = relativeImportPath.startsWith('.') ? relativeImportPath : `./${relativeImportPath}`

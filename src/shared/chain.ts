@@ -635,7 +635,7 @@ const getAllContractArtifactPaths = (ctx: Context): ContractArtifactPath[] => {
       default:
         error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
     }
-
+    
     return {
       jsonFilePath,
       fullyQualifiedName,

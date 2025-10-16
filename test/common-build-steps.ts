@@ -503,7 +503,7 @@ fs[${i}] = FacetSelectors({
       })
     })
 
-    it('and fails if the hook fails', async () => {
+    it.only('and fails if the hook fails', async () => {
       writeFile(join(cwd, 'prebuild.sh'), `#!/usr/bin/env node
         throw new Error('test');
       `, { executable: true })
@@ -511,6 +511,7 @@ fs[${i}] = FacetSelectors({
       const ret = cli('build', { cwd })
 
       expect(ret.success).to.be.false
+      console.log(ret.output)
       expect(ret.output).to.contain('Error: test')
     })
 

@@ -1,5 +1,8 @@
 
 module.exports = {
+  paths: {
+    sources: ['contracts', 'lib'],
+  },
   solidity: '0.8.21',
   settings: {
     optimizer: {
