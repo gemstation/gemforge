@@ -23,7 +23,7 @@ export const addDeployTestSteps = ({
       const a = cli('build', { cwd, verbose: false })
       console.log('build output:', a.output)
       expect(a.success).to.be.true
-      const b = cli('deploy', 'local', { cwd, verbose: false })
+      const b = cli('deploy', 'local', { cwd, verbose: true })
       console.log('deploy output:', b.output)
       expect(b.success).to.be.true
     })
