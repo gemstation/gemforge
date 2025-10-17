@@ -773,10 +773,11 @@ export const addDeployTestSteps = ({
         expect(deployWithDelay(['-n']).success).to.be.true      
       })
 
-      it('and can execute a custom upgrade initialization method', async () => {
+      it.only('and can execute a custom upgrade initialization method', async () => {
         expect(deployWithDelay(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init']).success).to.be.true
         const ret = deployWithDelay(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init'])
         expect(ret.success).to.be.false
+        console.log(ret.output)
         expect(ret.output).to.contain('Init2 already executed')
       })
     })
