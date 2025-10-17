@@ -21,7 +21,7 @@ export const addDeployTestSteps = ({
     beforeEach(() => {
       cwd = setupFolderCallback()
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(cli('deploy', 'local', { cwd, txConfirmDelay: 5000, verbose: true }).success).to.be.true
+      expect(cli('deploy', 'local', '--tx-confirm-delay 3000', { cwd, verbose: true }).success).to.be.true
     })
 
     it.only('and updates the deployment json', async () => {
