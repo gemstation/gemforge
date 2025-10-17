@@ -1,14 +1,6 @@
 import get from 'lodash.get'
 import { ensure, ensureArray, ensureBool, ensureIsSet, ensureIsType, throwError } from './common.js'
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const spdxLicenseIds = JSON.parse(
-  readFileSync(join(__dirname, '../../../node_modules/spdx-license-ids/index.json'), 'utf-8')
-) as string[]
+import spdxLicenseIds from 'spdx-license-ids/index.json' with { type: 'json' }
 
 export interface MnemonicWalletConfig {
   words: string | Function,

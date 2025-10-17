@@ -1,19 +1,11 @@
 import { ethers } from 'ethers'
 import get from 'lodash.get'
 import semver from 'semver'
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
 import { loadJson } from '../fs.js'
 import { warn } from '../log.js'
 import { ensure, ensureArray, ensureBool, ensureIsSet, ensureIsType, throwError } from './common.js'
 import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const spdxLicenseIds = JSON.parse(
-  readFileSync(join(__dirname, '../../../node_modules/spdx-license-ids/index.json'), 'utf-8')
-) as string[]
+import spdxLicenseIds from 'spdx-license-ids/index.json' with { type: 'json' }
 
 const { version } = loadJson(new URL('../../../package.json', import.meta.url)) as any
 
