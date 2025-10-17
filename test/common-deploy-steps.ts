@@ -24,7 +24,7 @@ export const addDeployTestSteps = ({
       expect(cli('deploy', 'local', '--tx-confirm-delay 3000', { cwd, verbose: true }).success).to.be.true
     })
 
-    it.only('and updates the deployment json', async () => {
+    it('and updates the deployment json', async () => {
       const filePath = join(cwd, 'gemforge.deployments.json')
       const json = loadJsonFile(filePath)
 
