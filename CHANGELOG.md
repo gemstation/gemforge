@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.16.1](https://github.com/gemstation/gemforge/compare/v2.16.0...v2.16.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* remove JSON import assertions from build output ([d3228c5](https://github.com/gemstation/gemforge/commit/d3228c5aeadd3cf720a953474559f0a425566d06))
+
 ## [2.16.0](https://github.com/gemstation/gemforge/compare/v2.15.0...v2.16.0) (2025-02-14)
 
 
