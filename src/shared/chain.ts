@@ -431,11 +431,12 @@ export const deployContract3 = async (
         await tx.wait()
         trace(`   ...done`)
       } else {
-        trace(`   Sufficient balance.`)
+        trace(`   Sufficient balance found.`)
       }
       trace(`   Deploying factory ...`)
       const tx = await signer.provider!.broadcastTransaction(FACTORY_SIGNED_RAW_TX)
-      await tx.wait()
+      const rec = await tx.wait() as TransactionReceipt
+      trace(`   ...factory deployed in block ${rec.blockNumber}, confirming contract on-chain ...`)
       const confirmCode = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
       if (!confirmCode || confirmCode === '0x') {
         return error(`Failed to deploy CREATE3 factory`)
