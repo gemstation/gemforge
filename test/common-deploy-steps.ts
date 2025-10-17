@@ -17,8 +17,8 @@ export const addDeployTestSteps = ({
 
   const contractSrcBasePath = (framework === 'hardhat' ? 'contracts' : 'src')
 
-  const cli_deploy = (args: string[]) => {
-    return cli('deploy', 'local', ...args, { cwd, verbose: true })
+  const cli_deploy = (args: string[], opts: { verbose?: boolean } = {}) => {
+    return cli('deploy', 'local', ...args, { cwd, verbose: opts.verbose })
   }
 
   describe('deploys the project', () => {
@@ -350,7 +350,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and everything gets deployed', async () => {
-      expect(cli('build', { cwd, verbose: true }).success).to.be.true
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
 
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet_key')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
