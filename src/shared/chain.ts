@@ -1,5 +1,6 @@
 import { create } from "node:domain";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { BigVal } from "bigval"
 import { Provider } from "ethers";
 import { Fragment } from "ethers";
@@ -437,6 +438,7 @@ export const deployContract3 = async (
       const tx = await signer.provider!.broadcastTransaction(FACTORY_SIGNED_RAW_TX)
       const rec = await tx.wait() as TransactionReceipt
       trace(`   ...factory deployed in block ${rec.blockNumber}, confirming contract on-chain ...`)
+      await setTimeout(5000) // TODO: remove once tests are working
       const confirmCode = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
       if (!confirmCode || confirmCode === '0x') {
         return error(`Failed to deploy CREATE3 factory`)
