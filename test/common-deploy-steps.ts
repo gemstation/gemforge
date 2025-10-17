@@ -18,7 +18,7 @@ export const addDeployTestSteps = ({
   const contractSrcBasePath = (framework === 'hardhat' ? 'contracts' : 'src')
 
   const deployWithDelay = (args: string[]) => {
-    return cli('deploy', 'local', '--tx-confirm-delay 3000', ...args, { cwd, verbose: false })
+    return cli('deploy', 'local', ...args, { cwd, verbose: false })
   }
 
   describe('deploys the project', () => {

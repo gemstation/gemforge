@@ -437,6 +437,7 @@ export const deployContract3 = async (
       const tx = await signer.provider!.broadcastTransaction(FACTORY_SIGNED_RAW_TX)
       const rec = await confirmTx(ctx, tx)
       trace(`   ...factory deployed in block ${rec.blockNumber}, confirming contract on-chain ...`)
+      await setTimeout(1000) // needed for anvil/hardhat to catch up
       const confirmCode = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
       if (!confirmCode || confirmCode === '0x') {
         return error(`Failed to deploy CREATE3 factory`)
