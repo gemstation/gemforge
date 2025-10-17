@@ -23,8 +23,7 @@ export const addQueryTestSteps = ({
     before(async () => {
       cwd = setupFolderCallback()
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      const ret = cli('deploy', 'local', { cwd, verbose: false })
-      expect(ret.success).to.be.true
+      expect(cli('deploy', 'local', { cwd, verbose: false }).success).to.be.true
     })
 
     describe('and outputs text', () => {

@@ -1,6 +1,5 @@
 import { create } from "node:domain";
 import path from "node:path";
-import { setTimeout } from "node:timers/promises";
 import { BigVal } from "bigval"
 import { Provider } from "ethers";
 import { Fragment } from "ethers";
@@ -367,7 +366,7 @@ export const clearNonceCache = () => {
   Object.keys(latestNonce).forEach(key => delete latestNonce[key])
 }
 
-export const deployContract = async (ctx: Context, target: Target, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
+export const deployContract = async (ctx: Context, name: string, signer: Signer, ...args: any[]): Promise<OnChainContract> => {
   try {
     const artifact = loadContractArtifact(ctx, name)
     const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
@@ -404,7 +403,6 @@ export const deployContract = async (ctx: Context, target: Target, name: string,
  */
 export const deployContract3 = async (
   ctx: Context,
-  target: Target,
   name: string,
   signer: Signer,
   create3Salt: string = '',
@@ -429,16 +427,15 @@ export const deployContract3 = async (
           to: FACTORY_DEPLOYER_ADDRESS,
           value: moreNeeded.toString(),
         })
-        await tx.wait()
+        await confirmTx(ctx, tx)
         trace(`   ...done`)
       } else {
         trace(`   Sufficient balance found.`)
       }
       trace(`   Deploying factory ...`)
       const tx = await signer.provider!.broadcastTransaction(FACTORY_SIGNED_RAW_TX)
-      const rec = await tx.wait() as TransactionReceipt
+      const rec = await confirmTx(ctx, tx)
       trace(`   ...factory deployed in block ${rec.blockNumber}, confirming contract on-chain ...`)
-      await setTimeout(5000) // TODO: remove once tests are working
       const confirmCode = await signer.provider!.getCode(FACTORY_DEPLOYED_ADDRESS)
       if (!confirmCode || confirmCode === '0x') {
         return error(`Failed to deploy CREATE3 factory`)
@@ -471,7 +468,7 @@ export const deployContract3 = async (
       )
     }
 
-    const receipt = await execContractMethod(factory, 'deploy', [create3Salt, deployData])
+    const receipt = await execContractMethod(ctx, factory, 'deploy', [create3Salt, deployData])
 
     trace(`   ...done`)
 
@@ -545,7 +542,14 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
   }
 }
 
-export const getContractValue = async <T = any>(contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<T> => {  
+export const confirmTx = async (ctx: Context, tx: TransactionResponse): Promise<TransactionReceipt> => {
+  if (ctx.txWaitTimeout > 0) {
+    return await tx.wait(1, ctx.txWaitTimeout) as TransactionReceipt
+  }
+  return await tx.wait() as TransactionReceipt
+}
+
+export const getContractValue = async <T = any>(contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<T> => {
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
@@ -563,7 +567,7 @@ export const getContractValue = async <T = any>(contract: OnChainContract, metho
 
 
 
-export const execContractMethod = async (contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<TransactionReceipt> => {  
+export const execContractMethod = async (ctx: Context, contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<TransactionReceipt> => {
   const label = `${method}() on contract ${contract.artifact.name} deployed at ${contract.address} with args (${args.join(', ')})`
 
   try {
@@ -571,7 +575,7 @@ export const execContractMethod = async (contract: OnChainContract, method: stri
     const tx = (await contract.contract[method](...args, {
       nonce: await getLatestNonce(contract.contract.runner as Signer)
     })) as TransactionResponse
-    const receipt = (await tx.wait())!
+    const receipt = await confirmTx(ctx, tx)
     trace(`   ...mined in block ${receipt.blockNumber}`)
     return receipt
   } catch (err: any) {

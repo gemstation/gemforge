@@ -21,9 +21,7 @@ export const addDeployTestSteps = ({
     beforeEach(() => {
       cwd = setupFolderCallback()
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      const b = cli('deploy', 'local', { cwd, verbose: true })
-      console.log('deploy output:', b.output)
-      expect(b.success).to.be.true
+      expect(cli('deploy', 'local', { cwd, txConfirmDelay: 1000, verbose: false }).success).to.be.true
     })
 
     it.only('and updates the deployment json', async () => {
@@ -370,7 +368,7 @@ export const addDeployTestSteps = ({
 
     it('and nothing gets deployed', async () => {
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      
+
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
@@ -380,6 +378,23 @@ export const addDeployTestSteps = ({
 
       expect(startingBal).to.equal(endingBal)
       expect(fileExists(join(cwd, 'gemforge.deployments.json'))).to.be.false
+    })
+  })
+
+  describe('supports transaction confirmation delay', () => {
+    beforeEach(() => {
+      cwd = setupFolderCallback()
+    })
+
+    it('and can deploy with a delay specified', async () => {
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      expect(cli('deploy', 'local', '--tx-confirm-delay', '60000', { cwd, verbose: false }).success).to.be.true
+      expect(fileExists(join(cwd, 'gemforge.deployments.json'))).to.be.true
+
+      const { contract } = await loadDiamondContract(cwd)
+      await sendTx(contract.setInt1(2))
+      const n = await contract.getInt1()
+      expect(n.toString()).to.equal('2')
     })
   })
 

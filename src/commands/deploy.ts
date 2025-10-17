@@ -16,6 +16,7 @@ export const command = () =>
     .option('--upgrade-init-method <method>', 'method to call on the custom initialization contract during the upgrade')
     .option('--pause-cut-to-file <file>', 'pause before the diamondCut() method is called and the write the cut info to a file')
     .option('--resume-cut-from-file <file>', 'resume a diamondCut() method call using the cut info in the given file')
+    .option('--tx-confirm-delay <milliseconds>', 'timeout in milliseconds to wait for transactions to complete', '0')
     .action(async (targetArg, args) => {
       const ctx = await getContext(args)
 
@@ -124,7 +125,7 @@ export const command = () =>
         if (args.dry) {
           warn(`Dry run requested. Skipping the reset...`)
         } else {
-          await callDiamondCut(proxyInterface!, [cleanCut])
+          await callDiamondCut(ctx, proxyInterface!, [cleanCut])
         }
       }
       
@@ -141,7 +142,7 @@ export const command = () =>
         if (args.dry) {
           warn(`Dry run requested. Skipping the cut...`)
         } else {
-          await callDiamondCut(proxyInterface!, resumed.cuts, resumed.initContractAddress, resumed.initData)
+          await callDiamondCut(ctx, proxyInterface!, resumed.cuts, resumed.initContractAddress, resumed.initData)
         }
       } 
       // otherwise, resolve changes and deploy
@@ -172,7 +173,7 @@ export const command = () =>
               info('Deploying facets...')
               for (const name of changes.facetsToDeploy) {
                 info(`   Deploying ${name} ...`)
-                const contract = await deployContract(ctx, target, name, signer)
+                const contract = await deployContract(ctx, name, signer)
                 facetContracts[name] = contract
                 info(`   Deployed ${name} at: ${await contract.address}`)
               }
@@ -192,7 +193,6 @@ export const command = () =>
             } else {
               const { address, data } = await deployAndEncodeInitData(
                 ctx,
-                target,
                 signer,
                 initContract,
                 initFunction,
@@ -208,7 +208,6 @@ export const command = () =>
             } else {
               const { address, data } = await deployAndEncodeInitData(
                 ctx,
-                target,
                 signer,
                 args.upgradeInitContract,
                 args.upgradeInitMethod,
@@ -239,7 +238,7 @@ export const command = () =>
               notice(`Tx data: ${proxyInterface!.contract.interface.encodeFunctionData('diamondCut', [cuts, initContractAddress, initData])}\n`)
               notice(`================================================================================\n`)
             } else {
-              await callDiamondCut(proxyInterface!, cuts, initContractAddress, initData)
+              await callDiamondCut(ctx, proxyInterface!, cuts, initContractAddress, initData)
             }
           }
         }
@@ -265,9 +264,9 @@ export const command = () =>
     })
 
 
-  const callDiamondCut = async (diamondProxy: OnChainContract, cuts: FacetCut[], initContractAddress: string = ZeroAddress, initData: string = '0x') => {
-    info('Calling diamondCut() on the proxy...')        
-    await execContractMethod(diamondProxy, 'diamondCut', [cuts, initContractAddress, initData])
+  const callDiamondCut = async (ctx: Context, diamondProxy: OnChainContract, cuts: FacetCut[], initContractAddress: string = ZeroAddress, initData: string = '0x') => {
+    info('Calling diamondCut() on the proxy...')
+    await execContractMethod(ctx, diamondProxy, 'diamondCut', [cuts, initContractAddress, initData])
   }
 
   
@@ -281,7 +280,7 @@ export const command = () =>
     } else {
       info(`   CREATE3 salt (specified): ${salt32bytes}`)
     }
-    const diamond = await deployContract3(ctx, target, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
+    const diamond = await deployContract3(ctx, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
     info(`   ...deployed at: ${diamond.address}`)
     return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
   }
@@ -289,7 +288,6 @@ export const command = () =>
   
   const deployAndEncodeInitData = async (
     ctx: Context,
-    target: Target,
     signer: Signer,
     contractName: string,
     methodName: string,
@@ -297,7 +295,7 @@ export const command = () =>
     logPrefix: string
   ): Promise<{ address: string; data: string }> => {
     info(`Deploying ${logPrefix} contract: ${contractName} ...`)
-    const contract = await deployContract(ctx, target, contractName, signer)
+    const contract = await deployContract(ctx, contractName, signer)
     const address = contract.address
     info(`   ...deployed at: ${address}`)
 
