@@ -546,7 +546,9 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
 export const confirmTx = async (ctx: Context, tx: TransactionResponse): Promise<TransactionReceipt> => {
   const receipt = await tx.wait() as TransactionReceipt
   if (ctx.txWaitTimeout > 0) {
+    trace(`            Waiting for ${ctx.txWaitTimeout} milliseconds for transaction to complete ...`)
     await setTimeout(ctx.txWaitTimeout)
+    trace(`            ...done`)  
   }
   return receipt
 }
