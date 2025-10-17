@@ -1,5 +1,6 @@
 import { create } from "node:domain";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { BigVal } from "bigval"
 import { Provider } from "ethers";
 import { Fragment } from "ethers";
@@ -543,10 +544,11 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
 }
 
 export const confirmTx = async (ctx: Context, tx: TransactionResponse): Promise<TransactionReceipt> => {
+  const receipt = await tx.wait() as TransactionReceipt
   if (ctx.txWaitTimeout > 0) {
-    return await tx.wait(1, ctx.txWaitTimeout) as TransactionReceipt
+    await setTimeout(ctx.txWaitTimeout)
   }
-  return await tx.wait() as TransactionReceipt
+  return receipt
 }
 
 export const getContractValue = async <T = any>(contract: OnChainContract, method: string, args: any[], dontExitOnError = false): Promise<T> => {
