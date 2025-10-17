@@ -16,7 +16,7 @@ export const command = () =>
     .option('--upgrade-init-method <method>', 'method to call on the custom initialization contract during the upgrade')
     .option('--pause-cut-to-file <file>', 'pause before the diamondCut() method is called and the write the cut info to a file')
     .option('--resume-cut-from-file <file>', 'resume a diamondCut() method call using the cut info in the given file')
-    .option('--tx-confirm-delay <milliseconds>', 'timeout in milliseconds to wait for transactions to complete', '0')
+    .option('--tx-confirm-delay <milliseconds>', 'additional time in milliseconds to wait for transactions to complete', '0')
     .action(async (targetArg, args) => {
       const ctx = await getContext(args)
 

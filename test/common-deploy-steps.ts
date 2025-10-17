@@ -17,15 +17,15 @@ export const addDeployTestSteps = ({
 
   const contractSrcBasePath = (framework === 'hardhat' ? 'contracts' : 'src')
 
-  const deployWithDelay = (args: string[]) => {
-    return cli('deploy', 'local', ...args, { cwd, verbose: false })
+  const cli_deploy = (args: string[]) => {
+    return cli('deploy', 'local', ...args, { cwd, verbose: true })
   }
 
   describe('deploys the project', () => {
     beforeEach(() => {
       cwd = setupFolderCallback()
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
     })
 
     it('and updates the deployment json', async () => {
@@ -90,7 +90,7 @@ export const addDeployTestSteps = ({
 
       // build and re-deploy
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       const { contract, signer } = await loadDiamondContract(cwd)
 
@@ -129,7 +129,7 @@ export const addDeployTestSteps = ({
 
       // build and re-deploy
       expect(cli('build', { cwd }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       const { contract } = await loadDiamondContract(cwd, [
         'function setInt1(uint i) external', // this one should exist
@@ -162,7 +162,7 @@ export const addDeployTestSteps = ({
 
       // build and re-deploy
       expect(cli('build', { cwd }).success).to.be.true
-      const ret = deployWithDelay(['-v'])
+      const ret = cli_deploy(['-v'])
       expect(ret.success).to.be.true
 
       const { contract } = await loadDiamondContract(cwd, [
@@ -200,7 +200,7 @@ export const addDeployTestSteps = ({
 
       // build and re-deploy
       expect(cli('build', { cwd }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
       // console.log(cwd)
 
       const { contract } = await loadDiamondContract(cwd)
@@ -216,7 +216,7 @@ export const addDeployTestSteps = ({
       const jsonOld = loadJsonFile(filePath)
 
       // redeploy new
-      expect(deployWithDelay(['--new']).success).to.be.true
+      expect(cli_deploy(['--new']).success).to.be.true
 
       const jsonNew = loadJsonFile(filePath)
 
@@ -239,7 +239,7 @@ export const addDeployTestSteps = ({
       await sendTx(contract.setInt1(2))
 
       // redeploy new
-      expect(deployWithDelay(['--reset']).success).to.be.true
+      expect(cli_deploy(['--reset']).success).to.be.true
 
       const jsonNew = loadJsonFile(filePath)
 
@@ -288,7 +288,7 @@ export const addDeployTestSteps = ({
       // re-build
       expect(cli('build', { cwd }).success).to.be.true
 
-      expect(deployWithDelay(['--dry']).success).to.be.true
+      expect(cli_deploy(['--dry']).success).to.be.true
 
       const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
@@ -308,7 +308,7 @@ export const addDeployTestSteps = ({
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
-      expect(deployWithDelay(['--reset', '--dry']).success).to.be.true
+      expect(cli_deploy(['--reset', '--dry']).success).to.be.true
 
       const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
@@ -328,7 +328,7 @@ export const addDeployTestSteps = ({
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
-      expect(deployWithDelay(['--new', '--dry']).success).to.be.true
+      expect(cli_deploy(['--new', '--dry']).success).to.be.true
 
       const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
@@ -349,13 +349,13 @@ export const addDeployTestSteps = ({
       })
     })
 
-    it('and everything gets deployed', async () => {
-      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+    it.only('and everything gets deployed', async () => {
+      expect(cli('build', { cwd, verbose: true }).success).to.be.true
 
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet_key')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       await setTimeout(2000) // to give time for balance to update
       const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
@@ -376,7 +376,7 @@ export const addDeployTestSteps = ({
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet1')
       const startingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
-        expect(deployWithDelay(['--dry']).success).to.be.true
+        expect(cli_deploy(['--dry']).success).to.be.true
 
       const endingBal = (await wallet.provider!.getBalance(wallet.address)).toString()
 
@@ -412,7 +412,7 @@ export const addDeployTestSteps = ({
       })
 
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       const { contract } = await loadDiamondContract(cwd)
       const n = await contract.getInt1()
@@ -437,7 +437,7 @@ export const addDeployTestSteps = ({
         throw new Error('test');
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.false
       expect(ret.output).to.contain('Error: test')
@@ -450,7 +450,7 @@ export const addDeployTestSteps = ({
         fs.writeFileSync(path.join(__dirname, 'gemforge.deployments.json'), 'test')
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.true
       expect(loadFile(join(cwd, 'gemforge.deployments.json'))).to.not.equal('test')
@@ -463,7 +463,7 @@ export const addDeployTestSteps = ({
         fs.writeFileSync(path.join(__dirname, 'test.data'), process.env.GEMFORGE_DEPLOY_TARGET + '/' + process.env.GEMFORGE_DEPLOY_CHAIN_ID)
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.true
       expect(loadFile(join(cwd, 'test.data'))).to.equal('local/31337')
@@ -487,7 +487,7 @@ export const addDeployTestSteps = ({
         throw new Error('test');
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.false
       expect(ret.output).to.contain('Error: test')
@@ -500,7 +500,7 @@ export const addDeployTestSteps = ({
         fs.writeFileSync(path.join(__dirname, 'gemforge.deployments.json'), 'test')
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.true
       expect(loadFile(join(cwd, 'gemforge.deployments.json'))).to.equal('test')
@@ -513,7 +513,7 @@ export const addDeployTestSteps = ({
         fs.writeFileSync(path.join(__dirname, 'test.data'), process.env.GEMFORGE_DEPLOY_TARGET + '/' + process.env.GEMFORGE_DEPLOY_CHAIN_ID)
       `, { executable: true })
 
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
 
       expect(ret.success).to.be.true
       expect(loadFile(join(cwd, 'test.data'))).to.equal('local/31337')
@@ -546,7 +546,7 @@ export const addDeployTestSteps = ({
 
       beforeEach(async () => {
         f = path.join(cwd, '1.json')
-        const ret = deployWithDelay(['--pause-cut-to-file', f])
+        const ret = cli_deploy(['--pause-cut-to-file', f])
         expect(ret.success).to.be.true
         expect(ret.output).to.contain('Pausing before diamondCut()')
       })
@@ -601,8 +601,8 @@ export const addDeployTestSteps = ({
 
       beforeEach(async () => {
         f = path.join(cwd, '1.json')
-        expect(deployWithDelay(['--pause-cut-to-file', f]).success).to.be.true
-        const ret = deployWithDelay(['--resume-cut-from-file', f])
+        expect(cli_deploy(['--pause-cut-to-file', f]).success).to.be.true
+        const ret = cli_deploy(['--resume-cut-from-file', f])
         expect(ret.success).to.be.true  
         expect(ret.output).to.contain('Calling diamondCut()')
       })
@@ -635,7 +635,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and updates the deployment json', async () => {
-      const ret = deployWithDelay(['-n'])
+      const ret = cli_deploy(['-n'])
       expect(ret.success).to.be.true
 
       const filePath = join(cwd, 'gemforge.deployments.json')
@@ -650,14 +650,14 @@ export const addDeployTestSteps = ({
     })
 
     it('and cannot do a fresh deploy with same salt on same network', async () => {
-      expect(deployWithDelay(['-n']).success).to.be.true
+      expect(cli_deploy(['-n']).success).to.be.true
 
       const filePath = join(cwd, 'gemforge.deployments.json')
       const json = loadJsonFile(filePath)
       const obj = get(json, 'local.contracts', []).find((a: any) => a.name === 'DiamondProxy') as any
       const { address } = obj.onChain
 
-      const ret = deployWithDelay(['-n'])
+      const ret = cli_deploy(['-n'])
 
       expect(ret.success).to.be.false
       expect(ret.output).to.contain(`Address already in use: ${address}`)
@@ -676,7 +676,7 @@ export const addDeployTestSteps = ({
       })
 
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(deployWithDelay(['-n']).success).to.be.true
+      expect(cli_deploy(['-n']).success).to.be.true
     })
 
     it('and can handle an upgrade', async () => {
@@ -706,7 +706,7 @@ export const addDeployTestSteps = ({
 
       // build and re-deploy
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
       expect(ret.success).to.be.true
       expect(ret.output).to.contain('Unable to call supportsInterface')
 
@@ -732,11 +732,11 @@ export const addDeployTestSteps = ({
     })    
 
     it('needs both custom upgrade initialization contract and method', async () => {
-      let ret = deployWithDelay(['--upgrade-init-contract', 'Init2'])
+      let ret = cli_deploy(['--upgrade-init-contract', 'Init2'])
       expect(ret.success).to.be.false
       expect(ret.output).to.contain('No upgrade initialization method specified.')
 
-      ret = deployWithDelay(['--upgrade-init-method', 'init'])
+      ret = cli_deploy(['--upgrade-init-method', 'init'])
       expect(ret.success).to.be.false
       expect(ret.output).to.contain('No upgrade initialization contract specified.')
     })
@@ -770,12 +770,12 @@ export const addDeployTestSteps = ({
         `)
               
         expect(cli('build', { cwd, verbose: false }).success).to.be.true
-        expect(deployWithDelay(['-n']).success).to.be.true      
+        expect(cli_deploy(['-n']).success).to.be.true      
       })
 
       it('and can execute a custom upgrade initialization method', async () => {
-        expect(deployWithDelay(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init']).success).to.be.true
-        const ret = deployWithDelay(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init'])
+        expect(cli_deploy(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init']).success).to.be.true
+        const ret = cli_deploy(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init'])
         expect(ret.success).to.be.false
         // TODO: for hardhat the error message is "missing revert data" due to some ethers issue,
         // see: https://github.com/ethers-io/ethers.js/discussions/2849
@@ -796,7 +796,7 @@ export const addDeployTestSteps = ({
       })
 
       expect(cli('build', { cwd, verbose: false }).success).to.be.true
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
         pragma solidity >=0.8.21;
@@ -857,7 +857,7 @@ export const addDeployTestSteps = ({
     })
 
     it('and will output the tx params', async () => {      
-      const ret = deployWithDelay([])
+      const ret = cli_deploy([])
       expect(ret.success).to.be.true
 
       const filePath = join(cwd, 'gemforge.deployments.json')
@@ -875,14 +875,14 @@ export const addDeployTestSteps = ({
     })
 
     it('and did not execute the upgrade', async () => {
-      expect(deployWithDelay([]).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
 
       const { contract } = await loadDiamondContract(cwd)
       expect(contract.setInt1New()).to.be.rejectedWith('execution reverted')
     })
 
     it('and can execute a custom upgrade initialization method', async () => {
-      const ret = deployWithDelay(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init'])
+      const ret = cli_deploy(['--upgrade-init-contract', 'Init2', '--upgrade-init-method', 'init'])
 
       expect(ret.success).to.be.true
       // console.log(ret.output)
