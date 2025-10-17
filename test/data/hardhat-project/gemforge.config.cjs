@@ -5,7 +5,7 @@ module.exports = {
     version: '0.8.21',
   },
   commands: {
-    build: 'npx hardhat compile',
+    build: 'npx hardhat --config hardhat.config.cjs compile',
   },
   paths: {
     artifacts: 'artifacts',

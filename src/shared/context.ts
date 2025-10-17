@@ -10,6 +10,7 @@ export interface Context {
   deploymentInfoJsonPath: string
   artifactsPath: string
   libDiamondPath: string
+  txWaitTimeout: number
 }
 
 export const getContext = async (args: Record<string, any>): Promise<Context> => {
@@ -32,9 +33,11 @@ export const getContext = async (args: Record<string, any>): Promise<Context> =>
   }
   info(`Working folder: ${context.folder}`)
 
+  context.txWaitTimeout = parseInt(args.txConfirmDelay || '0', 10)
+
   if (config) {
     config = path.resolve(process.cwd(), config)
-    
+
     try {
       context.config = (await import(config)).default as GemforgeConfig
       sanitizeConfig(context.config)
