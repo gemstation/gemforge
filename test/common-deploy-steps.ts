@@ -349,7 +349,7 @@ export const addDeployTestSteps = ({
       })
     })
 
-    it.only('and everything gets deployed', async () => {
+    it('and everything gets deployed', async () => {
       expect(cli('build', { cwd, verbose: true }).success).to.be.true
 
       const wallet = await loadWallet(join(cwd, 'gemforge.config.cjs'), 'local', 'wallet_key')
