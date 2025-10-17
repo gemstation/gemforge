@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.16.2](https://github.com/gemstation/gemforge/compare/v2.16.1...v2.16.2) (2025-10-17)
+
 ### [2.16.1](https://github.com/gemstation/gemforge/compare/v2.16.0...v2.16.1) (2025-10-17)
 
 
