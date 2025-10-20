@@ -209,6 +209,7 @@ export interface OnChainContract {
   artifact: ContractArtifact
   address: string
   contract: Contract
+  txHash?: string
 }
 
 export const getContractAt = async (ctx: Context, name: string, signer: Signer, address: string): Promise<OnChainContract> => {
@@ -485,7 +486,11 @@ export const deployContract3 = async (
       },
     })
 
-    return getContractAt(ctx, name, signer, address)
+    const contract = await getContractAt(ctx, name, signer, address)
+    return {
+      ...contract,
+      txHash: receipt.hash,
+    }
   } catch (err: any) {
     return error(`Failed to deploy ${name}: ${err.message}}`)
   }
@@ -629,6 +634,74 @@ interface ContractArtifactPath {
   fullyQualifiedName: string
 }
 
+/**
+ * Record core facet deployments to the deployment recorder.
+ *
+ * Queries the diamond proxy for deployed facets and matches them against
+ * core facet artifacts, adding deployment records for each matched core facet.
+ */
+export const recordCoreFacetDeployments = async (
+  ctx: Context,
+  signer: Signer,
+  proxyAddress: string,
+  coreFacetNames: string[],
+  diamondDeploymentTxHash: string
+): Promise<void> => {
+  trace(`Recording core facet deployments for diamond at ${proxyAddress} ...`)
+
+  // Get the diamond proxy interface to query facets
+  const proxy = await getContractAt(ctx, 'IDiamondProxy', signer, proxyAddress)
+
+  // Query deployed facets
+  const deployedFacets = await getContractValue<{ facetAddress: string; functionSelectors: string[] }[]>(proxy, 'facets', [])
+  trace(`   Found ${deployedFacets.length} deployed facets`)
+
+  // Load core facet artifacts
+  const coreFacetArtifacts: Record<string, ContractArtifact> = {}
+  coreFacetNames.forEach(name => {
+    coreFacetArtifacts[name] = loadContractArtifact(ctx, name)
+  })
+
+  // Fetch bytecode for deployed facets and match with core facets
+  const bytecodeFetcher = new BytecodeFetcher(signer)
+  const facetAddresses = new Set<string>()
+
+  for (const facet of deployedFacets) {
+    const facetAddress = facet.facetAddress
+    if (!facetAddresses.has(facetAddress)) {
+      facetAddresses.add(facetAddress)
+    }
+  }
+
+  trace(`   ${facetAddresses.size} unique facet addresses found`)
+
+  for (const facetAddress of facetAddresses) {
+    const deployedBytecode = await bytecodeFetcher.getBytecode(facetAddress)
+
+    // Find matching core facet artifact
+    for (const [name, artifact] of Object.entries(coreFacetArtifacts)) {
+      if (artifact.deployedBytecode === deployedBytecode) {
+        trace(`   Matched facet at ${facetAddress} with core facet ${name}`)
+
+        deploymentRecorder.push({
+          name,
+          fullyQualifiedName: artifact.fullyQualifiedName,
+          sender: proxyAddress,
+          txHash: diamondDeploymentTxHash,
+          onChain: {
+            address: facetAddress,
+            constructorArgs: [],
+          },
+        })
+
+        break
+      }
+    }
+  }
+
+  trace(`   ...done recording core facet deployments`)
+}
+
 const getAllContractArtifactPaths = (ctx: Context): ContractArtifactPath[] => {
   const files = glob.sync(`${ctx.artifactsPath}/**/*.json`) as string[]
 
@@ -651,7 +724,7 @@ const getAllContractArtifactPaths = (ctx: Context): ContractArtifactPath[] => {
       default:
         error(`Unknown artifacts format: ${ctx.config.artifacts.format}`)
     }
-    
+
     return {
       jsonFilePath,
       fullyQualifiedName,

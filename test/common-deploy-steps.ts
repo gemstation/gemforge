@@ -45,6 +45,23 @@ export const addDeployTestSteps = ({
       expect(obj2).to.have.property('txHash')
       expect(obj2).to.have.property('onChain')
       expect(obj2.onChain).to.have.property('address')
+
+      const coreFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet']
+      coreFacets.forEach(facetName => {
+        const facet = get(json, 'local.contracts', []).find((a: any) => a.name === facetName) as any
+        expect(facet).to.exist
+        expect(facet).to.have.property('name')
+        expect(facet.name).to.equal(facetName)
+        expect(facet).to.have.property('fullyQualifiedName')
+        expect(facet).to.have.property('sender')
+        expect(facet.sender).to.equal(obj.onChain.address)
+        expect(facet).to.have.property('txHash')
+        expect(facet.txHash).to.equal(obj.txHash)
+        expect(facet).to.have.property('onChain')
+        expect(facet.onChain).to.have.property('address')
+        expect(facet.onChain).to.have.property('constructorArgs')
+        expect(facet.onChain.constructorArgs).to.be.an('array').that.is.empty
+      })
     })
 
     it('and the facets really are deployed', async () => {
@@ -57,6 +74,24 @@ export const addDeployTestSteps = ({
     it('and the core facets really are deployed', async () => {
       const { contract, walletAddress } = await loadDiamondContract(cwd)
       expect(contract.owner()).to.eventually.eq(walletAddress)
+    })
+
+    it('and records core facets with addresses matching the diamond query', async () => {
+      const filePath = join(cwd, 'gemforge.deployments.json')
+      const json = loadJsonFile(filePath)
+
+      const { contract } = await loadDiamondContract(cwd)
+      const deployedFacets = await contract.facets()
+
+      const coreFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet']
+      coreFacets.forEach(facetName => {
+        const facetRecord = get(json, 'local.contracts', []).find((a: any) => a.name === facetName) as any
+        expect(facetRecord).to.exist
+
+        const deployedFacet = deployedFacets.find((f: any) => f.facetAddress.toLowerCase() === facetRecord.onChain.address.toLowerCase())
+        expect(deployedFacet).to.exist
+        expect(deployedFacet.functionSelectors.length).to.be.greaterThan(0)
+      })
     })
 
     it('and can handle additions and replacements in a facet', async () => {
@@ -226,6 +261,15 @@ export const addDeployTestSteps = ({
         expect(newAddr.toLowerCase()).to.not.equal(oldAddr.toLowerCase())
       })
 
+      const coreFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet']
+      coreFacets.forEach((name) => {
+        const oldFacet = get(jsonOld, 'local.contracts', []).find((a: any) => a.name === name) as any
+        const newFacet = get(jsonNew, 'local.contracts', []).find((a: any) => a.name === name) as any
+        expect(oldFacet).to.exist
+        expect(newFacet).to.exist
+        expect(newFacet.onChain.address.toLowerCase()).to.not.equal(oldFacet.onChain.address.toLowerCase())
+      })
+
       const { contract } = await loadDiamondContract(cwd)
       const n = await contract.getInt1()
       expect(n.toString()).to.equal('0')
@@ -253,6 +297,15 @@ export const addDeployTestSteps = ({
         const oldAddr = (get(jsonOld, 'local.contracts', []).find((a: any) => a.name === name) as any).onChain.address as string
         const newAddr = (get(jsonNew, 'local.contracts', []).find((a: any) => a.name === name) as any).onChain.address as string
         expect(newAddr.toLowerCase()).to.equal(oldAddr.toLowerCase())
+      })
+
+      const coreFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet']
+      coreFacets.forEach((name) => {
+        const oldFacet = get(jsonOld, 'local.contracts', []).find((a: any) => a.name === name) as any
+        const newFacet = get(jsonNew, 'local.contracts', []).find((a: any) => a.name === name) as any
+        expect(oldFacet).to.exist
+        expect(newFacet).to.exist
+        expect(newFacet.onChain.address.toLowerCase()).to.equal(oldFacet.onChain.address.toLowerCase())
       })
 
       const n = await contract.getInt1()

@@ -1,5 +1,5 @@
 import { Signer, ZeroAddress, ethers } from 'ethers'
-import { OnChainContract, Target, clearDeploymentRecorder, clearNonceCache, deployContract, deployContract3, execContractMethod, getContractAt, getDeploymentRecorderData, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
+import { OnChainContract, Target, clearDeploymentRecorder, clearNonceCache, deployContract, deployContract3, execContractMethod, getContractAt, getDeploymentRecorderData, recordCoreFacetDeployments, saveDeploymentInfo, setupTarget, setupWallet } from '../shared/chain.js'
 import { Context, getContext } from '../shared/context.js'
 import { FacetCut, FacetCutAction, getFinalizedFacetCuts, resolveClean, resolveUpgrade } from '../shared/diamond.js'
 import { $, loadJson, saveJson } from '../shared/fs.js'
@@ -282,7 +282,19 @@ export const command = () =>
     }
     const diamond = await deployContract3(ctx, 'DiamondProxy', signer, salt32bytes, await signer.getAddress())
     info(`   ...deployed at: ${diamond.address}`)
-    return await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
+
+    const proxyInterface = await getContractAt(ctx, 'IDiamondProxy', signer, diamond.address)
+
+    info('Recording core facet deployments...')
+    await recordCoreFacetDeployments(
+      ctx,
+      signer,
+      diamond.address,
+      ctx.config.diamond.coreFacets,
+      diamond.txHash!
+    )
+
+    return proxyInterface
   }
 
   
