@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.17.0](https://github.com/gemstation/gemforge/compare/v2.16.3...v2.17.0) (2025-10-20)
+
+
+### Features
+
+* record core facet deployments in deployment history ([255c5b2](https://github.com/gemstation/gemforge/commit/255c5b2e88f998b0b25f355b1c0f661fb9397f6c))
+
 ### [2.16.3](https://github.com/gemstation/gemforge/compare/v2.16.2...v2.16.3) (2025-10-17)
 
 ### [2.16.2](https://github.com/gemstation/gemforge/compare/v2.16.1...v2.16.2) (2025-10-17)
