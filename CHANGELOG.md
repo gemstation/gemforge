@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.18.0](https://github.com/gemstation/gemforge/compare/v2.17.0...v2.18.0) (2025-10-30)
+
+
+### Features
+
+* **verify:** add optional foundry verification parameters ([b1a0911](https://github.com/gemstation/gemforge/commit/b1a09117f74396a0c1d0d68275c422dad86da3c4))
+
 ## [2.17.0](https://github.com/gemstation/gemforge/compare/v2.16.3...v2.17.0) (2025-10-20)
 
 
