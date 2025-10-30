@@ -97,5 +97,172 @@ module.exports = {
       // check for call
       expect(ret2.output).to.contain(checkFor)
     })
+
+    it('verifies with custom verifier parameter', async () => {
+      if (framework !== 'foundry') {
+        return
+      }
+
+      const dummyKey = 'dummy-key'
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.networks.local.contractVerification = {
+          foundry: {
+            apiUrl: `http://localhost:${mockServerPort}/api`,
+            apiKey: dummyKey,
+            verifier: 'blockscout'
+          }
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const diamondAddress = ret.output.split('Will be deployed at: ')[1].split('\n')[0]
+      const { contract } = await loadDiamondContract(cwd, undefined, diamondAddress)
+      const owner = await contract.owner()
+
+      const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
+      const checkFor = `forge verify-contract ${diamondAddress} DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api --verifier-api-key dummy-key --verifier blockscout --watch`
+
+      const ret2 = cli('verify', 'local', { cwd, verbose: false })
+      expect(ret2.success).to.be.false
+      expect(ret2.output).to.contain(checkFor)
+    })
+
+    it('verifies with custom chainId parameter', async () => {
+      if (framework !== 'foundry') {
+        return
+      }
+
+      const dummyKey = 'dummy-key'
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.networks.local.contractVerification = {
+          foundry: {
+            apiUrl: `http://localhost:${mockServerPort}/api`,
+            apiKey: dummyKey,
+            chainId: 31337
+          }
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const diamondAddress = ret.output.split('Will be deployed at: ')[1].split('\n')[0]
+      const { contract } = await loadDiamondContract(cwd, undefined, diamondAddress)
+      const owner = await contract.owner()
+
+      const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
+      const checkFor = `forge verify-contract ${diamondAddress} DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api --verifier-api-key dummy-key --chain 31337 --watch`
+
+      const ret2 = cli('verify', 'local', { cwd, verbose: false })
+      expect(ret2.success).to.be.false
+      expect(ret2.output).to.contain(checkFor)
+    })
+
+    it('verifies with both verifier and chainId parameters', async () => {
+      if (framework !== 'foundry') {
+        return
+      }
+
+      const dummyKey = 'dummy-key'
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.networks.local.contractVerification = {
+          foundry: {
+            apiUrl: `http://localhost:${mockServerPort}/api`,
+            apiKey: dummyKey,
+            verifier: 'blockscout',
+            chainId: 31337
+          }
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const diamondAddress = ret.output.split('Will be deployed at: ')[1].split('\n')[0]
+      const { contract } = await loadDiamondContract(cwd, undefined, diamondAddress)
+      const owner = await contract.owner()
+
+      const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
+      const checkFor = `forge verify-contract ${diamondAddress} DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api --verifier-api-key dummy-key --verifier blockscout --chain 31337 --watch`
+
+      const ret2 = cli('verify', 'local', { cwd, verbose: false })
+      expect(ret2.success).to.be.false
+      expect(ret2.output).to.contain(checkFor)
+    })
+
+    it('verifies without apiKey (optional apiKey)', async () => {
+      if (framework !== 'foundry') {
+        return
+      }
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.networks.local.contractVerification = {
+          foundry: {
+            apiUrl: `http://localhost:${mockServerPort}/api`
+          }
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const diamondAddress = ret.output.split('Will be deployed at: ')[1].split('\n')[0]
+      const { contract } = await loadDiamondContract(cwd, undefined, diamondAddress)
+      const owner = await contract.owner()
+
+      const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
+      const checkFor = `forge verify-contract ${diamondAddress} DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api  --watch`
+
+      const ret2 = cli('verify', 'local', { cwd, verbose: false })
+      expect(ret2.success).to.be.false
+      expect(ret2.output).to.contain(checkFor)
+      expect(ret2.output).to.not.contain('--verifier-api-key')
+    })
+
+    it('verifies with verifier and chainId but without apiKey', async () => {
+      if (framework !== 'foundry') {
+        return
+      }
+
+      await updateConfigFile(join(cwd, 'gemforge.config.cjs'), (cfg: GemforgeConfig) => {
+        cfg.networks.local.contractVerification = {
+          foundry: {
+            apiUrl: `http://localhost:${mockServerPort}/api`,
+            verifier: 'blockscout',
+            chainId: 31337
+          }
+        }
+        return cfg
+      })
+
+      expect(cli('build', { cwd, verbose: false }).success).to.be.true
+      const ret = cli('deploy', 'local', { cwd, verbose: false })
+      expect(ret.success).to.be.true
+
+      const diamondAddress = ret.output.split('Will be deployed at: ')[1].split('\n')[0]
+      const { contract } = await loadDiamondContract(cwd, undefined, diamondAddress)
+      const owner = await contract.owner()
+
+      const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
+      const checkFor = `forge verify-contract ${diamondAddress} DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api  --verifier blockscout --chain 31337 --watch`
+
+      const ret2 = cli('verify', 'local', { cwd, verbose: false })
+      expect(ret2.success).to.be.false
+      expect(ret2.output).to.contain(checkFor)
+      expect(ret2.output).to.not.contain('--verifier-api-key')
+    })
   })
 }

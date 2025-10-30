@@ -157,9 +157,11 @@ export const generateUnifiedAbi = (ctx: Context): Fragment[] => {
 export interface ContractArtifact {
   name: string,
   fullyQualifiedName: string,
+  srcPath?: string,
   abi: Fragment[],
   bytecode: string,
   deployedBytecode: string,
+
 }
 
 export const loadContractArtifact = (ctx: Context, name: string) => {
@@ -172,7 +174,7 @@ export const loadContractArtifact = (ctx: Context, name: string) => {
         fullyQualifiedName: name,
         abi: FACTORY_ABI, 
         bytecode: FACTORY_BYTECODE, 
-        deployedBytecode: FACTORY_BYTECODE
+        deployedBytecode: FACTORY_BYTECODE,
       } as ContractArtifact
     }
     default: {
@@ -189,18 +191,21 @@ export const loadContractArtifact = (ctx: Context, name: string) => {
       let abi: Fragment[] = json.abi
       let bytecode: string
       let deployedBytecode: string
+      let srcPath: string
 
       switch (ctx.config.artifacts.format) {
         case 'foundry':
           bytecode = json.bytecode.object
           deployedBytecode = json.deployedBytecode.object
+          srcPath = Object.keys(json.metadata.settings.compilationTarget)[0]
           break
         case 'hardhat':
           bytecode = json.bytecode
           deployedBytecode = json.deployedBytecode
-      }
+          srcPath = json.inputSourceName
+      } 
 
-      return { name, fullyQualifiedName, abi, bytecode, deployedBytecode } as ContractArtifact
+      return { name, fullyQualifiedName, abi, bytecode, deployedBytecode, srcPath } as ContractArtifact
     }
   }
 }
@@ -522,7 +527,10 @@ export const verifyContract = async (ctx: Context, target: Target, artifact: Con
   
       trace(`      Verifying ${artifact.name} at ${address} with args ${argStr}`)
   
-      output = (await $$`forge verify-contract ${address} ${artifact.name} --constructor-args ${argStr} --verifier-url ${apiUrl} --etherscan-api-key ${apiKey} --watch`).stdout
+      const verifier = verification.foundry?.verifier ? `--verifier ${verification.foundry?.verifier}` : ''
+      const chain = verification.foundry?.chainId ? `--chain ${verification.foundry?.chainId}` : ''
+      const apiKeyStr = apiKey ? `--verifier-api-key ${apiKey}` : ''
+      output = (await $$`forge verify-contract ${address} ${artifact.srcPath ? `${artifact.srcPath}:${artifact.name}` : artifact.name} --constructor-args ${argStr} --verifier-url ${apiUrl} ${apiKeyStr} ${verifier} ${chain} --watch`).stdout
     } else {
       const { networkId } = verification.hardhat!
 

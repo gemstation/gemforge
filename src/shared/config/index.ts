@@ -1,11 +1,11 @@
 import { ethers } from 'ethers'
 import get from 'lodash.get'
 import semver from 'semver'
+import spdxLicenseIds from 'spdx-license-ids/index.json' with { type: 'json' }
 import { loadJson } from '../fs.js'
 import { warn } from '../log.js'
 import { ensure, ensureArray, ensureBool, ensureIsSet, ensureIsType, throwError } from './common.js'
 import { GemforgeConfigV1, sanitizeConfigV1 } from './v1.js'
-import spdxLicenseIds from 'spdx-license-ids/index.json' with { type: 'json' }
 
 const { version } = loadJson(new URL('../../../package.json', import.meta.url)) as any
 
@@ -41,7 +41,9 @@ export interface NetworkConfig {
   contractVerification?: {
     foundry?: {
       apiUrl: StringOrFunction,
-      apiKey: StringOrFunction,
+      apiKey?: StringOrFunction,
+      verifier?: string,
+      chainId?: number,
     },
     hardhat?: {
       networkId: string,
@@ -212,8 +214,10 @@ export const sanitizeConfig = (config: GemforgeConfig) => {
     ensureIsType(config, `networks.${name}.rpcUrl`, ['string', 'function'])
     if (config.networks[name].contractVerification) {
       if (config.artifacts.format === 'foundry') {
-        ensureIsType(config, `networks.${name}.contractVerification.foundry.apiKey`, ['string', 'function'], { suffix: 'Foundry format requires an explorer API key' })
         ensureIsType(config, `networks.${name}.contractVerification.foundry.apiUrl`, ['string', 'function'], { suffix: 'Foundry format requires an explorer API URL' })
+        ensureIsType(config, `networks.${name}.contractVerification.foundry.apiKey`, ['undefined', 'string', 'function'], { suffix: 'Foundry format verifier API key must be a string or function' })
+        ensureIsType(config, `networks.${name}.contractVerification.foundry.verifier`, ['undefined', 'string'], { suffix: 'Foundry format verifier type must be a string' })
+        ensureIsType(config, `networks.${name}.contractVerification.foundry.chainId`, ['undefined', 'number'], { suffix: 'Foundry format chain ID must be a number' })
       } else {
         ensureIsType(config, `networks.${name}.contractVerification.hardhat.networkId`, ['string'], { suffix: 'Hardhat format requires a network ID' })
       }
