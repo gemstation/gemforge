@@ -224,7 +224,7 @@ module.exports = {
       const owner = await contract.owner()
 
       const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
-      const checkFor = `forge verify-contract ${diamondAddress} src/generated/DiamondProxy.sol:DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api  --watch`
+      const checkFor = `forge verify-contract ${diamondAddress} src/generated/DiamondProxy.sol:DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api --watch`
 
       const ret2 = cli('verify', 'local', { cwd, verbose: false })
       expect(ret2.success).to.be.false
@@ -257,7 +257,7 @@ module.exports = {
       const owner = await contract.owner()
 
       const argsStr = (exec(`cast abi-encode "constructor(address)" ${owner}`).stdout).toString().trim()
-      const checkFor = `forge verify-contract ${diamondAddress} src/generated/DiamondProxy.sol:DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api  --verifier blockscout --chain 31337 --watch`
+      const checkFor = `forge verify-contract ${diamondAddress} src/generated/DiamondProxy.sol:DiamondProxy --constructor-args ${argsStr} --verifier-url http://localhost:${mockServerPort}/api --verifier blockscout --chain 31337 --watch`
 
       const ret2 = cli('verify', 'local', { cwd, verbose: false })
       expect(ret2.success).to.be.false
