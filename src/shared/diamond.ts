@@ -168,7 +168,7 @@ export const resolveUpgrade = async (params: {
           trace(`[Will not remove] method [${f}] pointing to facet ${liveFunctions[f]} (PROTECTED)`)
         } else {
           trace(`[Remove] method [${f}] pointing to facet ${liveFunctions[f]}`)
-          todo.remove[ZeroAddress] = todo.remove[liveFunctions[f]] || []
+          todo.remove[ZeroAddress] ??= []
           todo.remove[ZeroAddress].push(f)
         }
       }

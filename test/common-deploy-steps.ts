@@ -175,6 +175,32 @@ export const addDeployTestSteps = ({
       expect(contract.getInt1()).to.be.rejectedWith('execution reverted')
     })
 
+    it('and can handle multiple removals from the same facet', async () => {
+      writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
+        pragma solidity >=0.8.21;
+        import "../libs/LibAppStorage.sol";
+        contract ExampleFacet {
+          function setInt2(uint i) external {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.data.i1 = i + 1;
+          }
+        }
+      `)
+
+      expect(cli('build', { cwd }).success).to.be.true
+      expect(cli_deploy([]).success).to.be.true
+
+      const { contract } = await loadDiamondContract(cwd, [
+        'function setInt2(uint i) external',
+        'function setInt1(uint i) external',
+        'function getInt1() external view returns (uint)',
+      ])
+
+      await sendTx(contract.setInt2(2))
+      await expect(contract.setInt1(2)).to.be.rejected
+      await expect(contract.getInt1()).to.be.rejected
+    })
+
     it('and can prevent removals of protected methods', async () => {
       writeFile(join(cwd, `${contractSrcBasePath}/facets/ExampleFacet.sol`), `
         pragma solidity >=0.8.21;
@@ -972,4 +998,3 @@ export const addDeployTestSteps = ({
 
   })
 }
-
