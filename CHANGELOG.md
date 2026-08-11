@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.18.1](https://github.com/gemstation/gemforge/compare/v2.18.0...v2.18.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* preserve all removed function selectors ([#54](https://github.com/gemstation/gemforge/issues/54)) ([4403dc4](https://github.com/gemstation/gemforge/commit/4403dc4e4101d2b911a284e22ab8d1b99f48fc82))
+* tests had extra space in verification string ([f222501](https://github.com/gemstation/gemforge/commit/f2225011d1c666987c613dddf05d788adbb81a80))
+
 ## [2.18.0](https://github.com/gemstation/gemforge/compare/v2.17.0...v2.18.0) (2025-10-30)
 
 
