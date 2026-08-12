@@ -433,6 +433,7 @@ export const deployContract3 = async (
         const tx = await signer.sendTransaction({
           to: FACTORY_DEPLOYER_ADDRESS,
           value: moreNeeded.toString(),
+          nonce: await getLatestNonce(signer),
         })
         await confirmTx(ctx, tx)
         trace(`   ...done`)
@@ -619,8 +620,8 @@ const getLatestNonce = async (signer: Signer): Promise<number> => {
 
     trace(`Get nonce for ${address}...`)
     
-    if (!latestNonce[address]) {
-      latestNonce[address] = await signer.getNonce()
+    if (latestNonce[address] === undefined) {
+      latestNonce[address] = await signer.getNonce('pending')
       trace(`   Live nonce: ${latestNonce[address]}`)
     } else {
       latestNonce[address]++
