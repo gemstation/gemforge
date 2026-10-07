@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.18.2](https://github.com/gemstation/gemforge/compare/v2.18.1...v2.18.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* prevent nonce reuse when a wallet starts at nonce zero ([d3b8667](https://github.com/gemstation/gemforge/commit/d3b86673c34706a5ce3879526430b1f0d0b60750))
+
 ### [2.18.1](https://github.com/gemstation/gemforge/compare/v2.18.0...v2.18.1) (2026-08-11)
 
 
